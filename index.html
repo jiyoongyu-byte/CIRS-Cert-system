@@ -192,7 +192,7 @@ input[type=date]{color:#fff;color-scheme:dark}
 <div class="sidebar">
   <div class="sidebar-logo">
     <div id="sidebarLogoContainer" style="max-width:130px; margin: 0 auto;"></div>
-    <div class="sys" id="sidebarUser">제품 인허가 부문</div>
+    <div class="sys" id="sidebarUser">제품 인허가 관리</div>
   </div>
   <div class="sidebar-nav">
     <div class="nav-label">대시보드</div>
@@ -248,9 +248,18 @@ input[type=date]{color:#fff;color-scheme:dark}
   <div class="stat-grid" id="dashStats"></div>
   
   <div class="workspace-grid">
-    <div class="card"><div class="card-header"><span class="card-title">🚀 내 작업 보드 (수신된 업무)</span><span class="badge badge-cert" id="myTaskCount">0건</span></div><div class="card-body" style="padding:16px"><div class="ws-list" id="myTasksList"></div></div></div>
-    <div class="card"><div class="card-header"><span class="card-title">📂 프로젝트 진척 모니터링</span><span class="badge badge-med" id="myProjectCount">0건</span></div><div class="card-body" style="padding:16px"><div class="ws-list" id="myProjectsList"></div></div></div>
-    <div class="card"><div class="card-header"><span class="card-title">🏆 스피드 지표 및 ⚠️ 장기 지연</span><span class="badge badge-warn">이번 달 완료 / 지연</span></div><div class="card-body" style="padding:16px"><div class="ws-list" id="speedStarList"></div></div></div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">🚀 내 작업 보드 (수신된 업무)</span><span class="badge badge-cert" id="myTaskCount">0건</span></div>
+      <div class="card-body" style="padding:16px"><div class="ws-list" id="myTasksList"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">📂 프로젝트 진척 모니터링</span><span class="badge badge-med" id="myProjectCount">0건</span></div>
+      <div class="card-body" style="padding:16px"><div class="ws-list" id="myProjectsList"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">🏆 스피드 지표 및 ⚠️ 장기 지연</span><span class="badge badge-warn">이번 달 완료 / 지연</span></div>
+      <div class="card-body" style="padding:16px"><div class="ws-list" id="speedStarList"></div></div>
+    </div>
   </div>
 
   <div class="grid-2" style="margin-bottom:20px">
@@ -893,7 +902,6 @@ input[type=date]{color:#fff;color-scheme:dark}
 </div></div></div>
 
 <script>
-// [로고 데이터 매립]
 const CIRS_LOGO_DATA = "data:image/svg+xml;utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 250 60' width='220' height='52'%3E%3Crect width='100%25' height='100%25' fill='none'/%3E%3Ctext x='15' y='42' font-family='Arial, sans-serif' font-weight='900' font-size='42' letter-spacing='-1' fill='%230A2A66'%3ECiRS%3C/text%3E%3Crect x='42' y='10' width='10' height='10' fill='%2300C3A5'/%3E%3C/svg%3E";
 window.addEventListener('DOMContentLoaded', () => {
   if(document.getElementById('loginLogoContainer')) document.getElementById('loginLogoContainer').innerHTML = `<img src="${CIRS_LOGO_DATA}" class="logo-img" alt="CIRS">`;
@@ -912,53 +920,37 @@ const PRIORITY_COLOR={'긴급':'var(--danger)','일반':'var(--warn)','낮음':'
 const PRIORITY_LABEL={'긴급':'🔴 긴급','일반':'🟡 일반','낮음':'🟢 낮음'};
 const BILL_LABELS=['1','2','3','4','5'];
 
-let sb, currentYear=new Date().getFullYear(), currentView='dashboard', currentUser='', revTeam='med', kpiTab='qual';
+let sb, currentYear=new Date().getFullYear(), currentView='dashboard', currentUser='', revTeam='total', kpiTab='qual';
 let editingEduId=null, completingTaskId=null, editingTaskId=null, medEditId=null, certEditId=null;
 let medIsContract=true, certIsContract=true;
 let qualData=JSON.parse(JSON.stringify(QUAL_MASTER));
-let chartQ=null, chartRevBar=null, chartRevLine=null, chartTop=null, chartTopServices=null, chartKpi=null, chartDashLine=null;
+let chartQ=null, chartRevBar=null, chartRevLine=null, chartTop=null, chartKpi=null, chartDashLine=null;
 const state={ med:[], cert:[], revenue:{}, kpiEdu:{}, qualData:null, eduRecords:[], tasks:[], pw:DEFAULT_PW };
 const titles={ dashboard:'전체 현황', revenue:'분기/연간 계획', medContract:'의료기기팀 · 계약업체', medConsult:'의료기기팀 · 상담', certContract:'제품환경인증팀 · 계약업체', certConsult:'제품환경인증팀 · 상담', kpi:'KPI 현황', tasks:'업무지시서' };
 
-window.addEventListener('DOMContentLoaded', async()=>{
-  sb = supabase.createClient(SB_URL, SB_KEY);
-  if(localStorage.getItem('cirs_rmb_rate')){ setTimeout(()=>{ const r=document.getElementById('rmbRateInput'); if(r){ r.value = localStorage.getItem('cirs_rmb_rate'); onExchangeRateChange(); }}, 300); }
-  if(localStorage.getItem('cirs_usd_rate')){ setTimeout(()=>{ const u=document.getElementById('usdRateInput'); if(u){ u.value = localStorage.getItem('cirs_usd_rate'); onExchangeRateChange(); }}, 300); }
-  const sel=document.getElementById('yearSelect'); sel.innerHTML='';
-  for(let y=2036;y>=2020;y--){ const o=document.createElement('option'); o.value=y; o.textContent=y+'년'; if(y===currentYear) o.selected=true; sel.appendChild(o); }
-});
+function ensureRevYear(y){ 
+  if(!state.revenue) state.revenue = {};
+  if(!state.revenue[y]) state.revenue[y] = {};
+  if(!state.revenue[y].med) state.revenue[y].med = {q1:0,q2:0,q3:0,q4:0};
+  if(!state.revenue[y].cert) state.revenue[y].cert = {q1:0,q2:0,q3:0,q4:0};
+}
 
-document.addEventListener('click', (e)=>{
-  const searchResults = document.getElementById('searchResults');
-  const searchInput = document.getElementById('globalSearch');
-  if(e.target !== searchInput && !searchResults.contains(e.target)) searchResults.classList.remove('active');
-});
-
-function getUserTeam(user){ if(['지윤규','유재용','윤미령','차상호'].includes(user)) return '의료기기팀'; if(['엄태호','Lyu Cuicui','박성재'].includes(user)) return '제품환경인증팀'; return '공통'; }
-
+// 모든 구성원 권한 전면 개방
 function applyPermissions() {
-  const isSuperAdmin = ADMIN_USERS.includes(currentUser) || currentUser === SUPER_ADMIN;
-  
-  // 수익 탭: 분기/연간 계획 모든 구성원 개방 
   document.getElementById('rev-tab-med').style.display = 'inline-block';
   document.getElementById('rev-tab-cert').style.display = 'inline-block';
   document.getElementById('rev-tab-total').style.display = 'inline-block';
-  
   if(!['med','cert','total'].includes(revTeam)) revTeam = 'total';
   document.querySelectorAll('.team-tab').forEach(b => b.classList.remove('active-med', 'active-cert'));
   const activeBtn = document.getElementById('rev-tab-' + revTeam);
   if(activeBtn) activeBtn.classList.add(revTeam === 'cert' ? 'active-cert' : 'active-med');
 
-  // 작업 지시/협조 버튼 모두에게 개방
   if(document.getElementById('taskOrderBtn')) document.getElementById('taskOrderBtn').style.display = 'inline-block';
   if(document.getElementById('taskCollabBtn')) document.getElementById('taskCollabBtn').style.display = 'inline-block';
-
-  // 기타 생성 및 수정 메뉴 버튼들 모두 개방
   ['medAddContractBtn', 'medAddConsultBtn', 'certAddContractBtn', 'certAddConsultBtn', 'eduAddBtn'].forEach(id => {
       if(document.getElementById(id)) document.getElementById(id).style.display = 'inline-block';
   });
-  // 최고 관리자 전용 메뉴
-  if(document.getElementById('qualAdminBtn')) document.getElementById('qualAdminBtn').style.display = isSuperAdmin ? 'inline-block' : 'none';
+  if(document.getElementById('qualAdminBtn')) document.getElementById('qualAdminBtn').style.display = 'inline-block';
 }
 
 async function doLogin(){
@@ -999,6 +991,34 @@ async function loadFromSupabase(){
 }
 async function saveState(){ try{ await sb.from('revenue_plan').upsert({id:'main',data:{...state.revenue,_kpiEdu:state.kpiEdu,_qualData:state.qualData,_eduRecords:state.eduRecords,_tasks:state.tasks},updated_at:new Date().toISOString()}); }catch(e){} }
 
+window.addEventListener('DOMContentLoaded', async()=>{
+  sb = supabase.createClient(SB_URL, SB_KEY);
+  if(localStorage.getItem('cirs_rmb_rate')){ setTimeout(()=>{ const r=document.getElementById('rmbRateInput'); if(r){ r.value = localStorage.getItem('cirs_rmb_rate'); onExchangeRateChange(); }}, 300); }
+  if(localStorage.getItem('cirs_usd_rate')){ setTimeout(()=>{ const u=document.getElementById('usdRateInput'); if(u){ u.value = localStorage.getItem('cirs_usd_rate'); onExchangeRateChange(); }}, 300); }
+  const sel=document.getElementById('yearSelect'); sel.innerHTML='';
+  for(let y=2036;y>=2020;y--){ const o=document.createElement('option'); o.value=y; o.textContent=y+'년'; if(y===currentYear) o.selected=true; sel.appendChild(o); }
+});
+
+document.addEventListener('click', (e)=>{
+  const searchResults = document.getElementById('searchResults');
+  const searchInput = document.getElementById('globalSearch');
+  if(e.target !== searchInput && !searchResults.contains(e.target)) searchResults.classList.remove('active');
+});
+
+// [UX 개선] 계약 화폐단위 변경 시 하위 수입내역 단위 전체 동기화
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'm-amount-currency') {
+    const val = e.target.value;
+    for(let i=0; i<5; i++) { const el = document.getElementById('m-bc'+i); if(el) el.value = val; }
+    calcBilling('m', 'medBillingTotal');
+  }
+  if (e.target.id === 'c-amount-currency') {
+    const val = e.target.value;
+    for(let i=0; i<5; i++) { const el = document.getElementById('c-bc'+i); if(el) el.value = val; }
+    calcBilling('c', 'certBillingTotal');
+  }
+});
+
 function uid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36);}
 function fmt(n){return Number(n||0).toLocaleString();}
 function fmtM(n){ if(!n)return'0원'; const v=Number(n); if(v>=100000000)return (v/100000000).toFixed(1)+'억원'; if(v>=10000)return Math.round(v/10000).toLocaleString()+'만원'; return v.toLocaleString()+'원'; }
@@ -1008,6 +1028,26 @@ function getRates(){ return{rmb:Number(document.getElementById('rmbRateInput')?.
 function toKRW(amt,cur){ const{rmb,usd}=getRates(); if(cur==='RMB')return rmb?Number(amt)*rmb:0; if(cur==='USD')return usd?Number(amt)*usd:0; return Number(amt); }
 function onExchangeRateChange(){ const r=document.getElementById('rmbRateInput')?.value, u=document.getElementById('usdRateInput')?.value; if(r)localStorage.setItem('cirs_rmb_rate',r); if(u)localStorage.setItem('cirs_usd_rate',u); calcMedBilling(); calcCertBilling(); updateRateWarning(); renderView(currentView); }
 function updateRateWarning(){ const{rmb,usd}=getRates(); const hasRMB=[...state.med,...state.cert].some(r=>(r.billingCurrencies||[]).some(c=>c==='RMB')||r.amountCurrency==='RMB'); const hasUSD=[...state.med,...state.cert].some(r=>(r.billingCurrencies||[]).some(c=>c==='USD')||r.amountCurrency==='USD'); const w=[]; if(hasRMB&&!rmb)w.push('RMB'); if(hasUSD&&!usd)w.push('USD'); const el=document.getElementById('rateWarning'); if(el){el.textContent=w.length?'⚠ '+w.join('/')+' 환율 미입력':'';el.style.display=w.length?'':'none';} }
+
+// 외화-원화 듀얼 표기 함수
+function fmtCurEx(amt, cur){
+  const num=Number(amt)||0; if(cur==='KRW'||!cur) return fmtM(num);
+  const {rmb, usd} = getRates(); let krw=0, cStr='', col='';
+  if(cur==='RMB'){krw=num*rmb; cStr='RMB'; col='#F5A623';}
+  if(cur==='USD'){krw=num*usd; cStr='USD'; col='#4FC3F7';}
+  return `<div style="line-height:1.4"><span style="color:${col};font-size:11px;font-family:var(--mono)">${fmt(num)} ${cStr}</span><br><span style="font-weight:700">${fmtM(krw)}</span></div>`;
+}
+
+function doSearch(e){
+  const v=e.target.value.toLowerCase().trim(); const res=document.getElementById('searchResults');
+  if(!v){res.classList.remove('active');return;}
+  const matched=[];
+  state.med.forEach(r=>{ if(r.client.toLowerCase().includes(v)||r.product?.toLowerCase().includes(v)) matched.push({id:r.id,team:'의료기기',title:r.client,sub:r.product,fn:`editMed('${r.id}')`}); });
+  state.cert.forEach(r=>{ if(r.client.toLowerCase().includes(v)||r.certtype?.toLowerCase().includes(v)) matched.push({id:r.id,team:'인증팀',title:r.client,sub:r.certtype,fn:`editCert('${r.id}')`}); });
+  if(!matched.length){ res.innerHTML=`<div class="search-item"><span class="search-item-title" style="color:var(--text3)">결과가 없습니다</span></div>`; }
+  else { res.innerHTML=matched.map(m=>`<div class="search-item" onclick="${m.fn}; document.getElementById('searchResults').classList.remove('active');"><span class="search-item-title"><span class="badge ${m.team==='의료기기'?'badge-med':'badge-cert'}" style="margin-right:6px">${m.team}</span>${m.title}</span><span class="search-item-sub">${m.sub||''}</span></div>`).join(''); }
+  res.classList.add('active');
+}
 
 function downloadCSV(tableId, filename){
   const table=document.getElementById(tableId); let csv=[]; 
@@ -1042,16 +1082,22 @@ function calcBilling(p,tId){
   let bKRW=0; for(let i=0;i<5;i++){ bKRW+=toKRW(Number(document.getElementById(`${p}-b${i}`).value||0), document.getElementById(`${p}-bc${i}`).value||'KRW'); }
   document.getElementById(tId).innerHTML=`<span>계약총액 <strong>${fmt(tAmt)} ${tCur}</strong></span><span>수입합계 <strong>${fmt(Math.round(bKRW))}원</strong></span><span class="billing-remain ${tKRW-bKRW<=0&&tKRW>0?'ok':'none'}">잔액 ${fmt(Math.round(tKRW-bKRW))}원</span>`;
 }
+
 function billingMini(bArr,tAmt,bDates,bCur,tCur){
   let bKRW=0; (bArr||[]).forEach((a,i)=>{bKRW+=toKRW(Number(a||0),(bCur||[])[i]||'KRW');});
-  return`<div class="billing-mini">${(bArr||[]).map((a,i)=>a?`${i+1}차(${fmt(a)})`:null).filter(Boolean).join('/')||'<span style="color:var(--text3)">내역없음</span>'}</div><div class="billing-remain">잔액 ${fmtM(Math.round(toKRW(Number(tAmt||0),tCur||'KRW')-bKRW))}</div>`;
+  return`<div class="billing-mini">${(bArr||[]).map((a,i)=>{
+     if(!a) return null; const c=(bCur||[])[i]||'KRW'; 
+     const aStr = c==='KRW' ? fmtM(a) : `<span style="color:${c==='RMB'?'#F5A623':'#4FC3F7'};font-family:var(--mono)">${fmt(a)} ${c}</span>`;
+     return `${i+1}차(${aStr})`; 
+  }).filter(Boolean).join(' / ')||'<span style="color:var(--text3)">내역없음</span>'}</div><div class="billing-remain">잔액 ${fmtM(Math.round(toKRW(Number(tAmt||0),tCur||'KRW')-bKRW))}</div>`;
 }
+
 function closeModal(id){document.getElementById('modal-'+id).classList.remove('open');}
 
 function renderDashboard(){
   const y=currentYear; document.getElementById('dashYear').textContent=y+'년';
   const medRows=(state.med||[]).filter(r=>isRowVisibleInYear(r,y)), certRows=(state.cert||[]).filter(r=>isRowVisibleInYear(r,y));
-  const mA=getBilledActual('med',y).qs, cA=getBilledActual('cert',y).qs; if(!state.revenue[y])ensureRevYear(y);
+  const mA=getBilledActual('med',y).qs, cA=getBilledActual('cert',y).qs; ensureRevYear(y);
   
   const medTarget=Object.values(state.revenue[y].med).reduce((s,v)=>s+v,0), certTarget=Object.values(state.revenue[y].cert).reduce((s,v)=>s+v,0);
   const totalTarget = medTarget+certTarget;
@@ -1060,18 +1106,30 @@ function renderDashboard(){
   const certActualSum = Object.values(cA).reduce((s,v)=>s+v,0);
   const tKRW = medActualSum + certActualSum;
 
+  let dashRMB=0, dashUSD=0;
+  [...medRows,...certRows].filter(r=>r.recordType!=='consult').forEach(r=>{
+    (r.billing||[]).forEach((amt,i)=>{
+      const c=(r.billingCurrencies||[])[i]||'KRW';
+      if(c==='RMB')dashRMB+=Number(amt); else if(c==='USD')dashUSD+=Number(amt);
+    });
+  });
+  const exStr=[];
+  if(dashRMB>0) exStr.push(`<span style="color:#F5A623;font-family:var(--mono)">${fmt(dashRMB)} RMB</span>`);
+  if(dashUSD>0) exStr.push(`<span style="color:#4FC3F7;font-family:var(--mono)">${fmt(dashUSD)} USD</span>`);
+  const exHtml = exStr.length ? `<div style="font-size:11px;margin-top:6px;color:var(--text3)">외화 결제분: ${exStr.join(' / ')}</div>` : '';
+
   document.getElementById('dashStats').innerHTML=`
-    <div class="stat-card"><div class="stat-label">부문 전체 실적 (KRW)</div><div class="stat-value color-accent" style="display:flex;align-items:baseline;">${fmtM(Math.round(tKRW))}<span style="font-size:14px;color:var(--text3);font-weight:500;margin-left:8px;">/ ${fmtM(totalTarget)} <small>(${pct(tKRW, totalTarget)}%)</small></span></div></div>
-    <div class="stat-card"><div class="stat-label">의료기기팀 실적</div><div class="stat-value color-med" style="display:flex;align-items:baseline;">${fmtM(medActualSum)}<span style="font-size:14px;color:var(--text3);font-weight:500;margin-left:8px;">/ ${fmtM(medTarget)} <small>(${pct(medActualSum,medTarget)}%)</small></span></div></div>
-    <div class="stat-card"><div class="stat-label">인증팀 실적</div><div class="stat-value color-cert" style="display:flex;align-items:baseline;">${fmtM(certActualSum)}<span style="font-size:14px;color:var(--text3);font-weight:500;margin-left:8px;">/ ${fmtM(certTarget)} <small>(${pct(certActualSum,certTarget)}%)</small></span></div></div>
+    <div class="stat-card"><div class="stat-label">부문 전체 실적 (KRW)</div><div class="stat-value color-accent" style="display:flex;align-items:baseline;">${fmtM(Math.round(tKRW))}<span style="font-size:13px;color:var(--text3);font-weight:500;margin-left:8px;">/ ${fmtM(totalTarget)} <small style="font-size:11px;color:var(--text3);">(${pct(tKRW, totalTarget)}%)</small></span></div>${exHtml}</div>
+    <div class="stat-card"><div class="stat-label">의료기기팀 실적</div><div class="stat-value color-med" style="display:flex;align-items:baseline;">${fmtM(medActualSum)}<span style="font-size:13px;color:var(--text3);font-weight:500;margin-left:8px;">/ ${fmtM(medTarget)} <small style="font-size:11px;color:var(--text3);">(${pct(medActualSum,medTarget)}%)</small></span></div></div>
+    <div class="stat-card"><div class="stat-label">인증팀 실적</div><div class="stat-value color-cert" style="display:flex;align-items:baseline;">${fmtM(certActualSum)}<span style="font-size:13px;color:var(--text3);font-weight:500;margin-left:8px;">/ ${fmtM(certTarget)} <small style="font-size:11px;color:var(--text3);">(${pct(certActualSum,certTarget)}%)</small></span></div></div>
     <div class="stat-card"><div class="stat-label">통합 달성률</div><div class="stat-value">${pct(tKRW, totalTarget)}%</div><div class="stat-bar"><div class="stat-fill fill-accent" style="width:${Math.min(pct(tKRW, totalTarget),100)}%"></div></div></div>`;
 
   const isSuperAdmin = ADMIN_USERS.includes(currentUser) || currentUser === SUPER_ADMIN;
   const todayStr=new Date().toISOString().slice(0,10), thisMonth=todayStr.slice(0,7);
 
-  const myTasks=(state.tasks||[]).filter(t=>{ if(isSuperAdmin)return !t.completedDate; return t.to===currentUser&&!t.completedDate; }).sort((a,b)=>a.due.localeCompare(b.due));
+  const myTasks=(state.tasks||[]).filter(t=> !t.completedDate).sort((a,b)=>a.due.localeCompare(b.due));
   document.getElementById('myTaskCount').textContent=myTasks.length+'건';
-  document.getElementById('myTasksList').innerHTML=myTasks.length?myTasks.map(t=>`<div class="ws-item" onclick="nav('tasks', document.querySelector('.nav-item:last-child'))"><div><div class="ws-title">📝 ${isSuperAdmin?`<span style="color:var(--med)">[${t.to}]</span> `:''}${t.content.substring(0,30)}</div><div class="ws-meta">기한: <strong style="color:${t.due<todayStr?'var(--danger)':'var(--text1)'}">${t.due||'없음'}</strong></div></div></div>`).join(''):'<div style="padding:10px;text-align:center;color:var(--text3)">대기 업무가 없습니다.</div>';
+  document.getElementById('myTasksList').innerHTML=myTasks.length?myTasks.map(t=>`<div class="ws-item" onclick="nav('tasks', document.querySelector('.nav-item:last-child'))"><div><div class="ws-title"><span style="color:var(--med)">[${t.to}]</span> ${t.content.substring(0,30)}</div><div class="ws-meta">기한: <strong style="color:${t.due<todayStr?'var(--danger)':'var(--text1)'}">${t.due||'없음'}</strong></div></div></div>`).join(''):'<div style="padding:10px;text-align:center;color:var(--text3)">대기 업무가 없습니다.</div>';
   
   const allItems = [...medRows, ...certRows].filter(r => r.status !== '완료' && r.stage !== '완료');
   document.getElementById('myProjectCount').textContent = (isSuperAdmin ? allItems.length : allItems.filter(r=>r.manager===currentUser).length) + '건';
@@ -1090,11 +1148,10 @@ function renderDashboard(){
      userSpeed[t.to].count++; userSpeed[t.to].est += Number(t.estHours||0); userSpeed[t.to].act += Number(t.actHours||0);
   });
   const topSpeed = Object.keys(userSpeed).map(u => ({ name:u, ...userSpeed[u] })).sort((a,b) => b.count - a.count).slice(0, 3);
-  const topSpeedHTML = topSpeed.length ? topSpeed.map((u, i) => `<div class="ws-item" style="cursor:default;border-left:3px solid var(--med)"><div><div class="ws-title">${i===0?'🥇':i===1?'🥈':'🥉'} ${u.name} (${u.count}건 완료)</div><div class="ws-meta">처리시간: 예상 ${u.est}h / 실제 ${u.act}h</div></div></div>`).join('') : '';
+  const topSpeedHTML = topSpeed.length ? topSpeed.map((u, i) => `<div class="ws-item" style="cursor:default;border-left:3px solid var(--med)"><div><div class="ws-title">${i==0?'🥇':i==1?'🥈':'🥉'} ${u.name} (${u.count}건 완료)</div><div class="ws-meta">처리시간: 예상 ${u.est}h / 실제 ${u.act}h</div></div></div>`).join('') : '';
 
   const delayedProjs = allItems.filter(r => { if(!r.duedate && !r.expiredate && !r.issuedate) return false; const end = r.duedate || r.issuedate || r.expiredate; return end < todayStr; }).sort((a,b) => (a.duedate||a.issuedate||a.expiredate).localeCompare(b.duedate||b.issuedate||b.expiredate));
   const delayedHTML = delayedProjs.length ? delayedProjs.map(r => `<div class="ws-item" style="cursor:default;border-left:3px solid var(--danger)"><div><div class="ws-title">⚠️ [${r.manager||'미지정'}] ${r.client}</div><div class="ws-meta" style="color:var(--danger)">기한 지연: ${r.duedate||r.issuedate||r.expiredate}</div></div></div>`).join('') : '';
-  
   document.getElementById('speedStarList').innerHTML = (topSpeedHTML + delayedHTML) || '<div style="color:var(--text3);padding:10px;text-align:center">데이터가 없습니다.</div>';
 
   const qk=['q1','q2','q3','q4'];
@@ -1112,96 +1169,30 @@ function renderDashboard(){
 function renderRevenue(){
   const y=currentYear; ensureRevYear(y); const qk=['q1','q2','q3','q4'], teams=revTeam==='total'?['med','cert']:[revTeam];
   const t={q1:0,q2:0,q3:0,q4:0}, a={q1:0,q2:0,q3:0,q4:0};
-  teams.forEach(tm=>{ const p=state.revenue[y]?.[tm]; const res=getBilledActual(tm,y); qk.forEach(k=>{t[k]+=p[k]||0;a[k]+=res.qs[k]||0;}); });
+  teams.forEach(tm=>{ const p=state.revenue[y]?.[tm] || {q1:0,q2:0,q3:0,q4:0}; const res=getBilledActual(tm,y); qk.forEach(k=>{t[k]+=Number(p[k]||0);a[k]+=Number(res.qs[k]||0);}); });
   
   const mLabels = {q1:'Q2', q2:'Q3', q3:'Q4', q4:'내년 Q1'};
   document.getElementById('qCards').innerHTML=qk.map((k,i)=>`<div class="q-card"><div class="q-label">Q${i+1}</div><div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px;"><span>이번 분기 실적</span><span>${t[k]>0?pct(a[k],t[k])+'% 달성':''}</span></div><div class="q-actual">${fmt(a[k])}원</div><div style="font-size:11px;color:var(--text3);margin-top:14px;border-top:1px solid var(--border);padding-top:8px;">${mLabels[k]} 목표 설정</div><input type="number" value="${t[k]}" placeholder="목표액 입력" onchange="updateTarget('${revTeam}','${k}',this.value)" style="width:100%;border:1px solid var(--border2);border-radius:8px;padding:8px;font-size:14px;font-family:var(--mono);background:var(--bg);color:var(--text1);outline:none;margin-top:4px;"></div></div>`).join('');
   
-  if(chartRevBar)chartRevBar.destroy();
-  chartRevBar=new Chart(document.getElementById('chartRevBar'),{type:'bar',data:{labels:qk,datasets:[
-    {label:'목표',data:qk.map(k=>t[k]),backgroundColor:'rgba(91,110,245,.2)',borderColor:'rgba(91,110,245,.6)',borderWidth:1.5,borderRadius:4},
-    {label:'실적',data:qk.map(k=>a[k]),backgroundColor:'rgba(91,110,245,.85)',borderRadius:4}
-  ]},options:chartOpts(y+'년 연간 수입목표 vs 수입실적'),plugins:[{id:'barTop',afterDatasetsDraw(ch){
-    const ctx2=ch.ctx;
-    ch.data.datasets.forEach((ds,di)=>{ch.getDatasetMeta(di).data.forEach((bar,i)=>{
-      const v=ds.data[i];if(!v)return;
-      ctx2.save();ctx2.font='bold 9px sans-serif';ctx2.fillStyle='#A8ABBE';ctx2.textAlign='center';
-      ctx2.fillText((v/1000000).toFixed(1)+'M',bar.x,bar.y-3);ctx2.restore();
-    });});
-  }}]});
-
-  // 누계 달성 추이
-  let tc=0,ac=0;
-  const cumT=qk.map(k=>{tc+=t[k];return tc;});
-  const cumA=qk.map(k=>{ac+=a[k];return ac;});
+  if(chartRevBar)chartRevBar.destroy(); chartRevBar=new Chart(document.getElementById('chartRevBar'),{type:'bar',data:{labels:qk,datasets:[{label:'목표',data:qk.map(k=>t[k]),backgroundColor:'rgba(91,110,245,.2)',borderWidth:1},{label:'실적',data:qk.map(k=>a[k]),backgroundColor:'rgba(91,110,245,.8)'}]},options:chartOpts()});
   if(chartRevLine)chartRevLine.destroy();
-  chartRevLine=new Chart(document.getElementById('chartRevLine'),{type:'line',data:{labels:['Q1','Q2','Q3','Q4'],datasets:[
-    {label:'수입목표 누계',data:cumT,borderColor:'rgba(180,180,170,.8)',borderDash:[4,3],fill:false,tension:.3,pointRadius:5,pointHoverRadius:8},
-    {label:'수입실적 누계',data:cumA,borderColor:revTeam==='cert'?'#19A876':'#5B6EF5',fill:false,tension:.3,pointRadius:5,pointHoverRadius:8},
-  ]},options:{...chartOpts(),plugins:{...chartOpts().plugins,tooltip:{callbacks:{label:ctx=>{
-    const v=Number(ctx.parsed.y)||0;
-    return ' '+ctx.dataset.label+': '+(v/1000000).toFixed(1)+'백만원 (₩'+Math.round(v).toLocaleString()+'원)';
-  }}}}},plugins:[{id:'lineLabel',afterDatasetsDraw(ch){
-    const ctx2=ch.ctx;
-    ch.data.datasets.forEach((ds,di)=>{ch.getDatasetMeta(di).data.forEach((pt,i)=>{
-      const v=ds.data[i];if(!v)return;
-      ctx2.save();ctx2.font='bold 10px sans-serif';
-      ctx2.fillStyle=di===0?'#A8ABBE':'#5B6EF5';ctx2.textAlign='center';
-      ctx2.fillText((v/1000000).toFixed(1)+'M',pt.x,pt.y-(di===0?14:6));ctx2.restore();
-    });});
-  }}]});
-
-  // 인증 서비스별 수입 기여도
-  const fRowsAll=(revTeam==='total'?[...state.med,...state.cert]:state[revTeam]).filter(r=>r.recordType!=='consult'&&isRowVisibleInYear(r,y));
-  const svcMap={};
-  fRowsAll.forEach(r=>{
-    const label=r.certtype||r.product||r.biztype||'기타';
-    const billed=(r.billing||[]).reduce((s,v,i)=>s+toKRW(Number(v||0),(r.billingCurrencies||[])[i]||'KRW'),0);
-    svcMap[label]=(svcMap[label]||0)+billed;
-  });
-  const svcLabels=Object.keys(svcMap).sort((a,b)=>svcMap[b]-svcMap[a]).slice(0,8);
-  const svcColors=['#5B6EF5','#19A876','#E8652A','#F5A623','#F05252','#4FC3F7','#AB47BC','#26A69A'];
-  if(chartTopServices)chartTopServices.destroy();
-  chartTopServices=new Chart(document.getElementById('chartTopServices'),{type:'doughnut',data:{
-    labels:svcLabels,
-    datasets:[{data:svcLabels.map(l=>Math.round(svcMap[l])),backgroundColor:svcColors.slice(0,svcLabels.length),borderWidth:2,borderColor:'var(--card)'}]
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{
-    legend:{position:'right',labels:{color:'#A8ABBE',font:{size:11},boxWidth:12}},
-    tooltip:{callbacks:{label:ctx=>{const v=ctx.parsed||0;return ' '+ctx.label+': '+(v/1000000).toFixed(1)+'백만원';}}}
-  }}});
-
+  
   const fRows=(revTeam==='total'?[...state.med,...state.cert]:state[revTeam]).filter(r=>r.recordType==='contract'&&isRowVisibleInYear(r,y));
   let subAmt=0, subBil=0;
   document.getElementById('revContractTable').querySelector('tbody').innerHTML=fRows.map((r,i)=>{
     const tm=state.med.includes(r)?'med':'cert', amtK=toKRW(r.amount,r.amountCurrency), bilK=(r.billing||[]).reduce((s,v,bi)=>s+toKRW(Number(v||0),(r.billingCurrencies||[])[bi]||'KRW'),0);
     subAmt+=amtK; subBil+=bilK;
-    return`<tr><td>${i+1}</td><td><span class="badge ${tm==='med'?'badge-med':'badge-cert'}">${tm==='med'?'의료기기':'인증팀'}</span></td><td><strong>${r.client}</strong></td><td>${r.product||r.certtype||'-'}</td><td>Q1</td><td class="text-mono">${fmtM(amtK)}</td><td class="text-mono color-success">${fmtM(bilK)}</td><td class="text-mono color-warn">${fmtM(amtK-bilK)}</td><td>${r.manager||'-'}</td></tr>`;
-  }).join('')+`<tr><td colspan="5" class="text-right">소 계</td><td class="text-mono color-accent">${fmtM(subAmt)}</td><td class="text-mono color-success">${fmtM(subBil)}</td><td class="text-mono color-warn">${fmtM(subAmt-subBil)}</td><td></td></tr>`;
+    return`<tr><td>${i+1}</td><td><span class="badge ${tm==='med'?'badge-med':'badge-cert'}">${tm==='med'?'의료기기':'인증팀'}</span></td><td><strong>${r.client}</strong></td><td>${r.product||r.certtype||'-'}</td><td>Q1</td><td>${fmtCurEx(r.amount, r.amountCurrency)}</td><td><span style="color:var(--success);font-weight:700">${fmtM(bilK)}</span></td><td><span style="color:var(--warn);font-weight:700">${fmtM(amtK-bilK)}</span></td><td>${r.manager||'-'}</td></tr>`;
+  }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="5" class="text-right">소 계</td><td class="text-mono color-accent">${fmtM(subAmt)}</td><td class="text-mono color-success">${fmtM(subBil)}</td><td class="text-mono color-warn">${fmtM(subAmt-subBil)}</td><td></td></tr>`;
+  
+  const tC_plan = qk.map(k => (state.revenue[y]?.med?.[k]||0) + (state.revenue[y]?.cert?.[k]||0));
+  const tC_act  = qk.map(k => (getBilledActual('med',y).qs[k]||0) + (getBilledActual('cert',y).qs[k]||0));
+  let tc=0, ac=0; const tCum = tC_plan.map(v => tc += v); const aCum = tC_act.map(v => ac += v);
+  chartRevLine=new Chart(document.getElementById('chartRevLine'),{type:'line',data:{labels:['Q1','Q2','Q3','Q4'],datasets:[{label:'목표 누계',data:tCum,borderColor:'rgba(180,180,170,.6)',borderDash:[4,4],fill:false,tension:.3,pointRadius:4},{label:'실적 누계',data:aCum,borderColor:revTeam==='cert'?'#19A876':'#5B6EF5',fill:false,tension:.3,pointRadius:5}]},options:chartOpts()});
 }
 
-function switchRevTeam(team, el){
-  revTeam = team;
-  document.querySelectorAll('[id^="rev-tab-"]').forEach(b=>{
-    b.classList.remove('active-med','active-cert');
-  });
-  if(el) el.classList.add(team==='cert'?'active-cert':'active-med');
-  renderRevenue();
-}
-function ensureRevYear(y){
-  if(!state.revenue[y]) state.revenue[y]={med:{q1:0,q2:0,q3:0,q4:0},cert:{q1:0,q2:0,q3:0,q4:0}};
-  if(!state.revenue[y].med) state.revenue[y].med={q1:0,q2:0,q3:0,q4:0};
-  if(!state.revenue[y].cert) state.revenue[y].cert={q1:0,q2:0,q3:0,q4:0};
-}
-async function updateTarget(team,q,val){ 
-  if(team === 'total') return;
-  ensureRevYear(currentYear);
-  const n=Number(val)||0; 
-  state.revenue[currentYear][team][q]=n; 
-  await saveState(); 
-  renderRevenue(); 
-}
+window.updateTarget = async function(team,q,val){ const n=Number(val)||0; if(team==='total') return; state.revenue[currentYear][team][q]=n; await saveState(); renderRevenue(); }
 
-// ── CRUD LOGIC (All actions visible, unrestricted editing) ──
 function renderMedContract(){
   const y=currentYear, rows=state.med.filter(r=>r.recordType==='contract'&&isRowVisibleInYear(r,y));
   document.getElementById('medContractThead').innerHTML=`<tr><th>#</th><th>업체명</th><th>업체 담당자</th><th>등급</th><th>담당자</th><th>완료목표일</th><th>계약총액</th><th>수입내역 / 잔액</th><th>진행단계</th><th>상태</th><th>관리</th></tr>`;
@@ -1209,7 +1200,7 @@ function renderMedContract(){
   document.getElementById('medContractTable').querySelector('tbody').innerHTML=rows.length?rows.map((r,i)=>{
     tAmt += toKRW(r.amount,r.amountCurrency);
     let actionBtns = `<button class="btn btn-sm" onclick="editMed('${r.id}')">수정</button> <button class="btn btn-sm btn-danger" onclick="deleteMed('${r.id}')">삭제</button>`;
-    return`<tr><td>${i+1}</td><td><strong>${r.client}</strong></td><td><div>${r.contactName||''}</div><div style="color:var(--text3);font-size:11px">${r.contactPhone||''}</div></td><td><span class="badge badge-gray">${r.grade||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td>${r.duedate||'-'}</td><td>${fmtM(toKRW(r.amount,r.amountCurrency))}</td><td>${billingMini(r.billing,r.amount,r.billingDates,r.billingCurrencies,r.amountCurrency)}</td><td><span class="badge badge-amber">${r.progress||'-'}</span></td><td>${r.status||'-'}</td><td style="white-space:nowrap">${actionBtns}</td></tr>`;
+    return`<tr><td>${i+1}</td><td><strong>${r.client}</strong></td><td><div>${r.contactName||''}</div><div style="color:var(--text3);font-size:11px">${r.contactPhone||''}</div></td><td><span class="badge badge-gray">${r.grade||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td>${r.duedate||'-'}</td><td>${fmtCurEx(r.amount, r.amountCurrency)}</td><td>${billingMini(r.billing,r.amount,r.billingDates,r.billingCurrencies,r.amountCurrency)}</td><td><span class="badge badge-amber">${r.progress||'-'}</span></td><td>${r.status||'-'}</td><td style="white-space:nowrap">${actionBtns}</td></tr>`;
   }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="6" class="text-right">계약 총액 누계</td><td class="text-mono color-accent">${fmtM(tAmt)}</td><td colspan="4"></td></tr>` : `<tr class="empty-row"><td colspan="11">데이터가 없습니다.</td></tr>`;
 }
 
@@ -1230,7 +1221,7 @@ function renderCertContract(){
   document.getElementById('certContractTable').querySelector('tbody').innerHTML=rows.length?rows.map((r,i)=>{
     tAmt += toKRW(r.amount,r.amountCurrency);
     let actionBtns = `<button class="btn btn-sm" onclick="editCert('${r.id}')">수정</button> <button class="btn btn-sm btn-danger" onclick="deleteCert('${r.id}')">삭제</button>`;
-    return`<tr><td>${i+1}</td><td><strong>${r.client}</strong></td><td><div>${r.contactName||''}</div><div style="color:var(--text3);font-size:11px">${r.contactPhone||''}</div></td><td><span class="badge badge-cert">${r.certtype||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td>${r.contractdate||'-'}</td><td>${fmtM(toKRW(r.amount,r.amountCurrency))}</td><td>${billingMini(r.billing,r.amount,r.billingDates,r.billingCurrencies,r.amountCurrency)}</td><td><span class="badge badge-green">${r.stage||'-'}</span></td><td>${r.issuedate||'-'}</td><td style="white-space:nowrap">${actionBtns}</td></tr>`;
+    return`<tr><td>${i+1}</td><td><strong>${r.client}</strong></td><td><div>${r.contactName||''}</div><div style="color:var(--text3);font-size:11px">${r.contactPhone||''}</div></td><td><span class="badge badge-cert">${r.certtype||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td>${r.contractdate||'-'}</td><td>${fmtCurEx(r.amount, r.amountCurrency)}</td><td>${billingMini(r.billing,r.amount,r.billingDates,r.billingCurrencies,r.amountCurrency)}</td><td><span class="badge badge-green">${r.stage||'-'}</span></td><td>${r.issuedate||'-'}</td><td style="white-space:nowrap">${actionBtns}</td></tr>`;
   }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="6" class="text-right">계약 총액 누계</td><td class="text-mono color-accent">${fmtM(tAmt)}</td><td colspan="4"></td></tr>` : `<tr class="empty-row"><td colspan="11">데이터가 없습니다.</td></tr>`;
 }
 
@@ -1244,14 +1235,13 @@ function renderCertConsult(){
   }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="6" class="text-right">견적 발송 누계</td><td class="text-mono color-accent">${fmtM(tQuote)}</td><td colspan="2"></td></tr>` : `<tr class="empty-row"><td colspan="9">상담 내역이 없습니다.</td></tr>`;
 }
 
-// Data Modals Logic
-function openMedModal(type){ medEditId=null; medIsContract=(type==='contract'); document.getElementById('modal-med').classList.add('open'); ['m-client','m-product','m-grade','m-biztype','m-manager','m-startdate','m-duedate','m-status','m-progress','m-amount','m-expense','m-consult-status','m-fail-reason','m-consult-etc','m-quote-date','m-quote-amount','m-quote-file','m-contact-name','m-contact-phone','m-contact-email','m-note','m-renewcycle','m-expiredate'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=''}); document.getElementById('m-stage-wrap').innerHTML=''; buildBillingGrid('medBillingGrid','medBillingTotal','m',[],[],[]); document.getElementById('medContractFields').style.display=medIsContract?'contents':'none'; document.getElementById('medConsultSection').style.display=medIsContract?'none':'contents'; }
+window.openMedModal = function(type){ medEditId=null; medIsContract=(type==='contract'); document.getElementById('modal-med').classList.add('open'); ['m-client','m-product','m-grade','m-biztype','m-manager','m-startdate','m-duedate','m-status','m-progress','m-amount','m-expense','m-consult-status','m-fail-reason','m-consult-etc','m-quote-date','m-quote-amount','m-quote-file','m-contact-name','m-contact-phone','m-contact-email','m-note','m-renewcycle','m-expiredate'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=''}); document.getElementById('m-stage-wrap').innerHTML=''; buildBillingGrid('medBillingGrid','medBillingTotal','m',[],[],[]); document.getElementById('medContractFields').style.display=medIsContract?'contents':'none'; document.getElementById('medConsultSection').style.display=medIsContract?'none':'contents'; }
 
-function openCertModal(type){ certEditId=null; certIsContract=(type==='contract'); document.getElementById('modal-cert').classList.add('open'); ['c-client','c-certtype','c-certtype-etc','c-manager','c-amount','c-expense','c-contractdate','c-stage','c-issuedate','c-contracted','c-date','c-fail-reason','c-quote-date','c-quote-amount','c-quote-file','c-contact-name','c-contact-phone','c-contact-email','c-etc-memo','c-note','c-renewcycle','c-expiredate'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=''}); buildBillingGrid('certBillingGrid','certBillingTotal','c',[],[],[]); document.getElementById('certContractFields').style.display=certIsContract?'contents':'none'; document.getElementById('certConsultSection').style.display=certIsContract?'none':'contents'; }
+window.openCertModal = function(type){ certEditId=null; certIsContract=(type==='contract'); document.getElementById('modal-cert').classList.add('open'); ['c-client','c-certtype','c-certtype-etc','c-manager','c-amount','c-expense','c-contractdate','c-stage','c-issuedate','c-contracted','c-date','c-fail-reason','c-quote-date','c-quote-amount','c-quote-file','c-contact-name','c-contact-phone','c-contact-email','c-etc-memo','c-note','c-renewcycle','c-expiredate'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=''}); buildBillingGrid('certBillingGrid','certBillingTotal','c',[],[],[]); document.getElementById('certContractFields').style.display=certIsContract?'contents':'none'; document.getElementById('certConsultSection').style.display=certIsContract?'none':'contents'; }
 
-function updateMedStageOptions(){ const b=document.getElementById('m-biztype').value, w=document.getElementById('m-stage-wrap'), s={'인허가':['자료수집 및 규제검토','기술문서 작성','신청서 제출','시험 검사','심사 및 보완','인허가 완료'],'QMS':['현황분석','절차서 작성','직원교육','내부감사','인증심사','CGMP 완료']}[b]||[]; if(!s.length){w.innerHTML='<span style="font-size:12px;color:var(--text3)">업무 유형을 먼저 선택하세요</span>';return;} const c=medEditId?(state.med.find(r=>r.id===medEditId)?.stages||[]):[]; w.innerHTML=s.map(st=>`<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:8px;background:${c.includes(st)?'var(--med-light)':'var(--surface)'};color:${c.includes(st)?'var(--med)':'var(--text2)'};font-weight:600;"><input type="checkbox" value="${st}" ${c.includes(st)?'checked':''} style="display:none" onchange="this.parentElement.style.background=this.checked?'var(--med-light)':'var(--surface)';this.parentElement.style.color=this.checked?'var(--med)':'var(--text2)'">${st}</label>`).join(''); }
+window.updateMedStageOptions = function(){ const b=document.getElementById('m-biztype').value, w=document.getElementById('m-stage-wrap'), s={'인허가':['자료수집 및 규제검토','기술문서 작성','신청서 제출','시험 검사','심사 및 보완','인허가 완료'],'QMS':['현황분석','절차서 작성','직원교육','내부감사','인증심사','CGMP 완료']}[b]||[]; if(!s.length){w.innerHTML='<span style="font-size:12px;color:var(--text3)">업무 유형을 먼저 선택하세요</span>';return;} const c=medEditId?(state.med.find(r=>r.id===medEditId)?.stages||[]):[]; w.innerHTML=s.map(st=>`<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:8px;background:${c.includes(st)?'var(--med-light)':'var(--surface)'};color:${c.includes(st)?'var(--med)':'var(--text2)'};font-weight:600;"><input type="checkbox" value="${st}" ${c.includes(st)?'checked':''} style="display:none" onchange="this.parentElement.style.background=this.checked?'var(--med-light)':'var(--surface)';this.parentElement.style.color=this.checked?'var(--med)':'var(--text2)'">${st}</label>`).join(''); }
 
-function editMed(id){
+window.editMed = function(id){
   const r=state.med.find(x=>x.id===id); if(!r)return; medEditId=id; medIsContract=(r.recordType==='contract'); document.getElementById('modal-med').classList.add('open');
   document.getElementById('m-client').value=r.client||''; document.getElementById('m-product').value=r.product||''; document.getElementById('m-grade').value=r.grade||''; document.getElementById('m-biztype').value=r.biztype||''; updateMedStageOptions();
   (r.stages||[]).forEach(st=>{ const cb=document.querySelector(`#m-stage-wrap input[value="${st}"]`); if(cb){ cb.checked=true; cb.parentElement.style.background='var(--med-light)'; cb.parentElement.style.color='var(--med)'; } });
@@ -1260,25 +1250,25 @@ function editMed(id){
   document.getElementById('medContractFields').style.display=medIsContract?'contents':'none'; document.getElementById('medConsultSection').style.display=medIsContract?'none':'contents';
 }
 
-function editCert(id){
+window.editCert = function(id){
   const r=state.cert.find(x=>x.id===id); if(!r)return; certEditId=id; certIsContract=(r.recordType==='contract'); document.getElementById('modal-cert').classList.add('open');
   document.getElementById('c-client').value=r.client||''; document.getElementById('c-certtype').value=r.certtype||''; document.getElementById('c-manager').value=r.manager||''; document.getElementById('c-amount').value=r.amount||''; document.getElementById('c-amount-currency').value=r.amountCurrency||'KRW'; document.getElementById('c-expense').value=r.expense||''; document.getElementById('c-expense-currency').value=r.expenseCurrency||'KRW'; document.getElementById('c-contractdate').value=r.contractdate||''; document.getElementById('c-stage').value=r.stage||''; document.getElementById('c-issuedate').value=r.issuedate||''; document.getElementById('c-contracted').value=r.contracted||''; document.getElementById('c-date').value=r.date||''; document.getElementById('c-fail-reason').value=r.failReason||''; document.getElementById('c-note').value=r.note||''; document.getElementById('c-quote-amount').value=r.quoteAmount||'';
   buildBillingGrid('certBillingGrid','certBillingTotal','c',r.billing,r.billingDates,r.billingCurrencies);
   document.getElementById('certContractFields').style.display=certIsContract?'contents':'none'; document.getElementById('certConsultSection').style.display=certIsContract?'none':'contents';
 }
 
-function convertToContract(team, id) {
+window.convertToContract = function(team, id) {
   if(!confirm('계약업체로 전환하시겠습니까? (이전 상담 데이터는 보존되며 속성이 변경됩니다)')) return;
   if(team === 'med') {
     const r = state.med.find(x => x.id === id); if(!r) return;
-    medEditId = r.id; // 기존 ID 유지
+    medEditId = r.id; 
     medIsContract = true;
     document.getElementById('modal-med').classList.add('open');
     document.getElementById('m-client').value=r.client||''; document.getElementById('m-product').value=r.product||''; document.getElementById('m-grade').value=r.grade||''; document.getElementById('m-biztype').value=r.biztype||''; updateMedStageOptions(); document.getElementById('m-manager').value=r.manager||''; document.getElementById('m-note').value=r.note||'';
     document.getElementById('medContractFields').style.display='contents'; document.getElementById('medConsultSection').style.display='none';
   } else {
     const r = state.cert.find(x => x.id === id); if(!r) return;
-    certEditId = r.id; // 기존 ID 유지
+    certEditId = r.id; 
     certIsContract = true;
     document.getElementById('modal-cert').classList.add('open');
     document.getElementById('c-client').value=r.client||''; document.getElementById('c-certtype').value=r.certtype||''; document.getElementById('c-manager').value=r.manager||''; document.getElementById('c-note').value=r.note||'';
@@ -1286,28 +1276,28 @@ function convertToContract(team, id) {
   }
 }
 
-async function saveMed(){
+window.saveMed = async function(){
   const id = medEditId || uid();
   const r={id,year:currentYear,recordType:medIsContract?'contract':'consult',client:document.getElementById('m-client').value,product:document.getElementById('m-product').value,grade:document.getElementById('m-grade').value,biztype:document.getElementById('m-biztype').value,manager:document.getElementById('m-manager').value,startdate:document.getElementById('m-startdate').value,duedate:document.getElementById('m-duedate').value,status:document.getElementById('m-status').value,progress:document.getElementById('m-progress').value,amount:Number(document.getElementById('m-amount').value),amountCurrency:document.getElementById('m-amount-currency').value,expense:Number(document.getElementById('m-expense').value||0),expenseCurrency:document.getElementById('m-expense-currency').value,billing:getBillingValues('m'),billingDates:getBillingDates('m'),billingCurrencies:getBillingCurrencies('m'),consultStatus:document.getElementById('m-consult-status').value,failReason:document.getElementById('m-fail-reason').value,note:document.getElementById('m-note').value,q:1,stages:Array.from(document.querySelectorAll('#m-stage-wrap input:checked')).map(x=>x.value),quoteAmount:Number(document.getElementById('m-quote-amount').value||0)};
   if(medEditId){ const idx=state.med.findIndex(x=>x.id===medEditId); if(idx>=0)state.med[idx]=r; } else { state.med.push(r); }
   await saveMedRecord(r); closeModal('med'); renderView(currentView);
 }
 
-async function saveCert(){
+window.saveCert = async function(){
   const id = certEditId || uid();
   const r={id,year:currentYear,recordType:certIsContract?'contract':'consult',client:document.getElementById('c-client').value,certtype:document.getElementById('c-certtype').value,manager:document.getElementById('c-manager').value,amount:Number(document.getElementById('c-amount').value),amountCurrency:document.getElementById('c-amount-currency').value,expense:Number(document.getElementById('c-expense').value||0),expenseCurrency:document.getElementById('c-expense-currency').value,contractdate:document.getElementById('c-contractdate').value,date:document.getElementById('c-date').value,stage:document.getElementById('c-stage').value,issuedate:document.getElementById('c-issuedate').value,contracted:document.getElementById('c-contracted').value,billing:getBillingValues('c'),billingDates:getBillingDates('c'),billingCurrencies:getBillingCurrencies('c'),failReason:document.getElementById('c-fail-reason').value,note:document.getElementById('c-note').value,q:1,quoteAmount:Number(document.getElementById('c-quote-amount').value||0)};
   if(certEditId){ const idx=state.cert.findIndex(x=>x.id===certEditId); if(idx>=0)state.cert[idx]=r; } else { state.cert.push(r); }
   await saveCertRecord(r); closeModal('cert'); renderView(currentView);
 }
 
-async function deleteMed(id){ 
+window.deleteMed = async function(id){ 
   if(confirm('해당 항목을 삭제하시겠습니까?')){ 
     state.med = state.med.filter(x=>x.id!==id); 
     try { await sb.from('med_records').delete().eq('id', id); } catch(e){ console.error(e); } 
     renderView(currentView); 
   } 
 }
-async function deleteCert(id){ 
+window.deleteCert = async function(id){ 
   if(confirm('해당 항목을 삭제하시겠습니까?')){ 
     state.cert = state.cert.filter(x=>x.id!==id); 
     try { await sb.from('cert_records').delete().eq('id', id); } catch(e){ console.error(e); } 
@@ -1316,11 +1306,11 @@ async function deleteCert(id){
 }
 
 // ── KPI / EVALUATION ──
-function renderKpi(){ document.getElementById('kpiYear').textContent=currentYear+'년 부문 성과지표'; if(kpiTab==='qual')renderKpiQual(); else if(kpiTab==='edu')renderKpiEdu(); else if(kpiTab==='profit')renderKpiProfit(); }
-function switchKpiTab(tab,el){ kpiTab=tab; document.querySelectorAll('[id^="kpi-tab-"]').forEach(b=>b.className='team-tab'); el.className='team-tab active-cert'; document.getElementById('kpi-sect-qual').style.display=tab==='qual'?'block':'none'; document.getElementById('kpi-sect-edu').style.display=tab==='edu'?'block':'none'; document.getElementById('kpi-sect-profit').style.display=tab==='profit'?'block':'none'; renderKpi(); }
-function updateQualRemark(member, idx, value){ if(!qualData[member]||!qualData[member][idx]) return; qualData[member][idx].remark = value; if(!state.qualData) state.qualData={}; state.qualData[member] = qualData[member]; saveState(); }
+window.renderKpi = function(){ document.getElementById('kpiYear').textContent=currentYear+'년 부문 성과지표'; if(kpiTab==='qual')renderKpiQual(); else if(kpiTab==='edu')renderKpiEdu(); else if(kpiTab==='profit')renderKpiProfit(); }
+window.switchKpiTab = function(tab,el){ kpiTab=tab; document.querySelectorAll('[id^="kpi-tab-"]').forEach(b=>b.className='team-tab'); el.className='team-tab active-cert'; document.getElementById('kpi-sect-qual').style.display=tab==='qual'?'block':'none'; document.getElementById('kpi-sect-edu').style.display=tab==='edu'?'block':'none'; document.getElementById('kpi-sect-profit').style.display=tab==='profit'?'block':'none'; renderKpi(); }
+window.updateQualRemark = function(member, idx, value){ if(!qualData[member]||!qualData[member][idx]) return; qualData[member][idx].remark = value; if(!state.qualData) state.qualData={}; state.qualData[member] = qualData[member]; saveState(); }
 function getEduDateRecord(m,qn,y){return(state.kpiEdu||{})[`${m}__${qn}__${y}`]||'';}
-function setEduDateRecord(m,qn,y,v){ if(!state.kpiEdu)state.kpiEdu={}; state.kpiEdu[`${m}__${qn}__${y}`]=v; saveState(); renderKpiQual(); }
+window.setEduDateRecord = function(m,qn,y,v){ if(!state.kpiEdu)state.kpiEdu={}; state.kpiEdu[`${m}__${qn}__${y}`]=v; saveState(); renderKpiQual(); }
 
 function renderKpiQual(){
   const y=currentYear, cont=document.getElementById('qualCards'); if(!cont)return;
@@ -1336,7 +1326,7 @@ function renderKpiQual(){
   }).join('');
 }
 
-function renderKpiEdu(){
+window.renderKpiEdu = function(){
   const y=currentYear, memberF=document.getElementById('eduMemberSel').value, typeF=document.getElementById('eduTypeSel').value;
   const records=(state.eduRecords||[]).filter(r=>{ const inY=r.dateStart&&r.dateStart.startsWith(String(y)); return inY&&(!memberF||r.member===memberF)&&(!typeF||r.type===typeF); });
   const cont=document.getElementById('eduList');
@@ -1348,13 +1338,13 @@ function renderKpiEdu(){
   }).join('');
 }
 
-function openEduAddModal(){ document.getElementById('modal-edu-add').classList.add('open'); }
-async function saveEduRecord(){
+window.openEduAddModal = function(){ document.getElementById('modal-edu-add').classList.add('open'); }
+window.saveEduRecord = async function(){
   const m=document.getElementById('edu-member').value, t=document.getElementById('edu-type').value; if(!m||!t){alert('필수값을 입력해 주세요.');return;}
   const r={id:uid(),member:m,type:t,dateStart:document.getElementById('edu-date-start').value,dateEnd:document.getElementById('edu-date-end').value,org:document.getElementById('edu-org').value,content:document.getElementById('edu-content').value,cert:document.getElementById('edu-cert').value,license:document.getElementById('edu-license').value,licenseName:document.getElementById('edu-license-name').value,direct:document.getElementById('edu-direct').value,indirect:document.getElementById('edu-indirect').value,note:document.getElementById('edu-note').value};
   if(!state.eduRecords)state.eduRecords=[]; state.eduRecords.push(r); await saveState(); closeModal('edu-add'); renderKpiEdu();
 }
-async function deleteEduRecord(id){ if(!confirm('삭제하시겠습니까?'))return; state.eduRecords=(state.eduRecords||[]).filter(x=>x.id!==id); await saveState(); renderKpiEdu(); }
+window.deleteEduRecord = async function(id){ if(!confirm('삭제하시겠습니까?'))return; state.eduRecords=(state.eduRecords||[]).filter(x=>x.id!==id); await saveState(); renderKpiEdu(); }
 
 function renderKpiProfit(){
   const cont = document.getElementById('kpi-profit-content'); if(!cont) return;
@@ -1374,15 +1364,15 @@ function renderKpiProfit(){
   cont.innerHTML = html + `</tbody></table></div></div></div>`;
 }
 
-function openQualModal(){document.getElementById('modal-qual').classList.add('open');}
-function verifyQualAdmin(){ if(document.getElementById('qual-admin-pw').value===state.pw){document.getElementById('qual-edit-area').style.display='block';} }
-function loadQualMember(){ const m=document.getElementById('qual-member-sel').value, list=document.getElementById('qual-member-list'); if(!m){list.innerHTML='';return;} const qs=qualData[m]||[]; list.innerHTML=qs.map((q,i)=>`<div style="margin-bottom:6px;">${q.name} <button class="btn btn-sm btn-danger" onclick="removeQualItem('${m}',${i})">삭제</button></div>`).join(''); }
-function addQualItem(){ const m=document.getElementById('qual-member-sel').value; if(!m)return; if(!qualData[m])qualData[m]=[]; qualData[m].push({name:'새 자격 (수정요망)',date:'',org:'',edu:null,remark:''}); loadQualMember(); }
-function removeQualItem(m,i){ qualData[m].splice(i,1); loadQualMember(); }
-async function saveQualData(){ state.qualData=qualData; await saveState(); closeModal('qual'); renderKpiQual(); }
+window.openQualModal = function(){document.getElementById('modal-qual').classList.add('open');}
+window.verifyQualAdmin = function(){ if(document.getElementById('qual-admin-pw').value===state.pw){document.getElementById('qual-edit-area').style.display='block';} }
+window.loadQualMember = function(){ const m=document.getElementById('qual-member-sel').value, list=document.getElementById('qual-member-list'); if(!m){list.innerHTML='';return;} const qs=qualData[m]||[]; list.innerHTML=qs.map((q,i)=>`<div style="margin-bottom:6px;">${q.name} <button class="btn btn-sm btn-danger" onclick="removeQualItem('${m}',${i})">삭제</button></div>`).join(''); }
+window.addQualItem = function(){ const m=document.getElementById('qual-member-sel').value; if(!m)return; if(!qualData[m])qualData[m]=[]; qualData[m].push({name:'새 자격 (수정요망)',date:'',org:'',edu:null,remark:''}); loadQualMember(); }
+window.removeQualItem = function(m,i){ qualData[m].splice(i,1); loadQualMember(); }
+window.saveQualData = async function(){ state.qualData=qualData; await saveState(); closeModal('qual'); renderKpiQual(); }
 
 // ── TASKS ──
-function renderTasks(){
+window.renderTasks = function(){
   const tf=document.getElementById('taskTypeFilter')?.value||'', pf=document.getElementById('taskPrioFilter')?.value||'', sf=document.getElementById('taskStatusFilter')?.value||'', sbSel=document.getElementById('taskSortSel')?.value||'date';
   
   let ts=(state.tasks||[]).filter(t=>{
@@ -1434,21 +1424,19 @@ function renderTasks(){
   }).join('') || '<div class="card"><div class="card-body" style="text-align:center;padding:48px;color:var(--text3);font-size:14px">조건에 맞는 내역이 없습니다.</div></div>';
 }
 
-function updateTaskToOptions(team){ const m=TEAM_MEMBERS[team]||TEAM_MEMBERS['공통']; document.getElementById('task-to').innerHTML='<option value="">담당자 선택</option>'+m.filter(x=>x!==currentUser).map(x=>`<option value="${x}">${x}</option>`).join(''); }
-function openTaskModal(type){ document.getElementById('modal-task').classList.add('open'); document.getElementById('task-from').value=currentUser; document.getElementById('task-type-hidden').value=type; updateTaskToOptions('공통'); }
-async function saveTask(){
+window.updateTaskToOptions = function(team){ const m=TEAM_MEMBERS[team]||TEAM_MEMBERS['공통']; document.getElementById('task-to').innerHTML='<option value="">담당자 선택</option>'+m.filter(x=>x!==currentUser).map(x=>`<option value="${x}">${x}</option>`).join(''); }
+window.openTaskModal = function(type){ document.getElementById('modal-task').classList.add('open'); document.getElementById('task-from').value=currentUser; document.getElementById('task-type-hidden').value=type; updateTaskToOptions('공통'); }
+window.saveTask = async function(){
   const r = {id:uid(), type:document.getElementById('task-type-hidden').value, team:document.getElementById('task-team').value, priority:document.getElementById('task-priority').value, from:currentUser, to:document.getElementById('task-to').value, linkedProject:'', estHours:document.getElementById('task-est-hours').value, date:document.getElementById('task-date').value, due:document.getElementById('task-due').value, content:document.getElementById('task-content').value, completedDate:''};
   if(!state.tasks)state.tasks=[]; state.tasks.push(r); await saveState(); closeModal('task'); renderTasks();
 }
-function openTaskEdit(id){
+window.openTaskEdit = function(id){
   const t=(state.tasks||[]).find(x=>x.id===id); if(!t)return; editingTaskId=id; document.getElementById('taskModalTitle').textContent=t.type==='order'?'📋 업무지시 수정':'🤝 협조요청 수정';
   document.getElementById('task-type-hidden').value=t.type||'order'; document.getElementById('task-from').value=t.from||''; document.getElementById('task-date').value=t.date||''; document.getElementById('task-due').value=t.due||''; document.getElementById('task-team').value=t.team||'공통'; updateTaskToOptions(t.team||'공통'); document.getElementById('task-to').value=t.to||''; document.getElementById('task-project').value=t.linkedProject||''; document.getElementById('task-est-hours').value=t.estHours||''; document.getElementById('task-content').value=t.content||''; document.getElementById('task-priority').value=t.priority||'일반'; document.getElementById('modal-task').classList.add('open');
 }
-async function deleteTask(id){ if(confirm('삭제하시겠습니까?')){ state.tasks = state.tasks.filter(x=>x.id!==id); await saveState(); renderTasks(); } }
-function openTaskComplete(id){ completingTaskId=id; document.getElementById('task-complete-date').value=new Date().toISOString().slice(0,10); document.getElementById('modal-task-complete').classList.add('open'); }
-async function confirmTaskComplete(){ const t=(state.tasks||[]).find(x=>x.id===completingTaskId); if(!t)return; t.completedDate=document.getElementById('task-complete-date').value; t.actHours=document.getElementById('task-act-hours').value; t.completeNote=document.getElementById('task-complete-note').value; await saveState(); closeModal('task-complete'); renderTasks(); }
-async function confirmTask(id){ const t=(state.tasks||[]).find(x=>x.id===id); if(!t)return; t.confirmedDate=new Date().toISOString().slice(0,10); await saveState(); renderTasks(); }
+window.deleteTask = async function(id){ if(confirm('삭제하시겠습니까?')){ state.tasks = state.tasks.filter(x=>x.id!==id); await saveState(); renderTasks(); } }
+window.openTaskComplete = function(id){ completingTaskId=id; document.getElementById('task-complete-date').value=new Date().toISOString().slice(0,10); document.getElementById('modal-task-complete').classList.add('open'); }
+window.confirmTaskComplete = async function(){ const t=(state.tasks||[]).find(x=>x.id===completingTaskId); if(!t)return; t.completedDate=document.getElementById('task-complete-date').value; t.actHours=document.getElementById('task-act-hours').value; t.completeNote=document.getElementById('task-complete-note').value; await saveState(); closeModal('task-complete'); renderTasks(); }
+window.confirmTask = async function(id){ const t=(state.tasks||[]).find(x=>x.id===id); if(!t)return; t.confirmedDate=new Date().toISOString().slice(0,10); await saveState(); renderTasks(); }
 
 </script>
-</body>
-</html>
