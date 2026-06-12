@@ -83,8 +83,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text1);font-size:1
 .stat-bar{height:4px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden}
 .stat-fill{height:100%;border-radius:2px;transition:width 1s ease}
 .fill-med{background:var(--med)}.fill-cert{background:var(--cert)}.fill-accent{background:var(--accent)}.fill-danger{background:var(--danger)}
+.fill-success{background:var(--success)}
 
-.workspace-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+.workspace-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;transition:grid-template-columns 0.3s ease;}
 .ws-list{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;padding-right:4px}
 .ws-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:border .2s}
 .ws-item:hover{border-color:var(--text3)}
@@ -93,7 +94,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text1);font-size:1
 
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:var(--bg);color:var(--text3);font-weight:700;padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);font-size:12px;white-space:nowrap}
+th{background:var(--bg);color:var(--text3);font-weight:700;padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);font-size:12px;white-space:nowrap;cursor:pointer;transition:color 0.2s;}
+th:hover{color:var(--text1)}
 td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text1);}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(255,255,255,.03)}
@@ -113,13 +115,12 @@ tr:hover td{background:rgba(255,255,255,.03)}
 .team-tab.active-med{background:var(--med);color:#fff;border-color:var(--med)}
 .team-tab.active-cert{background:var(--cert);color:#fff;border-color:var(--cert)}
 
-.q-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
-.q-card{border:1px solid var(--border);border-radius:12px;padding:16px 20px;background:var(--card)}
-.q-label{font-size:12px;color:var(--med);font-weight:800;letter-spacing:.05em;margin-bottom:12px;text-transform:uppercase}
-.q-actual{font-size:22px;font-weight:700;font-family:var(--mono);margin:6px 0;color:var(--text1)}
-.q-rate{font-size:12px;font-weight:700}
-.q-bar{height:4px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden;}
-.q-fill{height:100%;border-radius:2px;}
+.m-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
+.m-card{border:1px solid var(--border);border-radius:12px;padding:12px 16px;background:var(--card)}
+.m-label{font-size:11px;color:var(--med);font-weight:800;letter-spacing:.05em;margin-bottom:8px;text-transform:uppercase}
+.m-actual{font-size:18px;font-weight:700;font-family:var(--mono);margin:4px 0;color:var(--text1)}
+.m-input{width:100%;border:1px solid var(--border2);border-radius:6px;padding:6px;font-size:13px;font-family:var(--mono);background:var(--bg);color:var(--text1);outline:none;margin-top:4px;}
+
 .chart-wrap{position:relative;height:280px;width:100%}
 
 .billing-mini{font-size:11px;color:var(--text2);line-height:1.6}
@@ -138,7 +139,11 @@ tr:hover td{background:rgba(255,255,255,.03)}
 .btn-cert{background:var(--cert);color:#fff;border-color:var(--cert)}.btn-cert:hover{background:#14916A}
 .btn-primary{background:var(--text1);color:var(--bg);border-color:var(--text1)}
 .btn-danger{background:var(--danger-light);color:var(--danger);border-color:var(--danger)}
+.btn-success{background:var(--success);color:#fff;border-color:var(--success)}
 .btn-sm{padding:5px 10px;font-size:11px;border-radius:6px;}
+
+.delay-input{border:1px solid var(--border);background:var(--bg);color:var(--text1);font-size:11px;padding:6px 10px;border-radius:6px;width:100%;margin-top:6px;outline:none;}
+.delay-input:focus{border-color:var(--warn);}
 
 /* ── Modals ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;overflow-y:auto;backdrop-filter:blur(3px)}
@@ -164,6 +169,7 @@ input[type=date]{color:#fff;color-scheme:dark}
 .logo-img { max-width: 180px; height: auto; display: block; margin: 0 auto; }
 </style>
 </head>
+
 <body>
 
 <div id="loginScreen">
@@ -175,14 +181,11 @@ input[type=date]{color:#fff;color-scheme:dark}
   <label class="login-label">사용자 이름</label>
   <select class="login-input" id="loginUser">
     <option value="">이름 선택</option>
-    <option>지윤규</option>
-    <option>유재용</option><option>윤미령</option><option>차상호</option>
-    <option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option>
-    <option>Zhao Lijie</option>
-    <option>대표이사</option>
+    <option>지윤규</option><option>유재용</option><option>윤미령</option><option>차상호</option>
+    <option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option><option>Zhao Lijie</option><option>대표이사</option>
   </select>
   <label class="login-label">비밀번호</label>
-  <input class="login-input" type="password" id="loginPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()">
+  <input class="login-input" type="password" id="loginPw" placeholder="비밀번호 입력 (초기: cirs2026!)" onkeydown="if(event.key==='Enter')doLogin()">
   <button class="login-btn" onclick="doLogin()">로그인</button>
   <div class="login-err" id="loginErr"></div>
 </div>
@@ -192,13 +195,13 @@ input[type=date]{color:#fff;color-scheme:dark}
 <div class="sidebar">
   <div class="sidebar-logo">
     <div id="sidebarLogoContainer" style="max-width:130px; margin: 0 auto;"></div>
-    <div class="sys" id="sidebarUser">제품 인허가 관리</div>
+    <div class="sys" id="sidebarUser">제품 인허가 부문</div>
   </div>
   <div class="sidebar-nav">
     <div class="nav-label">대시보드</div>
     <div class="nav-item active" onclick="nav('dashboard',this)"><span class="dot dot-all"></span>전체 현황</div>
     <div class="nav-label">수입 계획</div>
-    <div class="nav-item" onclick="nav('revenue',this)"><span class="dot dot-all"></span>분기/연간 계획</div>
+    <div class="nav-item" onclick="nav('revenue',this)"><span class="dot dot-all"></span>월별/연간 계획</div>
     <div class="nav-label">의료기기팀</div>
     <div class="nav-item" onclick="nav('medContract',this)"><span class="dot dot-med"></span>계약업체</div>
     <div class="nav-item" onclick="nav('medConsult',this)"><span class="dot dot-med"></span>상담</div>
@@ -247,33 +250,30 @@ input[type=date]{color:#fff;color-scheme:dark}
   <div id="dashAlerts" style="margin-bottom:20px"></div>
   <div class="stat-grid" id="dashStats"></div>
   
-  <div class="workspace-grid">
-    <div class="card">
-      <div class="card-header"><span class="card-title">🚀 내 작업 보드 (수신된 업무)</span><span class="badge badge-cert" id="myTaskCount">0건</span></div>
-      <div class="card-body" style="padding:16px"><div class="ws-list" id="myTasksList"></div></div>
+  <div class="workspace-grid" id="workspaceGrid">
+    <div class="card"><div class="card-header"><span class="card-title">🚀 내 작업 보드 (수신된 업무)</span><span class="badge badge-cert" id="myTaskCount">0건</span></div><div class="card-body" style="padding:16px"><div class="ws-list" id="myTasksList"></div></div></div>
+    <div class="card"><div class="card-header"><span class="card-title">📂 프로젝트 진척 모니터링 (진행중 계약)</span><span class="badge badge-med" id="myProjectCount">0건</span></div><div class="card-body" style="padding:16px"><div class="ws-list" id="myProjectsList"></div></div></div>
+    <div class="card" id="dashConsultBox"><div class="card-header"><span class="card-title">💬 현재 상담 진행 현황</span><span class="badge badge-warn">장기 보류 확인</span></div><div class="card-body" style="padding:16px"><div class="ws-list" id="speedStarList"></div></div></div>
+  </div>
+
+  <div class="card" id="dashBottleneckBox" style="display:none; border:1px solid var(--danger); border-left:4px solid var(--danger); margin-bottom:20px;">
+    <div class="card-header" style="background:rgba(240,82,82,0.05)">
+      <span class="card-title">🚧 프로젝트 병목 구간 분석 (장기 지연)</span>
+      <span class="badge badge-red">지연 사유 입력 요망</span>
     </div>
-    <div class="card">
-      <div class="card-header"><span class="card-title">📂 프로젝트 진척 모니터링</span><span class="badge badge-med" id="myProjectCount">0건</span></div>
-      <div class="card-body" style="padding:16px"><div class="ws-list" id="myProjectsList"></div></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><span class="card-title">🏆 스피드 지표 및 ⚠️ 장기 지연</span><span class="badge badge-warn">이번 달 완료 / 지연</span></div>
-      <div class="card-body" style="padding:16px"><div class="ws-list" id="speedStarList"></div></div>
+    <div class="card-body" style="padding:16px"><div class="ws-list" id="bottleneckList"></div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px; border:1px solid var(--border2); border-left:4px solid var(--warn);">
+    <div class="card-header" style="background:rgba(255,255,255,0.02)"><span class="card-title">🔔 다가오는 수금 예정 일정 및 인증 만료 (D-30 이내)</span></div>
+    <div class="card-body" style="padding:16px">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; max-height:220px; overflow-y:auto; padding-right:6px;" id="billingAlertList"></div>
     </div>
   </div>
 
-  <div class="grid-2" style="margin-bottom:20px">
-    <div class="card"><div class="card-header"><span class="card-title">통합 분기별 수입 달성률 <span id="dashYear" style="font-size:12px;color:var(--text3);font-weight:500;margin-left:8px"></span></span></div>
-      <div class="card-body"><div class="chart-wrap"><canvas id="chartQuarter"></canvas></div></div></div>
-    <div class="card"><div class="card-header"><span class="card-title">누계 달성 추이</span><span style="font-size:11px;color:var(--text3)">목표 vs 실적</span></div>
-      <div class="card-body"><div class="chart-wrap"><canvas id="chartDashLine"></canvas></div></div></div>
-  </div>
-  
-  <div class="grid-2">
-    <div class="card"><div class="card-header"><span class="card-title">🔵 의료기기팀 최근 프로젝트</span></div>
-      <div class="card-body" style="padding:0"><div class="table-wrap"><table id="dashMedTable"><thead><tr><th>업체명</th><th>구분</th><th>단계</th><th>담당자</th><th>상태</th></tr></thead><tbody></tbody></table></div></div></div>
-    <div class="card"><div class="card-header"><span class="card-title">🟢 제품환경인증팀 최근 프로젝트</span></div>
-      <div class="card-body" style="padding:0"><div class="table-wrap"><table id="dashCertTable"><thead><tr><th>업체명</th><th>구분</th><th>인증종류</th><th>단계</th><th>담당자</th></tr></thead><tbody></tbody></table></div></div></div>
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header"><span class="card-title">통합 월별 수입 달성률 및 누적 추이 <span id="dashYear" style="font-size:12px;color:var(--text3);font-weight:500;margin-left:8px"></span></span></div>
+    <div class="card-body"><div class="chart-wrap" style="height:320px"><canvas id="chartDashMixed"></canvas></div></div>
   </div>
 </div>
 
@@ -284,112 +284,59 @@ input[type=date]{color:#fff;color-scheme:dark}
     <button class="team-tab" id="rev-tab-total" onclick="switchRevTeam('total',this)">전체 합산</button>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-    <div style="font-size:15px;font-weight:700;color:var(--text1)">분기별 수입 목표 설정</div>
+    <div style="font-size:15px;font-weight:700;color:var(--text1)">월별 수입 목표 설정 (단위: 백만 원)</div>
     <div id="annualSummary" style="font-size:13px;color:var(--text2)"></div>
   </div>
-  <div class="q-grid" id="qCards"></div>
-  
+  <div class="m-grid" id="mCards"></div>
   <div class="grid-2" style="margin-bottom:20px">
-    <div class="card"><div class="card-header"><span class="card-title" id="revBarTitle">연간 수입목표 vs 수입실적</span></div>
-      <div class="card-body"><div class="chart-wrap"><canvas id="chartRevBar"></canvas></div></div></div>
-    <div class="card"><div class="card-header"><span class="card-title">인증 서비스별 수입 기여도 (수입 실적 기준)</span></div>
-      <div class="card-body"><div class="chart-wrap"><canvas id="chartTopServices"></canvas></div></div></div>
+    <div class="card"><div class="card-header"><span class="card-title" id="revBarTitle">월별 수입 실적 및 누적 추이</span></div><div class="card-body"><div class="chart-wrap"><canvas id="chartRevMixed"></canvas></div></div></div>
+    <div class="card"><div class="card-header"><span class="card-title">인증 서비스별 수입 기여도 (수입 실적 기준)</span></div><div class="card-body"><div class="chart-wrap"><canvas id="chartTopServices"></canvas></div></div></div>
   </div>
-
-  <div class="card" style="margin-bottom:20px">
-    <div class="card-header"><span class="card-title">누계 달성 추이</span></div>
-    <div class="card-body"><div class="chart-wrap" style="height:240px"><canvas id="chartRevLine"></canvas></div></div>
-  </div>
-
   <div class="card">
     <div class="card-header">
-      <div>
-        <span class="card-title">계약별 매출 내역</span>
-        <span id="revContractCount" style="font-size:12px;color:var(--text3);margin-left:8px"></span>
-      </div>
+      <div><span class="card-title">계약별 수입 결산 내역</span><span id="revContractCount" style="font-size:12px;color:var(--text3);margin-left:8px"></span></div>
       <button class="btn btn-sm btn-primary" onclick="downloadCSV('revContractTable', '계약매출내역')">엑셀 다운로드</button>
     </div>
     <div class="card-body" style="padding:0"><div class="table-wrap"><table id="revContractTable">
-      <thead><tr><th style="width:4%;text-align:center">#</th><th>팀</th><th>업체명</th><th>항목</th><th style="text-align:center">Q</th><th>계약총액</th><th>수입합계</th><th>잔액</th><th>담당자</th></tr></thead>
+      <thead><tr><th style="width:4%;text-align:center">#</th><th>팀</th><th>업체명</th><th>항목</th><th style="text-align:center">발생월</th><th>계약총액</th><th>수입합계</th><th>잔액</th><th>담당자</th></tr></thead>
       <tbody></tbody>
     </table></div></div>
   </div>
 </div>
 
 <div class="view" id="view-medContract">
-  <div class="section-head">
-    <span class="section-title" style="font-size:18px">의료기기팀 · 계약업체</span>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="downloadCSV('medContractTable', '의료기기팀_계약업체')">엑셀 다운로드</button>
-      <button class="btn btn-med" onclick="openMedModal('contract')" id="medAddContractBtn">+ 계약업체 추가</button>
-    </div>
-  </div>
-  <div class="stat-grid" id="medContractStats" style="grid-template-columns: repeat(4, 1fr);"></div>
-  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap">
-    <table id="medContractTable">
-      <thead id="medContractThead"></thead>
-      <tbody></tbody>
-    </table>
-  </div></div></div>
+  <div class="section-head"><span class="section-title">의료기기팀 · 계약업체</span><div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="downloadCSV('medContractTable', '의료기기팀_계약업체')">엑셀 다운로드</button><button class="btn btn-med" onclick="openMedModal('contract')" id="medAddContractBtn">+ 계약업체 추가</button></div></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medContractTable"><thead id="medContractThead"></thead><tbody></tbody></table></div></div></div>
 </div>
 
 <div class="view" id="view-medConsult">
-  <div class="section-head">
-    <span class="section-title" style="font-size:18px">의료기기팀 · 상담</span>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="downloadCSV('medConsultTable', '의료기기팀_상담내역')">엑셀 다운로드</button>
-      <button class="btn btn-med" onclick="openMedModal('consult')" id="medAddConsultBtn">+ 상담 추가</button>
-    </div>
-  </div>
-  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap">
-    <table id="medConsultTable">
-      <thead><tr><th>#</th><th>업체명</th><th>제품명</th><th>등급</th><th>담당자</th><th>접수일 ↑</th><th>완료목표일</th><th>진행상태</th><th>상태/사유</th><th>견적 발송</th><th>기타/비고</th><th>관리</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div></div></div>
+  <div class="section-head"><span class="section-title">의료기기팀 · 상담</span><div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="downloadCSV('medConsultTable', '의료기기팀_상담내역')">엑셀 다운로드</button><button class="btn btn-med" onclick="openMedModal('consult')" id="medAddConsultBtn">+ 상담 추가</button></div></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medConsultTable"><thead id="medConsultThead"></thead><tbody></tbody></table></div></div></div>
+  <div class="section-head" style="margin-top:30px;margin-bottom:12px;"><span class="section-title" style="font-size:15px; color:var(--warn)">📂 재상담 대기 (보류 및 실주 내역 아카이브)</span></div>
+  <div class="card" style="border:1px solid var(--border2);"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medConsultArchiveTable"><thead id="medConsultArchiveThead"></thead><tbody></tbody></table></div></div></div>
 </div>
 
 <div class="view" id="view-certContract">
-  <div class="section-head">
-    <span class="section-title" style="font-size:18px">제품환경인증팀 · 계약업체</span>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="downloadCSV('certContractTable', '인증팀_계약업체')">엑셀 다운로드</button>
-      <button class="btn btn-cert" onclick="openCertModal('contract')" id="certAddContractBtn">+ 계약업체 추가</button>
-    </div>
-  </div>
-  <div class="stat-grid" id="certContractStats" style="grid-template-columns: repeat(4, 1fr);"></div>
-  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap">
-    <table id="certContractTable">
-      <thead id="certContractThead"></thead>
-      <tbody></tbody>
-    </table>
-  </div></div></div>
+  <div class="section-head"><span class="section-title">제품환경인증팀 · 계약업체</span><div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="downloadCSV('certContractTable', '인증팀_계약업체')">엑셀 다운로드</button><button class="btn btn-cert" onclick="openCertModal('contract')" id="certAddContractBtn">+ 계약업체 추가</button></div></div>
+  <div class="card" style="margin-bottom:30px;"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certContractTable"><thead id="certContractThead"></thead><tbody></tbody></table></div></div></div>
+  <div class="section-head" style="margin-bottom:12px;"><span class="section-title" style="font-size:15px; color:var(--success)">✅ 완료된 계약 (미수금 관리)</span></div>
+  <div class="card" style="border:1px solid var(--success);"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certContractDoneTable"><thead id="certContractDoneThead"></thead><tbody></tbody></table></div></div></div>
 </div>
 
 <div class="view" id="view-certConsult">
-  <div class="section-head">
-    <span class="section-title" style="font-size:18px">제품환경인증팀 · 상담</span>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="downloadCSV('certConsultTable', '인증팀_상담내역')">엑셀 다운로드</button>
-      <button class="btn btn-cert" onclick="openCertModal('consult')" id="certAddConsultBtn">+ 상담 추가</button>
-    </div>
-  </div>
-  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap">
-    <table id="certConsultTable">
-      <thead><tr><th>#</th><th>업체명</th><th>인증종류</th><th>담당자</th><th>상담일 ↑</th><th>진행상태</th><th>견적 발송</th><th>비고</th><th>관리</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div></div></div>
+  <div class="section-head"><span class="section-title">제품환경인증팀 · 상담</span><div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="downloadCSV('certConsultTable', '인증팀_상담내역')">엑셀 다운로드</button><button class="btn btn-cert" onclick="openCertModal('consult')" id="certAddConsultBtn">+ 상담 추가</button></div></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certConsultTable"><thead id="certConsultThead"></thead><tbody></tbody></table></div></div></div>
+  <div class="section-head" style="margin-top:30px;margin-bottom:12px;"><span class="section-title" style="font-size:15px; color:var(--warn)">📂 재상담 대기 (보류 및 실주 내역 아카이브)</span></div>
+  <div class="card" style="border:1px solid var(--border2);"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certConsultArchiveTable"><thead id="certConsultArchiveThead"></thead><tbody></tbody></table></div></div></div>
 </div>
 
 <div class="view" id="view-kpi">
   <div style="display:flex;gap:12px;margin-bottom:24px;align-items:center">
     <button class="team-tab active-cert" id="kpi-tab-qual" onclick="switchKpiTab('qual',this)">🏅 자격·법정교육</button>
     <button class="team-tab" id="kpi-tab-edu" onclick="switchKpiTab('edu',this)">📚 교육 이력</button>
-    <button class="team-tab" id="kpi-tab-profit" onclick="switchKpiTab('profit',this)">💰 개인별 수익률</button>
+    <button class="team-tab" id="kpi-tab-profit" onclick="switchKpiTab('profit',this)" style="display:none;">💰 개인별 수익률</button>
     <span style="margin-left:auto;font-size:14px;font-weight:700;color:var(--text2)" id="kpiYear"></span>
   </div>
-  
   <div id="kpi-sect-qual">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <span class="section-title" style="font-size:16px">구성원 자격 및 법정교육 현황</span>
@@ -400,26 +347,20 @@ input[type=date]{color:#fff;color-scheme:dark}
     </div>
     <div id="qualCards" style="width:100%"></div>
   </div>
-  
   <div id="kpi-sect-edu" style="display:none">
     <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-      <select class="form-select" id="eduMemberSel" onchange="renderKpiEdu()" style="width:150px">
-        <option value="">전체 구성원</option><option>지윤규</option><option>유재용</option><option>윤미령</option><option>차상호</option><option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option><option>대표이사</option><option>Zhao Lijie</option>
-      </select>
-      <select class="form-select" id="eduTypeSel" onchange="renderKpiEdu()" style="width:140px">
-        <option value="">전체 유형</option><option value="역량강화">역량강화</option><option value="직무교육">직무교육</option><option value="보수교육">보수교육</option>
-      </select>
+      <select class="form-select" id="eduMemberSel" onchange="renderKpiEdu()" style="width:150px"><option value="">전체 구성원</option><option>지윤규</option><option>유재용</option><option>윤미령</option><option>차상호</option><option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option><option>대표이사</option><option>Zhao Lijie</option></select>
+      <select class="form-select" id="eduTypeSel" onchange="renderKpiEdu()" style="width:140px"><option value="">전체 유형</option><option value="역량강화">역량강화</option><option value="직무교육">직무교육</option><option value="보수교육">보수교육</option></select>
       <button class="btn btn-cert" onclick="openEduAddModal()" style="margin-left:auto" id="eduAddBtn">+ 교육 추가</button>
     </div>
     <div id="eduList"></div>
   </div>
-
   <div id="kpi-sect-profit" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <span class="section-title" style="font-size:16px">개인별 업무 수익 기여도 (계약 기준)</span>
     </div>
     <div style="margin-bottom:20px;padding:12px 16px;background:rgba(232,101,42,.1);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;font-size:13px;color:var(--text2)">
-      각 담당자가 수주한 계약의 <strong>총액, 예상 지출 비용, 순이익 및 마진율</strong>을 평가합니다. (최고 관리자는 전체 순위 열람 가능)
+      각 담당자가 수주한 계약의 <strong>총액, 세부 지출 비용(심사비/출장비 등), 순이익 및 마진율</strong>을 평가합니다. (최고 관리자 및 임원 전용 열람)
     </div>
     <div id="kpi-profit-content"></div>
   </div>
@@ -427,40 +368,14 @@ input[type=date]{color:#fff;color-scheme:dark}
 
 <div class="view" id="view-tasks">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-    <div style="display:flex;align-items:center;gap:12px">
-      <span class="section-title" style="font-size:18px">업무지시서</span>
-      <span id="taskUserBadge" style="font-size:12px;padding:4px 12px;background:var(--med-light);color:var(--med);border-radius:20px;font-weight:700"></span>
-    </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-cert" onclick="openTaskModal('order')" id="taskOrderBtn">📋 업무지시 작성</button>
-      <button class="btn btn-med" onclick="openTaskModal('collab')" id="taskCollabBtn">🤝 협조요청 작성</button>
-    </div>
-  </div>
-  <div id="taskLoginWarn" style="display:none;margin-bottom:16px;padding:12px 16px;background:var(--warn-light);border:1px solid var(--warn);border-radius:10px;font-size:13px;color:var(--warn);font-weight:600">
-    ⚠ 이름을 선택하지 않고 로그인했습니다.
-    <button class="btn btn-sm" onclick="doLogout()" style="margin-left:12px">재로그인</button>
+    <div style="display:flex;align-items:center;gap:12px"><span class="section-title" style="font-size:18px">업무지시서 및 협조요청</span><span id="taskUserBadge" style="font-size:12px;padding:4px 12px;background:var(--med-light);color:var(--med);border-radius:20px;font-weight:700"></span></div>
+    <div style="display:flex;gap:10px"><button class="btn btn-cert" onclick="openTaskModal('order')" id="taskOrderBtn">📋 업무지시 작성</button><button class="btn btn-med" onclick="openTaskModal('collab')" id="taskCollabBtn">🤝 협조요청 작성</button></div>
   </div>
   <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-    <select class="form-select" id="taskSortSel" onchange="renderTasks()" style="width:120px">
-      <option value="date">최신순</option>
-      <option value="name">이름순</option>
-    </select>
-    <select class="form-select" id="taskTypeFilter" onchange="renderTasks()" style="width:130px">
-      <option value="">전체 유형</option>
-      <option value="order">📋 업무지시</option>
-      <option value="collab">🤝 협조요청</option>
-    </select>
-    <select class="form-select" id="taskPrioFilter" onchange="renderTasks()" style="width:130px">
-      <option value="">전체 우선순위</option>
-      <option value="긴급">🔴 긴급</option>
-      <option value="일반">🟡 일반</option>
-      <option value="낮음">🟢 낮음</option>
-    </select>
-    <select class="form-select" id="taskStatusFilter" onchange="renderTasks()" style="width:120px">
-      <option value="">전체 상태</option>
-      <option value="진행중">진행중</option>
-      <option value="완료">완료</option>
-    </select>
+    <select class="form-select" id="taskSortSel" onchange="renderTasks()" style="width:120px"><option value="date">최신순</option><option value="name">이름순</option></select>
+    <select class="form-select" id="taskTypeFilter" onchange="renderTasks()" style="width:130px"><option value="">전체 유형</option><option value="order">📋 업무지시</option><option value="collab">🤝 협조요청</option></select>
+    <select class="form-select" id="taskPrioFilter" onchange="renderTasks()" style="width:130px"><option value="">전체 우선순위</option><option value="긴급">🔴 긴급</option><option value="일반">🟡 일반</option><option value="낮음">🟢 낮음</option></select>
+    <select class="form-select" id="taskStatusFilter" onchange="renderTasks()" style="width:120px"><option value="">전체 상태</option><option value="진행중">진행중</option><option value="완료">완료</option></select>
   </div>
   <div id="taskList"></div>
 </div>
@@ -491,7 +406,7 @@ input[type=date]{color:#fff;color-scheme:dark}
         <option value="">선택</option><option value="인허가">제품 인허가</option><option value="QMS">QMS 구축</option>
       </select>
     </div>
-    <div class="form-group full"><label class="form-label">진행 단계 (복수 선택)</label>
+    <div class="contract-only-med form-group full"><label class="form-label">진행 단계 (복수 선택)</label>
       <div id="m-stage-wrap" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border:1px solid var(--border2);border-radius:8px;background:var(--surface);min-height:42px;align-items:center">
         <span style="font-size:12px;color:var(--text3)">업무 유형을 먼저 선택하세요</span>
       </div>
@@ -501,14 +416,14 @@ input[type=date]{color:#fff;color-scheme:dark}
         <option value="">선택</option><option>유재용</option><option>윤미령</option><option>차상호</option><option>지윤규</option>
       </select>
     </div>
-    <div class="form-group"><label class="form-label">접수일</label><input class="form-input" type="date" id="m-startdate"></div>
-    <div class="form-group"><label class="form-label">완료 목표일</label><input class="form-input" type="date" id="m-duedate"></div>
-    <div class="form-group"><label class="form-label">진행 상태</label>
+    <div class="form-group"><label class="form-label" id="m-date-label">상담일</label><input class="form-input" type="date" id="m-startdate"></div>
+    <div class="contract-only-med form-group"><label class="form-label">완료 목표일</label><input class="form-input" type="date" id="m-duedate"></div>
+    <div class="form-group" style="display:none;"><label class="form-label">진행 상태 (히든)</label>
       <select class="form-select" id="m-status">
         <option value="진행중">진행중</option><option value="완료">완료</option><option value="보류">보류</option><option value="취소">취소</option>
       </select>
     </div>
-    <div class="form-group"><label class="form-label">현재 메인 단계</label>
+    <div class="contract-only-med form-group"><label class="form-label">현재 메인 단계</label>
       <select class="form-select" id="m-progress">
         <option value="">선택</option>
         <option value="신청서 작성">신청서 작성</option>
@@ -518,32 +433,40 @@ input[type=date]{color:#fff;color-scheme:dark}
       </select>
     </div>
     
-    <div class="form-group full" id="m-amount-wrap">
+    <div class="contract-only-med form-group full" id="m-amount-wrap">
       <hr class="section-divider">
       <div class="section-sub" style="margin-bottom:10px">계약 및 이익금 (관리자 분석용)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div>
-          <label class="form-label" style="display:block;margin-bottom:6px">계약 총액 *</label>
-          <div style="display:flex;gap:8px">
-            <select id="m-amount-currency" class="form-select" style="width:100px;flex-shrink:0" onchange="calcMedBilling()">
-              <option value="KRW">KRW</option><option value="RMB">RMB</option><option value="USD">USD</option>
-            </select>
-            <input class="form-input text-mono" type="number" id="m-amount" placeholder="0" oninput="calcMedBilling()" style="flex:1">
-          </div>
+      <div>
+        <label class="form-label" style="display:block;margin-bottom:6px">계약 총액 *</label>
+        <div style="display:flex;gap:8px">
+          <select id="m-amount-currency" class="form-select" style="width:100px;flex-shrink:0" onchange="calcBilling('m','medBillingTotal')">
+            <option value="KRW">KRW</option><option value="RMB">RMB</option><option value="USD">USD</option>
+          </select>
+          <input class="form-input text-mono" type="number" id="m-amount" placeholder="0" oninput="calcBilling('m','medBillingTotal')" style="flex:1">
         </div>
-        <div id="m-expense-section" style="display:none">
-          <label class="form-label" style="display:block;margin-bottom:6px">예상 지출 비용 (순이익 계산용)</label>
-          <div style="display:flex;gap:8px">
-            <select id="m-expense-currency" class="form-select" style="width:100px;flex-shrink:0" onchange="calcMedBilling()">
-              <option value="KRW">KRW</option><option value="RMB">RMB</option><option value="USD">USD</option>
-            </select>
-            <input class="form-input text-mono" type="number" id="m-expense" placeholder="외주/출장비 등" oninput="calcMedBilling()" style="flex:1">
-          </div>
+      </div>
+    </div>
+
+    <div class="contract-only-med form-group full" id="m-expense-section">
+      <hr class="section-divider">
+      <div class="section-sub" style="margin-bottom:10px">지출 비용 상세 (순이익 계산용)</div>
+      <div style="background:var(--surface); padding:16px; border-radius:8px; border:1px solid var(--border);">
+        <div class="form-grid" style="gap:12px; margin-bottom:12px;">
+          <div class="form-group"><label class="form-label">공장심사비</label><input class="form-input text-mono" type="number" id="m-exp-audit" placeholder="0" oninput="calcTotalExpense('med')"></div>
+          <div class="form-group"><label class="form-label">제품시험비</label><input class="form-input text-mono" type="number" id="m-exp-test" placeholder="0" oninput="calcTotalExpense('med')"></div>
+          <div class="form-group"><label class="form-label">출장비</label><input class="form-input text-mono" type="number" id="m-exp-trip" placeholder="0" oninput="calcTotalExpense('med')"></div>
+        </div>
+        <div id="m-dynamic-expense-wrap"></div>
+        <button class="btn btn-sm btn-settings" onclick="addDynamicExpense('med')" style="margin-bottom:16px; width:auto; border-color:var(--border)">+ 기타 비용 추가</button>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px dashed var(--border);">
+          <span style="font-size:13px; font-weight:700; color:var(--text2)">총 지출 합계 (KRW)</span>
+          <input class="form-input text-mono" type="number" id="m-expense" readonly style="width:150px; background:var(--bg); color:var(--danger); font-weight:700;">
         </div>
       </div>
     </div>
     
-    <div class="form-group full" id="medBillingSection">
+    <div class="contract-only-med form-group full" id="medBillingSection">
       <div class="billing-total-row" id="medBillingTotal" style="margin-bottom:12px;margin-top:4px"></div>
       <div class="section-sub" style="margin-bottom:10px">수입 내역 분할 입력</div>
       <div class="billing-grid" id="medBillingGrid"></div>
@@ -562,19 +485,19 @@ input[type=date]{color:#fff;color-scheme:dark}
 
     <div class="form-group full" id="medQuoteSection">
       <hr class="section-divider">
-      <div class="section-sub" style="margin-bottom:10px">상담 진행 및 실주 분석</div>
+      <div class="section-sub" id="m-consult-title" style="margin-bottom:10px">상담 진행</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px">
         <div class="form-group"><label class="form-label">진행 상태</label>
-          <select class="form-select" id="m-consult-status" onchange="document.getElementById('m-fail-reason-wrap').style.display=this.value==='계약불가'?'block':'none'">
+          <select class="form-select" id="m-consult-status" onchange="document.getElementById('m-fail-reason-wrap').style.display=(this.value==='계약불가'||this.value==='계약보류')?'block':'none'">
             <option value="">선택</option><option value="상담중">상담중</option><option value="계약완료">계약완료</option><option value="계약불가">계약불가</option><option value="계약보류">계약보류</option>
           </select>
         </div>
-        <div class="form-group" id="m-fail-reason-wrap" style="display:none"><label class="form-label" style="color:var(--danger)">실패(실주) 사유 *</label>
+        <div class="form-group" id="m-fail-reason-wrap" style="display:none"><label class="form-label" style="color:var(--danger)">실패/보류 사유 *</label>
           <select class="form-select" id="m-fail-reason">
-            <option value="">선택</option><option value="가격 경쟁력">가격 경쟁력 부족</option><option value="납기일 불만족">납기일 불만족</option><option value="경쟁사 선택">타 경쟁사 선택</option><option value="고객사 변심/보류">고객사 프로젝트 취소</option><option value="기타">기타 사유</option>
+            <option value="">선택</option><option value="가격 경쟁력">가격 경쟁력 부족</option><option value="납기일 불만족">납기일 불만족</option><option value="경쟁사 선택">타 경쟁사 선택</option><option value="고객사 변심/보류">고객사 프로젝트 취소/보류</option><option value="기타">기타 사유</option>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">상태 기타</label><input class="form-input" id="m-consult-etc" placeholder="특이사항 요약"></div>
+        <div class="form-group"><label class="form-label" id="m-etc-label">보류 및 계약 불가 사유</label><input class="form-input" id="m-consult-etc" placeholder="특이사항 요약"></div>
       </div>
       <hr class="section-divider">
       <div class="section-sub" style="margin-bottom:10px">견적서 발송</div>
@@ -597,18 +520,19 @@ input[type=date]{color:#fff;color-scheme:dark}
     <div class="form-group"><label class="form-label">담당자명</label><input class="form-input" id="m-contact-name" placeholder="홍길동"></div>
     <div class="form-group"><label class="form-label">핸드폰</label><input class="form-input" id="m-contact-phone" placeholder="010-0000-0000"></div>
     <div class="form-group full"><label class="form-label">이메일</label><input class="form-input" id="m-contact-email" placeholder="example@company.com"></div>
-    <div class="form-group full"><label class="form-label">이슈 / 비고</label><textarea class="form-textarea" id="m-note"></textarea></div>
+    <div class="form-group full"><label class="form-label">이슈 / 비고</label><textarea class="form-textarea" id="m-note" placeholder="추가 전달사항 등"></textarea></div>
   </div></div>
   <div class="modal-footer">
     <button class="btn" onclick="closeModal('med')">취소</button>
     <button class="btn btn-med" onclick="saveMed()">저장</button>
   </div>
-</div></div></div>
+</div></div>
+</div>
 
 <div class="modal-overlay" id="modal-cert">
 <div class="modal-wrapper"><div class="modal">
   <div class="modal-header">
-    <span class="modal-title" id="certModalTitle">제품환경인증팀</span>
+    <span class="modal-title" id="certModalTitle">제품환경인증팀 프로젝트</span>
     <button class="modal-close" onclick="closeModal('cert')">×</button>
   </div>
   <div class="modal-body"><div class="form-grid">
@@ -632,27 +556,36 @@ input[type=date]{color:#fff;color-scheme:dark}
       <div class="form-group full">
         <hr class="section-divider">
         <div class="section-sub" style="margin-bottom:10px">계약 및 이익금 (관리자 분석용)</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div>
-            <label class="form-label" style="display:block;margin-bottom:6px">계약 총액 *</label>
-            <div style="display:flex;gap:8px">
-              <select id="c-amount-currency" class="form-select" style="width:100px;flex-shrink:0" onchange="calcCertBilling()">
-                <option value="KRW">KRW</option><option value="RMB">RMB</option><option value="USD">USD</option>
-              </select>
-              <input class="form-input text-mono" type="number" id="c-amount" placeholder="0" oninput="calcCertBilling()" style="flex:1">
-            </div>
-          </div>
-          <div id="c-expense-section" style="display:none">
-            <label class="form-label" style="display:block;margin-bottom:6px">예상 지출 비용 (순이익 계산용)</label>
-            <div style="display:flex;gap:8px">
-              <select id="c-expense-currency" class="form-select" style="width:100px;flex-shrink:0" onchange="calcCertBilling()">
-                <option value="KRW">KRW</option><option value="RMB">RMB</option><option value="USD">USD</option>
-              </select>
-              <input class="form-input text-mono" type="number" id="c-expense" placeholder="외주/출장비 등" oninput="calcCertBilling()" style="flex:1">
-            </div>
+        <div>
+          <label class="form-label" style="display:block;margin-bottom:6px">계약 총액 *</label>
+          <div style="display:flex;gap:8px">
+            <select id="c-amount-currency" class="form-select" style="width:100px;flex-shrink:0" onchange="calcBilling('c','certBillingTotal')">
+              <option value="KRW">KRW</option><option value="RMB">RMB</option><option value="USD">USD</option>
+            </select>
+            <input class="form-input text-mono" type="number" id="c-amount" placeholder="0" oninput="calcBilling('c','certBillingTotal')" style="flex:1">
           </div>
         </div>
       </div>
+
+      <div class="form-group full" id="c-expense-section">
+        <hr class="section-divider">
+        <div class="section-sub" style="margin-bottom:10px">지출 비용 상세 (순이익 계산용)</div>
+        <div style="background:var(--surface); padding:16px; border-radius:8px; border:1px solid var(--border);">
+          <div class="form-grid" style="gap:12px; margin-bottom:12px;">
+            <div class="form-group"><label class="form-label">공장심사비</label><input class="form-input text-mono" type="number" id="c-exp-audit" placeholder="0" oninput="calcTotalExpense('cert')"></div>
+            <div class="form-group"><label class="form-label">제품시험비</label><input class="form-input text-mono" type="number" id="c-exp-test" placeholder="0" oninput="calcTotalExpense('cert')"></div>
+            <div class="form-group"><label class="form-label">출장비</label><input class="form-input text-mono" type="number" id="c-exp-trip" placeholder="0" oninput="calcTotalExpense('cert')"></div>
+          </div>
+          <div id="c-dynamic-expense-wrap"></div>
+          <button class="btn btn-sm btn-settings" onclick="addDynamicExpense('cert')" style="margin-bottom:16px; width:auto; border-color:var(--border)">+ 기타 비용 추가</button>
+          
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px dashed var(--border);">
+            <span style="font-size:13px; font-weight:700; color:var(--text2)">총 지출 합계 (KRW)</span>
+            <input class="form-input text-mono" type="number" id="c-expense" readonly style="width:150px; background:var(--bg); color:var(--danger); font-weight:700;">
+          </div>
+        </div>
+      </div>
+
       <div class="form-group"><label class="form-label">계약일</label><input class="form-input" type="date" id="c-contractdate"></div>
       <div class="form-group"><label class="form-label">진행 단계</label>
         <select class="form-select" id="c-stage">
@@ -681,14 +614,14 @@ input[type=date]{color:#fff;color-scheme:dark}
 
     <div id="certConsultSection" style="display:contents">
       <div class="form-group" id="certConsultStatus"><label class="form-label">진행 상태</label>
-        <select class="form-select" id="c-contracted" onchange="document.getElementById('c-fail-reason-wrap').style.display=this.value==='계약불가'?'block':'none'">
-          <option value="미계약">미계약 (진행중)</option><option value="협의중">협의중</option><option value="계약완료">계약완료</option><option value="계약불가">계약불가</option>
+        <select class="form-select" id="c-contracted" onchange="document.getElementById('c-fail-reason-wrap').style.display=(this.value==='계약불가'||this.value==='계약보류')?'block':'none'">
+          <option value="협의중">협의중</option><option value="계약완료">계약완료</option><option value="계약불가">계약불가</option><option value="계약보류">계약보류</option>
         </select>
       </div>
       <div class="form-group" id="certConsultDate"><label class="form-label">상담 일자</label><input class="form-input" type="date" id="c-date"></div>
-      <div class="form-group full" id="c-fail-reason-wrap" style="display:none"><label class="form-label" style="color:var(--danger)">실패(실주) 사유 *</label>
+      <div class="form-group full" id="c-fail-reason-wrap" style="display:none"><label class="form-label" style="color:var(--danger)">실패/보류 사유 *</label>
         <select class="form-select" id="c-fail-reason">
-          <option value="">선택</option><option value="가격 경쟁력">가격 경쟁력 부족</option><option value="납기일 불만족">납기일 불만족</option><option value="경쟁사 선택">타 경쟁사 선택</option><option value="고객사 변심/보류">고객사 프로젝트 취소</option><option value="기타">기타 사유</option>
+          <option value="">선택</option><option value="가격 경쟁력">가격 경쟁력 부족</option><option value="납기일 불만족">납기일 불만족</option><option value="경쟁사 선택">타 경쟁사 선택</option><option value="고객사 변심/보류">고객사 프로젝트 취소/보류</option><option value="기타">기타 사유</option>
         </select>
       </div>
 
@@ -722,7 +655,8 @@ input[type=date]{color:#fff;color-scheme:dark}
     <button class="btn" onclick="closeModal('cert')">취소</button>
     <button class="btn btn-cert" onclick="saveCert()">저장</button>
   </div>
-</div></div></div>
+</div></div>
+</div>
 
 <div class="modal-overlay" id="modal-task">
 <div class="modal-wrapper"><div class="modal" style="max-width:560px">
@@ -886,19 +820,19 @@ input[type=date]{color:#fff;color-scheme:dark}
       <div id="qual-pw-msg" style="font-size:12px;color:var(--danger);margin-top:6px;font-weight:600"></div>
     </div>
     <div id="qual-edit-area" style="display:none">
-      <hr style="border:none;border-top:1px solid var(--border);margin:0 0 16px">
-      <div class="form-group" style="margin-bottom:12px">
-        <label class="form-label">구성원 선택</label>
-        <select class="form-select" id="qual-member-sel" onchange="loadQualMember()">
-          <option value="">선택</option><option>지윤규</option><option>엄태호</option><option>차상호</option><option>윤미령</option><option>유재용</option><option>Lyu Cuicui</option><option>박성재</option>
+      <hr style=\"border:none;border-top:1px solid var(--border);margin:0 0 16px\">
+      <div class=\"form-group\" style=\"margin-bottom:12px\">
+        <label class=\"form-label\">구성원 선택</label>
+        <select class=\"form-select\" id=\"qual-member-sel\" onchange=\"loadQualMember()\">
+          <option value=\"\">선택</option><option>지윤규</option><option>엄태호</option><option>차상호</option><option>윤미령</option><option>유재용</option><option>Lyu Cuicui</option><option>박성재</option>
         </select>
       </div>
-      <div id="qual-member-list" style="margin-bottom:12px"></div>
-      <button class="btn btn-primary" onclick="addQualItem()" style="width:100%;margin-bottom:10px">+ 자격 항목 추가</button>
-      <button class="btn btn-cert" onclick="saveQualData()" style="width:100%">💾 전체 저장</button>
+      <div id=\"qual-member-list\" style=\"margin-bottom:12px\"></div>
+      <button class=\"btn btn-primary\" onclick=\"addQualItem()\" style=\"width:100%;margin-bottom:10px\">+ 자격 항목 추가</button>
+      <button class=\"btn btn-cert\" onclick=\"saveQualData()\" style=\"width:100%\">💾 전체 저장</button>
     </div>
   </div>
-  <div class="modal-footer"><button class="btn" onclick="closeModal('qual')">닫기</button></div>
+  <div class=\"modal-footer\"><button class=\"btn\" onclick=\"closeModal('qual')\">닫기</button></div>
 </div></div></div>
 
 <script>
@@ -912,53 +846,133 @@ const SB_URL='https://dbbpyrrxgpphfdqvpsva.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiYnB5cnJ4Z3BwaGZkcXZwc3ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNjU2MTgsImV4cCI6MjA5NTk0MTYxOH0.R3SGiIuHsvlJC293141oSmbbV47nkrEitDVBMBFkdbg';
 const DEFAULT_PW='cirs2026!';
 const SUPER_ADMIN='지윤규';
-const REP_USER='대표이사';
-const ADMIN_USERS=[SUPER_ADMIN, '엄태호', '유재용'];
-const TEAM_MEMBERS={'의료기기팀':['지윤규','유재용','윤미령','차상호'], '제품환경인증팀':['지윤규','엄태호','Lyu Cuicui','박성재'], '공통':['대표이사','지윤규','유재용','윤미령','차상호','엄태호','Lyu Cuicui','박성재']};
-const QUAL_MASTER={'지윤규':[{name:'내부감사원',date:'2022-03-02',edu:null,org:'CIRS Group Korea',remark:'전사 공통'},{name:'화장품 책임판매관리자 / 화장품 제조판매업 등록필증',date:'2019-10-23',edu:{cycle:'매년',note:'보수교육 필수'},org:'식품의약품안전처',remark:'제품환경인증팀 업무'}], '엄태호':[{name:'내부감사원',date:'2023-04-30',edu:null,org:'CIRS Group Korea',remark:'전사 공통'},{name:'의료기기품질책임자 / 의료기기 수입업 허가증',date:'2023-04-17',edu:{cycle:'매년',note:'보수교육 1회/년'},org:'식품의약품안전처',remark:'의료기기팀 업무'}], '차상호':[{name:'수입업신고증 (의약외품 제조·수입 관리자)',date:'2023-09-05',edu:null,org:'식품의약품안전처',remark:'의료기기팀 업무'}]};
+const EXECS=[SUPER_ADMIN, '대표이사'];
+const MANAGERS=[SUPER_ADMIN, '엄태호', '유재용'];
+const NO_TASK_USERS=['대표이사'];
+const TEAM_MEMBERS={'의료기기팀':['지윤규','유재용','윤미령','차상호'], '제품환경인증팀':['지윤규','엄태호','Lyu Cuicui','박성재'], '공통':['지윤규','유재용','윤미령','차상호','엄태호','Lyu Cuicui','박성재','대표이사']};
+const QUAL_MASTER={'지윤규':[{name:'내부감사원',date:'2022-03-02',edu:null,org:'CIRS Group Korea',remark:'전사 공통'}], '엄태호':[{name:'내부감사원',date:'2023-04-30',edu:null,org:'CIRS Group Korea',remark:'전사 공통'}], '차상호':[{name:'수입업신고증',date:'2023-09-05',edu:null,org:'식품의약품안전처',remark:'의료기기팀 업무'}]};
 const PRIORITY_COLOR={'긴급':'var(--danger)','일반':'var(--warn)','낮음':'var(--success)'};
 const PRIORITY_LABEL={'긴급':'🔴 긴급','일반':'🟡 일반','낮음':'🟢 낮음'};
 const BILL_LABELS=['1','2','3','4','5'];
+const mk=['m1','m2','m3','m4','m5','m6','m7','m8','m9','m10','m11','m12'];
+
+const d = new Date();
+const TODAY = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 
 let sb, currentYear=new Date().getFullYear(), currentView='dashboard', currentUser='', revTeam='total', kpiTab='qual';
 let editingEduId=null, completingTaskId=null, editingTaskId=null, medEditId=null, certEditId=null;
 let medIsContract=true, certIsContract=true;
 let qualData=JSON.parse(JSON.stringify(QUAL_MASTER));
-let chartQ=null, chartRevBar=null, chartRevLine=null, chartTop=null, chartKpi=null, chartDashLine=null;
-const state={ med:[], cert:[], revenue:{}, kpiEdu:{}, qualData:null, eduRecords:[], tasks:[], pw:DEFAULT_PW };
-const titles={ dashboard:'전체 현황', revenue:'분기/연간 계획', medContract:'의료기기팀 · 계약업체', medConsult:'의료기기팀 · 상담', certContract:'제품환경인증팀 · 계약업체', certConsult:'제품환경인증팀 · 상담', kpi:'KPI 현황', tasks:'업무지시서' };
+let chartDashMixed=null, chartRevMixed=null, chartTop=null, chartKpi=null;
+
+const state={ med:[], cert:[], revenue:{}, kpiEdu:{}, qualData:null, eduRecords:[], tasks:[], passwords:{} };
+const titles={ dashboard:'전체 현황', revenue:'월별/연간 계획', medContract:'의료기기팀 · 계약업체', medConsult:'의료기기팀 · 상담', certContract:'제품환경인증팀 · 계약업체', certConsult:'제품환경인증팀 · 상담', kpi:'KPI 현황', tasks:'업무지시서' };
+
+let sortConf = { 
+  medC: {col:'date', asc:false}, 
+  medCons: {col:'startdate', asc:false}, 
+  medConsArch: {col:'startdate', asc:false}, 
+  certC: {col:'date', asc:false},
+  certCons: {col:'date', asc:false},
+  certConsArch: {col:'date', asc:false},
+  revC: {col:'date', asc:false} 
+};
 
 function ensureRevYear(y){ 
   if(!state.revenue) state.revenue = {};
   if(!state.revenue[y]) state.revenue[y] = {};
-  if(!state.revenue[y].med) state.revenue[y].med = {q1:0,q2:0,q3:0,q4:0};
-  if(!state.revenue[y].cert) state.revenue[y].cert = {q1:0,q2:0,q3:0,q4:0};
+  const defM = {m1:0,m2:0,m3:0,m4:0,m5:0,m6:0,m7:0,m8:0,m9:0,m10:0,m11:0,m12:0};
+  if(!state.revenue[y].med) state.revenue[y].med = {...defM};
+  if(!state.revenue[y].cert) state.revenue[y].cert = {...defM};
 }
 
-// 모든 구성원 권한 전면 개방
+// [신규 추가] 동적 지출 항목 추가
+window.addDynamicExpense = function(team) {
+  const wrap = document.getElementById(team === 'med' ? 'm-dynamic-expense-wrap' : 'c-dynamic-expense-wrap');
+  if(!wrap) return;
+  const div = document.createElement('div');
+  div.style.cssText = "display:flex; gap:8px; margin-bottom:8px; align-items:center;";
+  div.innerHTML = `
+    <input class="form-input" type="text" placeholder="항목명 (예: 번역비)" style="flex:1">
+    <input class="form-input text-mono dyn-exp-${team}" type="number" placeholder="금액" oninput="calcTotalExpense('${team}')" style="width:140px;">
+    <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove(); calcTotalExpense('${team}')" style="padding:4px 8px; font-size:14px;">×</button>
+  `;
+  wrap.appendChild(div);
+};
+
+// [신규 추가] 세부 지출 자동 합산 로직
+window.calcTotalExpense = function(team) {
+  const pfx = team === 'med' ? 'm' : 'c';
+  let sum = 0;
+  ['audit', 'test', 'trip'].forEach(k => {
+    const el = document.getElementById(`${pfx}-exp-${k}`);
+    if(el) sum += Number(el.value || 0);
+  });
+  document.querySelectorAll(`.dyn-exp-${team}`).forEach(el => {
+    sum += Number(el.value || 0);
+  });
+  const expInput = document.getElementById(`${pfx}-expense`);
+  if(expInput) expInput.value = sum;
+};
+
+function showToast(msg) {
+  let box = document.getElementById('cirs-toast');
+  if(!box) {
+    box = document.createElement('div'); box.id = 'cirs-toast';
+    box.style = 'position:fixed; bottom:24px; right:24px; background:#1FAD6B; color:#fff; padding:12px 24px; border-radius:8px; font-weight:700; box-shadow:0 8px 24px rgba(0,0,0,0.3); z-index:9999; display:none;';
+    document.body.appendChild(box);
+  }
+  box.textContent = msg; box.style.display = 'block';
+  setTimeout(() => { box.style.display = 'none'; }, 2500);
+}
+
 function applyPermissions() {
-  document.getElementById('rev-tab-med').style.display = 'inline-block';
-  document.getElementById('rev-tab-cert').style.display = 'inline-block';
-  document.getElementById('rev-tab-total').style.display = 'inline-block';
+  if(document.getElementById('rev-tab-med')) document.getElementById('rev-tab-med').style.display = 'inline-block';
+  if(document.getElementById('rev-tab-cert')) document.getElementById('rev-tab-cert').style.display = 'inline-block';
+  if(document.getElementById('rev-tab-total')) document.getElementById('rev-tab-total').style.display = 'inline-block';
   if(!['med','cert','total'].includes(revTeam)) revTeam = 'total';
+  
   document.querySelectorAll('.team-tab').forEach(b => b.classList.remove('active-med', 'active-cert'));
   const activeBtn = document.getElementById('rev-tab-' + revTeam);
   if(activeBtn) activeBtn.classList.add(revTeam === 'cert' ? 'active-cert' : 'active-med');
 
-  if(document.getElementById('taskOrderBtn')) document.getElementById('taskOrderBtn').style.display = 'inline-block';
-  if(document.getElementById('taskCollabBtn')) document.getElementById('taskCollabBtn').style.display = 'inline-block';
-  ['medAddContractBtn', 'medAddConsultBtn', 'certAddContractBtn', 'certAddConsultBtn', 'eduAddBtn'].forEach(id => {
-      if(document.getElementById(id)) document.getElementById(id).style.display = 'inline-block';
+  const canWrite = !NO_TASK_USERS.includes(currentUser);
+  ['taskOrderBtn','taskCollabBtn','medAddContractBtn','medAddConsultBtn','certAddContractBtn','certAddConsultBtn','eduAddBtn','qualAdminBtn'].forEach(id => {
+      if(document.getElementById(id)) document.getElementById(id).style.display = canWrite ? 'inline-block' : 'none';
   });
-  if(document.getElementById('qualAdminBtn')) document.getElementById('qualAdminBtn').style.display = 'inline-block';
+
+  if (currentUser === SUPER_ADMIN) {
+      if(document.getElementById('dashConsultBox')) document.getElementById('dashConsultBox').style.display = 'block';
+      if(document.getElementById('dashBottleneckBox')) document.getElementById('dashBottleneckBox').style.display = 'block';
+      if(document.getElementById('workspaceGrid')) document.getElementById('workspaceGrid').style.gridTemplateColumns = '1fr 1fr 1fr';
+  } else {
+      if(document.getElementById('dashConsultBox')) document.getElementById('dashConsultBox').style.display = 'none';
+      if(document.getElementById('dashBottleneckBox')) document.getElementById('dashBottleneckBox').style.display = 'none';
+      if(document.getElementById('workspaceGrid')) document.getElementById('workspaceGrid').style.gridTemplateColumns = '1fr 1fr';
+  }
+
+  if (EXECS.includes(currentUser)) {
+      if(document.getElementById('kpi-tab-profit')) document.getElementById('kpi-tab-profit').style.display = 'inline-block';
+  } else {
+      if(document.getElementById('kpi-tab-profit')) document.getElementById('kpi-tab-profit').style.display = 'none';
+      if(kpiTab === 'profit') switchKpiTab('qual', document.getElementById('kpi-tab-qual'));
+  }
 }
 
 async function doLogin(){
   const user=document.getElementById('loginUser').value; const pw=document.getElementById('loginPw').value;
   const err=document.getElementById('loginErr'); err.textContent='';
   if(!user){err.textContent='사용자 이름을 선택하세요.';return;}
-  try{ const {data}=await sb.from('app_settings').select('pw').eq('id','main').single(); if(data?.pw) state.pw=data.pw; }catch(e){}
-  if(pw!==state.pw){err.textContent='비밀번호가 올바르지 않습니다.';return;}
+  
+  try {
+    const {data} = await sb.from('app_settings').select('*').eq('id','passwords').single();
+    if(data?.data) state.passwords = data.data;
+    else state.passwords = {}; 
+  } catch(e) {}
+
+  const currentPw = state.passwords[user] || DEFAULT_PW;
+  if(pw !== currentPw){ err.textContent='비밀번호가 올바르지 않습니다.'; return; }
+  
   currentUser=user;
   document.getElementById('loginPw').value=''; document.getElementById('loginUser').value='';
   document.getElementById('sidebarUser').textContent=user+' 님 환영합니다';
@@ -969,26 +983,61 @@ async function doLogin(){
 }
 
 function doLogout(){ currentUser=''; document.getElementById('appShell').style.display='none'; document.getElementById('loginScreen').style.display='flex'; }
+
 async function changePw(){
-  if(document.getElementById('pw-current').value!==state.pw){document.getElementById('pw-msg').textContent='비밀번호가 틀립니다.';return;}
+  const currentPw = state.passwords[currentUser] || DEFAULT_PW;
+  if(document.getElementById('pw-current').value !== currentPw){document.getElementById('pw-msg').textContent='현재 비밀번호가 틀립니다.';return;}
   if(document.getElementById('pw-new').value.length<6){document.getElementById('pw-msg').textContent='6자 이상 입력하세요.';return;}
-  if(document.getElementById('pw-new').value!==document.getElementById('pw-confirm').value){document.getElementById('pw-msg').textContent='불일치합니다.';return;}
-  state.pw=document.getElementById('pw-new').value; await sb.from('app_settings').upsert({id:'main',pw:state.pw,updated_at:new Date().toISOString()});
+  if(document.getElementById('pw-new').value!==document.getElementById('pw-confirm').value){document.getElementById('pw-msg').textContent='새 비밀번호가 일치하지 않습니다.';return;}
+  
+  state.passwords[currentUser] = document.getElementById('pw-new').value; 
+  await sb.from('app_settings').upsert({id:'passwords', data: state.passwords, updated_at: new Date().toISOString()});
   closeModal('settings');
+  alert('비밀번호가 성공적으로 변경되었습니다!');
 }
-function openSettings(){document.getElementById('modal-settings').classList.add('open');}
+
+function openSettings(){
+  document.getElementById('pw-current').value=''; document.getElementById('pw-new').value=''; document.getElementById('pw-confirm').value=''; document.getElementById('pw-msg').textContent=''; 
+  document.getElementById('modal-settings').classList.add('open');
+}
 
 async function loadFromSupabase(){
   try{
     const[mR,cR,rR]=await Promise.all([sb.from('med_records').select('*'), sb.from('cert_records').select('*'), sb.from('revenue_plan').select('*').eq('id','main').single()]);
-    state.med=(mR.data||[]).map(r=>({id:r.id,year:r.year,recordType:r.record_type||'contract',client:r.client||'',product:r.product||'',grade:r.grade||'',biztype:r.biztype||'',stage:r.stage||'',stages:r.stages||[],progress:r.progress||'',manager:r.manager||'',startdate:r.start_date||'',duedate:r.due_date||'',status:r.status||'',amount:Number(r.amount||0),amountCurrency:r.amount_currency||'KRW',expense:Number(r.expense||0),expenseCurrency:r.expense_currency||'KRW',billing:r.billing||[0,0,0,0,0],billingDates:r.billing_dates||['','','','',''],billingCurrencies:r.billing_currencies||['KRW','KRW','KRW','KRW','KRW'],renewcycle:r.renew_cycle||'',expiredate:r.expire_date||'',consultStatus:r.consult_status||'',failReason:r.fail_reason||'',note:r.note||'',contactName:r.contact_name||'',contactPhone:r.contact_phone||'',quoteDate:r.quote_date||'',quoteAmount:Number(r.quote_amount||0)}));
-    state.cert=(cR.data||[]).map(r=>({id:r.id,year:r.year,recordType:r.record_type||'contract',client:r.client||'',certtype:r.cert_type||'',manager:r.manager||'',contractdate:r.contract_date||'',date:r.date||'',stage:r.stage||'',issuedate:r.issue_date||'',contracted:r.contracted||'',amount:Number(r.amount||0),amountCurrency:r.amount_currency||'KRW',expense:Number(r.expense||0),expenseCurrency:r.expense_currency||'KRW',billing:r.billing||[0,0,0,0,0],billingDates:r.billing_dates||['','','','',''],billingCurrencies:r.billing_currencies||['KRW','KRW','KRW','KRW','KRW'],renewcycle:r.renew_cycle||'',expiredate:r.expire_date||'',failReason:r.fail_reason||'',note:r.note||'',contactName:r.contact_name||'',contactPhone:r.contact_phone||'',quoteDate:r.quote_date||'',quoteAmount:Number(r.quote_amount||0)}));
+    state.med=(mR.data||[]).map(r=>({id:r.id,year:r.year,recordType:r.record_type||'contract',client:r.client||'',product:r.product||'',grade:r.grade||'',biztype:r.biztype||'',stage:r.stage||'',stages:r.stages||[],progress:r.progress||'',manager:r.manager||'',startdate:r.start_date||'',duedate:r.due_date||'',status:r.status||'',amount:Number(r.amount||0),amountCurrency:r.amount_currency||'KRW',expense:Number(r.expense||0),expenseCurrency:r.expense_currency||'KRW',billing:r.billing||[0,0,0,0,0],billingDates:r.billing_dates||['','','','',''],billingCurrencies:r.billing_currencies||['KRW','KRW','KRW','KRW','KRW'],renewcycle:r.renew_cycle||'',expiredate:r.expire_date||'',consultStatus:r.consult_status||'',failReason:r.fail_reason||'',note:r.note||'',contactName:r.contact_name||'',contactPhone:r.contact_phone||'',contactEmail:r.contact_email||'',quoteDate:r.quote_date||'',quoteAmount:Number(r.quote_amount||0),quoteCurrency:r.quote_currency||'KRW',quoteFile:r.quote_file||'',consultEtc:r.consult_etc||'',delayReason:r.delay_reason||''}));
+    state.cert=(cR.data||[]).map(r=>{
+      let st = r.contracted||''; if(r.record_type === 'consult' && st === '미계약') st = '협의중';
+      return {id:r.id,year:r.year,recordType:r.record_type||'contract',client:r.client||'',certtype:r.cert_type||'',manager:r.manager||'',contractdate:r.contract_date||'',date:r.date||'',stage:r.stage||'',issuedate:r.issue_date||'',contracted:st,amount:Number(r.amount||0),amountCurrency:r.amount_currency||'KRW',expense:Number(r.expense||0),expenseCurrency:r.expense_currency||'KRW',billing:r.billing||[0,0,0,0,0],billingDates:r.billing_dates||['','','','',''],billingCurrencies:r.billing_currencies||['KRW','KRW','KRW','KRW','KRW'],renewcycle:r.renew_cycle||'',expiredate:r.expire_date||'',failReason:r.fail_reason||'',note:r.note||'',contactName:r.contact_name||'',contactPhone:r.contact_phone||'',contactEmail:r.contact_email||'',etcMemo:r.etc_memo||'',quoteDate:r.quote_date||'',quoteAmount:Number(r.quote_amount||0),quoteCurrency:r.quote_currency||'KRW',quoteFile:r.quote_file||'',delayReason:r.delay_reason||''}
+    });
     const rd=rR.data?.data||{}; state.revenue={};
     Object.keys(rd).forEach(k=>{ if(k==='_kpiEdu')state.kpiEdu=rd[k]||{}; else if(k==='_qualData'){state.qualData=rd[k];if(rd[k])Object.assign(qualData,rd[k]);} else if(k==='_eduRecords')state.eduRecords=rd[k]||[]; else if(k==='_tasks')state.tasks=rd[k]||[]; else state.revenue[k]=rd[k]; });
   }catch(e){console.error(e);}
   ensureRevYear(currentYear);
   updateRateWarning();
 }
+
+async function saveMedRecord(r) {
+  try {
+    const row = {id:r.id, year:r.year, record_type:r.recordType, client:r.client, product:r.product, grade:r.grade, biztype:r.biztype, stage:r.stage, stages:r.stages||[], progress:r.progress, start_date:r.startdate, due_date:r.duedate, manager:r.manager, amount:r.amount, amount_currency:r.amountCurrency, expense:r.expense, expense_currency:r.expenseCurrency, status:r.status, renew_cycle:r.renewcycle, expire_date:r.expiredate, billing:r.billing, billing_dates:r.billingDates, billing_currencies:r.billingCurrencies, contact_name:r.contactName, contact_phone:r.contactPhone, contact_email:r.contactEmail, quote_date:r.quoteDate, quote_amount:r.quoteAmount, quote_currency:r.quoteCurrency, quote_file:r.quoteFile, consult_status:r.consultStatus, fail_reason:r.failReason, consult_etc:r.consultEtc, note:r.note, delay_reason:r.delayReason||'', q:1};
+    await sb.from('med_records').upsert(row, {onConflict: 'id'});
+  } catch(e) { console.error(e); }
+}
+
+async function saveCertRecord(r) {
+  try {
+    const row = {id:r.id, year:r.year, record_type:r.recordType, client:r.client, cert_type:r.certtype, manager:r.manager, contracted:r.contracted, amount:r.amount, amount_currency:r.amountCurrency, expense:r.expense, expense_currency:r.expenseCurrency, contract_date:r.contractdate, date:r.date, stage:r.stage, issue_date:r.issuedate, renew_cycle:r.renewcycle, expire_date:r.expiredate, billing:r.billing, billing_dates:r.billingDates, billing_currencies:r.billingCurrencies, contact_name:r.contactName, contact_phone:r.contactPhone, contact_email:r.contactEmail, etc_memo:r.etcMemo, quote_date:r.quoteDate, quote_amount:r.quoteAmount, quote_currency:r.quoteCurrency, quote_file:r.quoteFile, fail_reason:r.failReason, note:r.note, delay_reason:r.delayReason||'', q:1};
+    await sb.from('cert_records').upsert(row, {onConflict: 'id'});
+  } catch(e) { console.error(e); }
+}
+
+window.saveDelayReason = async function(id, team, val){
+  const r = state[team].find(x=>x.id===id);
+  if(!r) return;
+  r.delayReason = val;
+  if(team==='med') await saveMedRecord(r); else await saveCertRecord(r);
+  showToast('병목 지연 사유가 저장되었습니다.');
+};
+
 async function saveState(){ try{ await sb.from('revenue_plan').upsert({id:'main',data:{...state.revenue,_kpiEdu:state.kpiEdu,_qualData:state.qualData,_eduRecords:state.eduRecords,_tasks:state.tasks},updated_at:new Date().toISOString()}); }catch(e){} }
 
 window.addEventListener('DOMContentLoaded', async()=>{
@@ -1005,31 +1054,16 @@ document.addEventListener('click', (e)=>{
   if(e.target !== searchInput && !searchResults.contains(e.target)) searchResults.classList.remove('active');
 });
 
-// [UX 개선] 계약 화폐단위 변경 시 하위 수입내역 단위 전체 동기화
-document.addEventListener('change', (e) => {
-  if (e.target.id === 'm-amount-currency') {
-    const val = e.target.value;
-    for(let i=0; i<5; i++) { const el = document.getElementById('m-bc'+i); if(el) el.value = val; }
-    calcBilling('m', 'medBillingTotal');
-  }
-  if (e.target.id === 'c-amount-currency') {
-    const val = e.target.value;
-    for(let i=0; i<5; i++) { const el = document.getElementById('c-bc'+i); if(el) el.value = val; }
-    calcBilling('c', 'certBillingTotal');
-  }
-});
-
 function uid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36);}
 function fmt(n){return Number(n||0).toLocaleString();}
 function fmtM(n){ if(!n)return'0원'; const v=Number(n); if(v>=100000000)return (v/100000000).toFixed(1)+'억원'; if(v>=10000)return Math.round(v/10000).toLocaleString()+'만원'; return v.toLocaleString()+'원'; }
 function pct(a,b){return b?Math.round(a/b*100):0;}
-
+function getStatColor(p){ if(p>=100)return'var(--success)'; if(p>=70)return'var(--warn)'; return'var(--danger)'; }
 function getRates(){ return{rmb:Number(document.getElementById('rmbRateInput')?.value)||0, usd:Number(document.getElementById('usdRateInput')?.value)||0}; }
 function toKRW(amt,cur){ const{rmb,usd}=getRates(); if(cur==='RMB')return rmb?Number(amt)*rmb:0; if(cur==='USD')return usd?Number(amt)*usd:0; return Number(amt); }
 function onExchangeRateChange(){ const r=document.getElementById('rmbRateInput')?.value, u=document.getElementById('usdRateInput')?.value; if(r)localStorage.setItem('cirs_rmb_rate',r); if(u)localStorage.setItem('cirs_usd_rate',u); calcMedBilling(); calcCertBilling(); updateRateWarning(); renderView(currentView); }
 function updateRateWarning(){ const{rmb,usd}=getRates(); const hasRMB=[...state.med,...state.cert].some(r=>(r.billingCurrencies||[]).some(c=>c==='RMB')||r.amountCurrency==='RMB'); const hasUSD=[...state.med,...state.cert].some(r=>(r.billingCurrencies||[]).some(c=>c==='USD')||r.amountCurrency==='USD'); const w=[]; if(hasRMB&&!rmb)w.push('RMB'); if(hasUSD&&!usd)w.push('USD'); const el=document.getElementById('rateWarning'); if(el){el.textContent=w.length?'⚠ '+w.join('/')+' 환율 미입력':'';el.style.display=w.length?'':'none';} }
 
-// 외화-원화 듀얼 표기 함수
 function fmtCurEx(amt, cur){
   const num=Number(amt)||0; if(cur==='KRW'||!cur) return fmtM(num);
   const {rmb, usd} = getRates(); let krw=0, cStr='', col='';
@@ -1038,298 +1072,654 @@ function fmtCurEx(amt, cur){
   return `<div style="line-height:1.4"><span style="color:${col};font-size:11px;font-family:var(--mono)">${fmt(num)} ${cStr}</span><br><span style="font-weight:700">${fmtM(krw)}</span></div>`;
 }
 
-function doSearch(e){
-  const v=e.target.value.toLowerCase().trim(); const res=document.getElementById('searchResults');
-  if(!v){res.classList.remove('active');return;}
-  const matched=[];
-  state.med.forEach(r=>{ if(r.client.toLowerCase().includes(v)||r.product?.toLowerCase().includes(v)) matched.push({id:r.id,team:'의료기기',title:r.client,sub:r.product,fn:`editMed('${r.id}')`}); });
-  state.cert.forEach(r=>{ if(r.client.toLowerCase().includes(v)||r.certtype?.toLowerCase().includes(v)) matched.push({id:r.id,team:'인증팀',title:r.client,sub:r.certtype,fn:`editCert('${r.id}')`}); });
-  if(!matched.length){ res.innerHTML=`<div class="search-item"><span class="search-item-title" style="color:var(--text3)">결과가 없습니다</span></div>`; }
-  else { res.innerHTML=matched.map(m=>`<div class="search-item" onclick="${m.fn}; document.getElementById('searchResults').classList.remove('active');"><span class="search-item-title"><span class="badge ${m.team==='의료기기'?'badge-med':'badge-cert'}" style="margin-right:6px">${m.team}</span>${m.title}</span><span class="search-item-sub">${m.sub||''}</span></div>`).join(''); }
-  res.classList.add('active');
+function getActualBilledEx(r) {
+  let krw = 0, rmb = 0, usd = 0;
+  (r.billing || []).forEach((amt, i) => {
+      if (!amt) return;
+      const d = (r.billingDates || [])[i];
+      if (d && d > TODAY) return; 
+      const cur = (r.billingCurrencies || [])[i] || 'KRW';
+      krw += toKRW(Number(amt), cur);
+      if(cur==='RMB') rmb += Number(amt);
+      if(cur==='USD') usd += Number(amt);
+  });
+  return { krw, rmb, usd };
 }
 
-function downloadCSV(tableId, filename){
-  const table=document.getElementById(tableId); let csv=[]; 
-  for(let i=0;i<table.rows.length;i++){
-    let row=[], cols=table.rows[i].querySelectorAll('td, th');
-    for(let j=0;j<cols.length;j++) { if(cols[j].innerText.includes('관리') || cols[j].innerText.includes('수정')) continue; row.push('"'+cols[j].innerText.replace(/"/g,'""').replace(/\n/g,' ')+'"'); }
-    csv.push(row.join(','));
-  }
-  const blob=new Blob(['\uFEFF'+csv.join('\n')],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename+'.csv'; a.click();
-}
-function exportData(){ const a=document.createElement('a'); a.href='data:application/json,'+encodeURIComponent(JSON.stringify({exportDate:new Date().toISOString(),...state},null,2)); a.download=`cirs_backup.json`; a.click(); }
-
-function nav(view,el){ currentView=view; document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById('view-'+view).classList.add('active'); document.getElementById('topbarTitle').textContent=titles[view]||view; document.getElementById('rateInputBox').style.display=['dashboard','revenue'].includes(view)?'flex':'none'; renderView(view); }
-function changeYear(){ currentYear=parseInt(document.getElementById('yearSelect').value); renderView(currentView); }
+window.nav = function(view,el){ currentView=view; document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById('view-'+view).classList.add('active'); document.getElementById('topbarTitle').textContent=titles[view]||view; document.getElementById('rateInputBox').style.display=['dashboard','revenue'].includes(view)?'flex':'none'; renderView(view); }
+window.changeYear = function(){ currentYear=parseInt(document.getElementById('yearSelect').value); renderView(currentView); }
 function renderView(v){ if(v==='dashboard')renderDashboard(); else if(v==='revenue')renderRevenue(); else if(v==='medContract')renderMedContract(); else if(v==='medConsult')renderMedConsult(); else if(v==='certContract')renderCertContract(); else if(v==='certConsult')renderCertConsult(); else if(v==='kpi')renderKpi(); else if(v==='tasks')renderTasks(); }
 
 function isRowVisibleInYear(r,y){ if(y<r.year)return false; if(r.year==y)return true; const ys=String(y); if(r.duedate&&r.duedate>=ys+'-01-01')return true; if((r.billingDates||[]).some(d=>d&&d.startsWith(ys)))return true; if((r.billingDates||[]).some(d=>d&&d>ys+'-01-01'))return true; const total=Number(r.amount||0), billed=(r.billing||[]).reduce((s,v)=>s+Number(v||0),0); const nc=r.status!=='완료'&&r.status!=='취소'&&r.contracted!=='완료취소'; if(total-billed>0&&nc&&r.duedate&&r.duedate>=ys+'-01-01')return true; if((r.status==='완료'||r.stage==='완료'||r.contracted==='계약완료')&&r.renewcycle){ if(parseInt(r.renewcycle))return true; } return false; }
+
 function getBilledActual(team,y){
-  const rows=(state[team]||[]).filter(r=>r.recordType!=='consult'&&isRowVisibleInYear(r,y)); const qs={q1:0,q2:0,q3:0,q4:0};
-  rows.forEach(r=>{ (r.billing||[]).forEach((amt,i)=>{ if(!amt)return; const krw=toKRW(Number(amt),(r.billingCurrencies||[])[i]||'KRW'), ds=(r.billingDates||[])[i]; if(ds){if(new Date(ds).getFullYear()===y) qs['q'+(new Date(ds).getMonth()<=2?1:new Date(ds).getMonth()<=5?2:new Date(ds).getMonth()<=8?3:4)]+=krw; }else if(r.year===y) qs['q1']+=krw; }); }); return{qs};
+  const rows=(state[team]||[]).filter(r=>r.recordType!=='consult'&&isRowVisibleInYear(r,y)); 
+  const ms={m1:0,m2:0,m3:0,m4:0,m5:0,m6:0,m7:0,m8:0,m9:0,m10:0,m11:0,m12:0};
+  rows.forEach(r=>{ 
+      (r.billing||[]).forEach((amt,i)=>{ 
+          if(!amt)return; 
+          const ds=(r.billingDates||[])[i]; 
+          if (ds && ds > TODAY) return; 
+          const krw=toKRW(Number(amt),(r.billingCurrencies||[])[i]||'KRW'); 
+          if(ds){ if(new Date(ds).getFullYear()===y) ms['m'+(new Date(ds).getMonth()+1)]+=krw; }
+          else if(r.year===y) ms['m1']+=krw; 
+      }); 
+  }); 
+  return ms;
 }
 
 Chart.defaults.font.family = "'Noto Sans KR', sans-serif";
 function chartOpts(titleStr){ return {responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{color:'#A8ABBE'}}, title:{display:!!titleStr,text:titleStr,color:'#F8F9FA'}}, scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A8ABBE'}}, y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#A8ABBE',callback:v=>fmtM(v)}}} }; }
 
 function buildBillingGrid(contId,totalId,prefix,bArr,bDates,bCur){
-  document.getElementById(contId).innerHTML=BILL_LABELS.map((l,i)=>{ const cur=bCur[i]||'KRW'; return`<div class="billing-item"><label>${l}차 수입</label><select id="${prefix}-bc${i}" onchange="calcBilling('${prefix}','${totalId}')"><option value="KRW" ${cur==='KRW'?'selected':''}>KRW</option><option value="RMB" ${cur==='RMB'?'selected':''}>RMB</option><option value="USD" ${cur==='USD'?'selected':''}>USD</option></select><input type="number" value="${bArr[i]||''}" id="${prefix}-b${i}" oninput="calcBilling('${prefix}','${totalId}')"><input type="date" id="${prefix}-bd${i}" value="${bDates[i]||''}"></div>`; }).join('');
-  calcBilling(prefix,totalId);
+  const el = document.getElementById(contId);
+  if(!el) return;
+  el.innerHTML=BILL_LABELS.map((l,i)=>{ const cur=bCur[i]||'KRW'; return`<div class="billing-item"><label>${l}차 수입</label><select id="${prefix}-bc${i}" onchange="calcBilling('${prefix}','${totalId}')"><option value="KRW" ${cur==='KRW'?'selected':''}>KRW</option><option value="RMB" ${cur==='RMB'?'selected':''}>RMB</option><option value="USD" ${cur==='USD'?'selected':''}>USD</option></select><input type="number" value="${bArr[i]||''}" id="${prefix}-b${i}" oninput="calcBilling('${prefix}','${totalId}')"><input type="date" id="${prefix}-bd${i}" value="${bDates[i]||''}"></div>`; }).join('');
+  window.calcBilling(prefix,totalId);
 }
-function calcBilling(p,tId){
-  const tAmt=Number(document.getElementById(p==='m'?'m-amount':'c-amount').value||0), tCur=document.getElementById(p==='m'?'m-amount-currency':'c-amount-currency').value||'KRW', tKRW=toKRW(tAmt,tCur);
-  let bKRW=0; for(let i=0;i<5;i++){ bKRW+=toKRW(Number(document.getElementById(`${p}-b${i}`).value||0), document.getElementById(`${p}-bc${i}`).value||'KRW'); }
-  document.getElementById(tId).innerHTML=`<span>계약총액 <strong>${fmt(tAmt)} ${tCur}</strong></span><span>수입합계 <strong>${fmt(Math.round(bKRW))}원</strong></span><span class="billing-remain ${tKRW-bKRW<=0&&tKRW>0?'ok':'none'}">잔액 ${fmt(Math.round(tKRW-bKRW))}원</span>`;
+
+window.calcBilling = function(p,tId){
+  const amtEl = document.getElementById(p==='m'?'m-amount':'c-amount');
+  const curEl = document.getElementById(p==='m'?'m-amount-currency':'c-amount-currency');
+  if(!amtEl) return;
+  const tAmt = Number(amtEl.value||0);
+  const tCur = curEl ? curEl.value : 'KRW';
+  const tKRW = toKRW(tAmt,tCur);
+  
+  let bKRW=0; 
+  for(let i=0;i<5;i++){ 
+      const bEl = document.getElementById(`${p}-b${i}`);
+      const cEl = document.getElementById(`${p}-bc${i}`);
+      if(bEl && cEl) bKRW += toKRW(Number(bEl.value||0), cEl.value||'KRW'); 
+  }
+  
+  const totalEl = document.getElementById(tId);
+  if(totalEl) {
+      totalEl.innerHTML=`<span>계약총액 <strong>${fmt(tAmt)} ${tCur}</strong></span><span>수입합계 <strong>${fmt(Math.round(bKRW))}원</strong></span><span class="billing-remain ${tKRW-bKRW<=0&&tKRW>0?'ok':'none'}">잔액 ${fmt(Math.round(tKRW-bKRW))}원</span>`;
+  }
 }
 
 function billingMini(bArr,tAmt,bDates,bCur,tCur){
-  let bKRW=0; (bArr||[]).forEach((a,i)=>{bKRW+=toKRW(Number(a||0),(bCur||[])[i]||'KRW');});
+  let bKRW=0; (bArr||[]).forEach((a,i)=>{
+      const ds = (bDates||[])[i];
+      if(ds && ds > TODAY) return; 
+      bKRW+=toKRW(Number(a||0),(bCur||[])[i]||'KRW');
+  });
   return`<div class="billing-mini">${(bArr||[]).map((a,i)=>{
      if(!a) return null; const c=(bCur||[])[i]||'KRW'; 
-     const aStr = c==='KRW' ? fmtM(a) : `<span style="color:${c==='RMB'?'#F5A623':'#4FC3F7'};font-family:var(--mono)">${fmt(a)} ${c}</span>`;
+     const aStr = c==='KRW' ? fmtM(a) : `<span style="color:${c==='RMB'?'#F5A623':'#4FC3F7'};font-family:var(--mono)">${fmt(a)}${c}</span>`;
      return `${i+1}차(${aStr})`; 
-  }).filter(Boolean).join(' / ')||'<span style="color:var(--text3)">내역없음</span>'}</div><div class="billing-remain">잔액 ${fmtM(Math.round(toKRW(Number(tAmt||0),tCur||'KRW')-bKRW))}</div>`;
+  }).filter(Boolean).join('<br>')||'<span style="color:var(--text3)">내역없음</span>'}</div><div class="billing-remain">잔액 ${fmtM(Math.round(toKRW(Number(tAmt||0),tCur||'KRW')-bKRW))}</div>`;
 }
 
-function closeModal(id){document.getElementById('modal-'+id).classList.remove('open');}
+window.closeModal = function(id){
+  const m = document.getElementById('modal-'+id);
+  if(m) m.classList.remove('open');
+}
 
 function renderDashboard(){
   const y=currentYear; document.getElementById('dashYear').textContent=y+'년';
   const medRows=(state.med||[]).filter(r=>isRowVisibleInYear(r,y)), certRows=(state.cert||[]).filter(r=>isRowVisibleInYear(r,y));
-  const mA=getBilledActual('med',y).qs, cA=getBilledActual('cert',y).qs; ensureRevYear(y);
+  const mA=getBilledActual('med',y), cA=getBilledActual('cert',y); ensureRevYear(y);
   
-  const medTarget=Object.values(state.revenue[y].med).reduce((s,v)=>s+v,0), certTarget=Object.values(state.revenue[y].cert).reduce((s,v)=>s+v,0);
-  const totalTarget = medTarget+certTarget;
-  
-  const medActualSum = Object.values(mA).reduce((s,v)=>s+v,0);
-  const certActualSum = Object.values(cA).reduce((s,v)=>s+v,0);
+  const medTarget = mk.reduce((s,k)=>s+Number(state.revenue[y].med[k]||0)*1000000, 0);
+  const certTarget = mk.reduce((s,k)=>s+Number(state.revenue[y].cert[k]||0)*1000000, 0);
+  const totalTarget = medTarget + certTarget;
+  const medActualSum = mk.reduce((s,k)=>s+mA[k],0);
+  const certActualSum = mk.reduce((s,k)=>s+cA[k],0);
   const tKRW = medActualSum + certActualSum;
 
+  const pTotal = pct(tKRW, totalTarget);
+  const pMed = pct(medActualSum, medTarget);
+  const pCert = pct(certActualSum, certTarget);
+
   let dashRMB=0, dashUSD=0;
-  [...medRows,...certRows].filter(r=>r.recordType!=='consult').forEach(r=>{
-    (r.billing||[]).forEach((amt,i)=>{
-      const c=(r.billingCurrencies||[])[i]||'KRW';
-      if(c==='RMB')dashRMB+=Number(amt); else if(c==='USD')dashUSD+=Number(amt);
-    });
-  });
+  [...medRows,...certRows].filter(r=>r.recordType!=='contract').forEach(r=>{ const acts = getActualBilledEx(r); dashRMB += acts.rmb; dashUSD += acts.usd; });
   const exStr=[];
   if(dashRMB>0) exStr.push(`<span style="color:#F5A623;font-family:var(--mono)">${fmt(dashRMB)} RMB</span>`);
   if(dashUSD>0) exStr.push(`<span style="color:#4FC3F7;font-family:var(--mono)">${fmt(dashUSD)} USD</span>`);
   const exHtml = exStr.length ? `<div style="font-size:11px;margin-top:6px;color:var(--text3)">외화 결제분: ${exStr.join(' / ')}</div>` : '';
 
   document.getElementById('dashStats').innerHTML=`
-    <div class="stat-card"><div class="stat-label">부문 전체 실적 (KRW)</div><div class="stat-value color-accent" style="display:flex;align-items:baseline;">${fmtM(Math.round(tKRW))}<span style="font-size:13px;color:var(--text3);font-weight:500;margin-left:8px;">/ ${fmtM(totalTarget)} <small style="font-size:11px;color:var(--text3);">(${pct(tKRW, totalTarget)}%)</small></span></div>${exHtml}</div>
-    <div class="stat-card"><div class="stat-label">의료기기팀 실적</div><div class="stat-value color-med" style="display:flex;align-items:baseline;">${fmtM(medActualSum)}<span style="font-size:13px;color:var(--text3);font-weight:500;margin-left:8px;">/ ${fmtM(medTarget)} <small style="font-size:11px;color:var(--text3);">(${pct(medActualSum,medTarget)}%)</small></span></div></div>
-    <div class="stat-card"><div class="stat-label">인증팀 실적</div><div class="stat-value color-cert" style="display:flex;align-items:baseline;">${fmtM(certActualSum)}<span style="font-size:13px;color:var(--text3);font-weight:500;margin-left:8px;">/ ${fmtM(certTarget)} <small style="font-size:11px;color:var(--text3);">(${pct(certActualSum,certTarget)}%)</small></span></div></div>
-    <div class="stat-card"><div class="stat-label">통합 달성률</div><div class="stat-value">${pct(tKRW, totalTarget)}%</div><div class="stat-bar"><div class="stat-fill fill-accent" style="width:${Math.min(pct(tKRW, totalTarget),100)}%"></div></div></div>`;
+    <div class="stat-card"><div class="stat-label">부문 전체 실적 (KRW)</div><div class="stat-value color-accent" style="display:flex;align-items:baseline;">${fmtM(Math.round(tKRW))}<span style="font-size:12px;color:${getStatColor(pTotal)};font-weight:700;margin-left:8px;">/ ${fmtM(totalTarget)} (${pTotal}%)</span></div>${exHtml}</div>
+    <div class="stat-card"><div class="stat-label">의료기기팀 실적</div><div class="stat-value color-med" style="display:flex;align-items:baseline;">${fmtM(medActualSum)}<span style="font-size:12px;color:${getStatColor(pMed)};font-weight:700;margin-left:8px;">/ ${fmtM(medTarget)} (${pMed}%)</span></div></div>
+    <div class="stat-card"><div class="stat-label">인증팀 실적</div><div class="stat-value color-cert" style="display:flex;align-items:baseline;">${fmtM(certActualSum)}<span style="font-size:12px;color:${getStatColor(pCert)};font-weight:700;margin-left:8px;">/ ${fmtM(certTarget)} (${pCert}%)</span></div></div>
+    <div class="stat-card"><div class="stat-label">통합 달성률</div><div class="stat-value" style="color:${getStatColor(pTotal)}">${pTotal}%</div><div class="stat-bar"><div class="stat-fill fill-accent" style="width:${Math.min(pTotal,100)}%; background:${getStatColor(pTotal)}"></div></div></div>`;
 
-  const isSuperAdmin = ADMIN_USERS.includes(currentUser) || currentUser === SUPER_ADMIN;
-  const todayStr=new Date().toISOString().slice(0,10), thisMonth=todayStr.slice(0,7);
-
-  const myTasks=(state.tasks||[]).filter(t=> !t.completedDate).sort((a,b)=>a.due.localeCompare(b.due));
+  const isSuperAdmin = currentUser === SUPER_ADMIN;
+  const isManager = MANAGERS.includes(currentUser);
+  
+  const myTasks=(state.tasks||[]).filter(t=> {
+    const isTargetUser = isSuperAdmin || t.to === currentUser || (isManager && t.from === currentUser);
+    const isFullyClosed = (t.completedDate && t.confirmedDate); 
+    return isTargetUser && !isFullyClosed;
+  }).sort((a,b)=>a.due.localeCompare(b.due));
+  
   document.getElementById('myTaskCount').textContent=myTasks.length+'건';
-  document.getElementById('myTasksList').innerHTML=myTasks.length?myTasks.map(t=>`<div class="ws-item" onclick="nav('tasks', document.querySelector('.nav-item:last-child'))"><div><div class="ws-title"><span style="color:var(--med)">[${t.to}]</span> ${t.content.substring(0,30)}</div><div class="ws-meta">기한: <strong style="color:${t.due<todayStr?'var(--danger)':'var(--text1)'}">${t.due||'없음'}</strong></div></div></div>`).join(''):'<div style="padding:10px;text-align:center;color:var(--text3)">대기 업무가 없습니다.</div>';
+  document.getElementById('myTasksList').innerHTML=myTasks.length?myTasks.map(t=>{
+    let act = ''; if(isSuperAdmin) act = `<button class="btn btn-sm btn-danger" style="margin-left:auto;padding:2px 6px;font-size:10px" onclick="event.stopPropagation();deleteTask('${t.id}')">삭제</button>`;
+    const statusB = t.completedDate ? `<span class="badge badge-green" style="margin-left:6px">완료보고됨</span>` : `<span class="badge badge-amber" style="margin-left:6px">진행중</span>`;
+    const labelStr = t.from === currentUser ? `<span style="color:var(--text3);margin-right:6px">[지시: ${t.to}]</span>` : `<span style="color:var(--med);margin-right:6px">[수신]</span>`;
+    return `<div class="ws-item" onclick="nav('tasks', document.querySelectorAll('.nav-item')[7])"><div style="width:100%"><div class="ws-title" style="display:flex;align-items:center">${labelStr} ${t.content.substring(0,25)}${t.content.length>25?'...':''} ${statusB} ${act}</div><div class="ws-meta">기한: <strong style="color:${t.due<TODAY?'var(--danger)':'var(--text1)'}">${t.due||'없음'}</strong> | 발신: ${t.from}</div></div></div>`;
+  }).join(''):'<div style="padding:10px;text-align:center;color:var(--text3)">대기 중인 업무가 없습니다.</div>';
   
-  const allItems = [...medRows, ...certRows].filter(r => r.status !== '완료' && r.stage !== '완료');
-  document.getElementById('myProjectCount').textContent = (isSuperAdmin ? allItems.length : allItems.filter(r=>r.manager===currentUser).length) + '건';
-  
+  const allContracts = [...medRows, ...certRows].filter(r => r.recordType === 'contract' && r.status !== '완료' && r.stage !== '완료');
+  document.getElementById('myProjectCount').textContent = (isSuperAdmin ? allContracts.length : allContracts.filter(r=>r.manager===currentUser).length) + '건';
   if (isSuperAdmin) {
-    const grouped = {}; allItems.forEach(r => { const mgr = r.manager || '미지정'; if (!grouped[mgr]) grouped[mgr] = []; grouped[mgr].push(r); });
+    const grouped = {}; allContracts.forEach(r => { const mgr = r.manager || '미지정'; if (!grouped[mgr]) grouped[mgr] = []; grouped[mgr].push(r); });
     document.getElementById('myProjectsList').innerHTML = Object.keys(grouped).map(mgr => `<div style="margin-bottom:10px;border-bottom:1px dashed var(--border);padding-bottom:8px;"><div style="font-weight:700;color:var(--accent);margin-bottom:6px;">👤 ${mgr} (${grouped[mgr].length}개 진행 중)</div>${grouped[mgr].map(r => { const start=r.startdate||r.contractdate||r.date||'미정'; const end=r.duedate||r.issuedate||r.expiredate||'미정'; return `<div style="font-size:11px;padding-left:10px;margin-bottom:4px;color:var(--text2)">• <strong>${r.client}</strong> (${r.progress || r.stage || '진행중'})<br><span style="color:var(--text3);padding-left:10px;">📅 기간: ${start} ~ ${end}</span></div>`;}).join('')}</div>`).join('');
   } else {
-    document.getElementById('myProjectsList').innerHTML = allItems.filter(r => r.manager === currentUser).map(r => { const start=r.startdate||r.contractdate||r.date||'미정'; const end=r.duedate||r.issuedate||r.expiredate||'미정'; return `<div class="ws-item"><div><div class="ws-title">🏢 ${r.client}</div><div class="ws-meta">단계: <strong style="color:var(--med)">${r.progress||r.stage||'진행중'}</strong><br>📅 기간: ${start} ~ ${end}</div></div></div>`;}).join('') || '<div style="padding:10px;text-align:center;color:var(--text3)">진행 중인 프로젝트가 없습니다.</div>';
+    document.getElementById('myProjectsList').innerHTML = allContracts.filter(r => r.manager === currentUser).map(r => { const start=r.startdate||r.contractdate||r.date||'미정'; const end=r.duedate||r.issuedate||r.expiredate||'미정'; return `<div class="ws-item"><div><div class="ws-title">🏢 ${r.client}</div><div class="ws-meta">단계: <strong style="color:var(--med)">${r.progress||r.stage||'진행중'}</strong><br>📅 기간: ${start} ~ ${end}</div></div></div>`;}).join('') || '<div style="padding:10px;text-align:center;color:var(--text3)">진행 중인 프로젝트가 없습니다.</div>';
   }
 
-  const completedThisMonth = (state.tasks||[]).filter(t=>t.completedDate && t.completedDate.startsWith(thisMonth));
-  const userSpeed = {};
-  completedThisMonth.forEach(t => {
-     if(!userSpeed[t.to]) userSpeed[t.to] = { count:0, est:0, act:0 };
-     userSpeed[t.to].count++; userSpeed[t.to].est += Number(t.estHours||0); userSpeed[t.to].act += Number(t.actHours||0);
-  });
-  const topSpeed = Object.keys(userSpeed).map(u => ({ name:u, ...userSpeed[u] })).sort((a,b) => b.count - a.count).slice(0, 3);
-  const topSpeedHTML = topSpeed.length ? topSpeed.map((u, i) => `<div class="ws-item" style="cursor:default;border-left:3px solid var(--med)"><div><div class="ws-title">${i==0?'🥇':i==1?'🥈':'🥉'} ${u.name} (${u.count}건 완료)</div><div class="ws-meta">처리시간: 예상 ${u.est}h / 실제 ${u.act}h</div></div></div>`).join('') : '';
+  const allConsults = [...medRows, ...certRows].filter(r => r.recordType === 'consult' && !['계약보류','계약불가','취소'].includes(r.consultStatus || r.contracted || r.status || ''));
+  allConsults.sort((a,b) => (a.startdate || a.date || '9999-12-31').localeCompare(b.startdate || b.date || '9999-12-31'));
+  const consultHTML = allConsults.map(r => {
+      const dStr = r.startdate || r.date; let badge = '';
+      if (dStr) {
+          const diffDays = Math.floor((new Date(TODAY) - new Date(dStr)) / (1000 * 60 * 60 * 24));
+          if (diffDays >= 60) badge = `<span class="badge badge-red" style="margin-left:6px">2달, 확인 필요</span>`;
+          else if (diffDays >= 30) badge = `<span class="badge badge-amber" style="margin-left:6px">1달 경과</span>`;
+      }
+      return `<div class="ws-item" style="cursor:default;border-left:3px solid var(--med)"><div><div class="ws-title">${r.client} <span style="font-size:11px;font-weight:400;color:var(--text3)">(${r.manager||'미지정'})</span></div><div class="ws-meta">상담일: <strong style="color:var(--text1)">${dStr||'-'}</strong> | 상태: ${r.consultStatus||r.contracted||'진행중'} ${badge}</div></div></div>`;
+  }).join('');
+  if(document.getElementById('speedStarList')) document.getElementById('speedStarList').innerHTML = consultHTML || '<div style="padding:10px;text-align:center;color:var(--text3)">진행 중인 상담이 없습니다.</div>';
 
-  const delayedProjs = allItems.filter(r => { if(!r.duedate && !r.expiredate && !r.issuedate) return false; const end = r.duedate || r.issuedate || r.expiredate; return end < todayStr; }).sort((a,b) => (a.duedate||a.issuedate||a.expiredate).localeCompare(b.duedate||b.issuedate||b.expiredate));
-  const delayedHTML = delayedProjs.length ? delayedProjs.map(r => `<div class="ws-item" style="cursor:default;border-left:3px solid var(--danger)"><div><div class="ws-title">⚠️ [${r.manager||'미지정'}] ${r.client}</div><div class="ws-meta" style="color:var(--danger)">기한 지연: ${r.duedate||r.issuedate||r.expiredate}</div></div></div>`).join('') : '';
-  document.getElementById('speedStarList').innerHTML = (topSpeedHTML + delayedHTML) || '<div style="color:var(--text3);padding:10px;text-align:center">데이터가 없습니다.</div>';
+  if (isSuperAdmin) {
+    const delayRows = [...medRows, ...certRows].filter(r => r.recordType === 'contract' && r.stage !== '완료' && r.status !== '완료');
+    delayRows.sort((a,b) => (a.startdate || a.contractdate || '9999-12-31').localeCompare(b.startdate || b.contractdate || '9999-12-31'));
+    let bottleneckHTML = '';
+    delayRows.forEach(r => {
+        const dStr = r.startdate || r.contractdate;
+        if(!dStr) return;
+        const diffDays = Math.floor((new Date(TODAY) - new Date(dStr)) / (1000*60*60*24));
+        if(diffDays >= 90) {
+            const tType = state.med.includes(r) ? 'med' : 'cert';
+            let bColor = diffDays >= 180 ? 'var(--danger)' : 'var(--warn)';
+            let badge = diffDays >= 180 ? `<span class="badge badge-red" style="margin-right:6px">[${diffDays}일 경과]</span>` : `<span class="badge badge-amber" style="margin-right:6px">[${diffDays}일 경과]</span>`;
+            bottleneckHTML += `
+            <div style="margin-bottom:12px; border-left:3px solid ${bColor}; padding-left:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <div style="font-size:13px; font-weight:700; color:var(--text1)">${badge} ${r.client} <span style="font-weight:400; font-size:11px; color:var(--text3)">(담당: ${r.manager||'미지정'})</span></div>
+                <div style="font-size:11px; color:var(--text3)">계약일: ${dStr} | 현단계: <strong style="color:var(--text1)">${r.progress||r.stage||'진행중'}</strong></div>
+              </div>
+              <input type="text" class="delay-input" placeholder="지연 사유를 입력하고 밖을 누르면 자동 저장됩니다." value="${r.delayReason||''}" onchange="saveDelayReason('${r.id}', '${tType}', this.value)">
+            </div>`;
+        }
+    });
+    if(document.getElementById('bottleneckList')) document.getElementById('bottleneckList').innerHTML = bottleneckHTML || '<div style="padding:10px;text-align:center;color:var(--text3)">90일 이상 지연 중인 프로젝트가 없습니다.</div>';
+  }
 
-  const qk=['q1','q2','q3','q4'];
-  if(chartQ)chartQ.destroy(); chartQ=new Chart(document.getElementById('chartQuarter'),{type:'bar',data:{labels:['Q1','Q2','Q3','Q4'],datasets:[{label:'통합 목표',data:qk.map(k=>(state.revenue[y]?.med?.[k]||0)+(state.revenue[y]?.cert?.[k]||0)),backgroundColor:'rgba(91,110,245,.2)',borderColor:'rgba(91,110,245,.8)',borderWidth:1},{label:'통합 실적',data:qk.map(k=>(mA[k]||0)+(cA[k]||0)),backgroundColor:'rgba(91,110,245,.9)'}]},options:chartOpts()});
+  let alertHTML = '';
+  const myAlertContracts = [...state.med, ...state.cert].filter(r => isRowVisibleInYear(r,y) && (isSuperAdmin || r.manager === currentUser));
   
-  const tC_plan = qk.map(k => (state.revenue[y]?.med?.[k]||0) + (state.revenue[y]?.cert?.[k]||0));
-  const tC_act  = qk.map(k => (mA[k]||0) + (cA[k]||0));
-  let tc=0, ac=0; const tCum = tC_plan.map(v => tc += v); const aCum = tC_act.map(v => ac += v);
-  if(chartDashLine) chartDashLine.destroy(); chartDashLine=new Chart(document.getElementById('chartDashLine'),{type:'line',data:{labels:['Q1','Q2','Q3','Q4'],datasets:[{label:'목표 누계',data:tCum,borderColor:'rgba(180,180,170,.6)',borderDash:[4,4],fill:false,tension:.3,pointRadius:4},{label:'실적 누계',data:aCum,borderColor:'#E8652A',fill:false,tension:.3,pointRadius:5}]},options:chartOpts()});
+  myAlertContracts.forEach(r => {
+      const teamStr = state.med.includes(r) ? '의료기기' : '제품환경';
+      if (r.recordType === 'contract') {
+          (r.billingDates || []).forEach((dStr, i) => {
+              if(!dStr) return;
+              const amt = Number((r.billing || [])[i] || 0); if(amt <= 0) return;
+              const diff = Math.ceil((new Date(dStr) - new Date(TODAY)) / (1000 * 60 * 60 * 24));
+              
+              if (diff <= 30 && diff >= -60) {
+                  let b = diff < 0 ? `<span class="badge badge-red">수금지연 (${Math.abs(diff)}일)</span>` : (diff <= 1 ? `<span class="badge badge-danger">수금임박 (D-${diff})</span>` : `<span class="badge badge-gray">수금예정 (D-${diff})</span>`);
+                  const cur = (r.billingCurrencies || [])[i] || 'KRW';
+                  alertHTML += `<div style="padding:12px; background:var(--surface); border-radius:8px; border:1px solid var(--border); display:flex; flex-direction:column; gap:4px;">
+                      <div style="display:flex; justify-content:space-between; align-items:center;"><span style="font-weight:700;">[${teamStr}] ${r.client}</span>${b}</div>
+                      <div style="font-size:11px; color:var(--text2)">${i+1}차 청구일: <strong>${dStr}</strong> | 금액: <strong style="color:var(--accent)">${cur==='KRW'?fmtM(amt):fmt(amt)+' '+cur}</strong></div>
+                  </div>`;
+              }
+          });
+      }
+      
+      if (r.expiredate) {
+          const diffExp = Math.ceil((new Date(r.expiredate) - new Date(TODAY)) / (1000 * 60 * 60 * 24));
+          if (diffExp <= 60 && diffExp >= -30) {
+              let bExp = diffExp < 0 ? `<span class="badge badge-red">인증만료과거</span>` : (diffExp <= 15 ? `<span class="badge badge-danger">🔥 갱신긴급 (D-${diffExp})</span>` : `<span class="badge badge-amber">갱신준비 (D-${diffExp})</span>`);
+              alertHTML += `<div style="padding:12px; background:var(--surface); border-radius:8px; border:1px solid #E8652A; display:flex; flex-direction:column; gap:4px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;"><span style="font-weight:700; color:var(--warn)">[⚠️ 인증갱신] ${r.client}</span>${bExp}</div>
+                  <div style="font-size:11px; color:var(--text1)">만료일: <strong style="color:var(--danger)">${r.expiredate}</strong> | 주기: ${r.renewcycle||'미정'} (담당: ${r.manager||'미지정'})</div>
+              </div>`;
+          }
+      }
+  });
+  if(document.getElementById('billingAlertList')) document.getElementById('billingAlertList').innerHTML = alertHTML || '<div style="color:var(--text3); padding:10px;">D-30 이내 수금 일정 및 갱신 대상 인증이 없습니다.</div>';
 
-  document.getElementById('dashMedTable').querySelector('tbody').innerHTML=medRows.filter(r=>r.recordType==='contract').slice(0,4).map(r=>`<tr><td><strong>${r.client}</strong></td><td><span class="badge badge-med">계약</span></td><td>${r.stage||'-'}</td><td>${r.manager||'-'}</td><td><span class="badge badge-green">${r.status||'진행중'}</span></td></tr>`).join('');
-  document.getElementById('dashCertTable').querySelector('tbody').innerHTML=certRows.filter(r=>r.recordType==='contract').slice(0,4).map(r=>`<tr><td><strong>${r.client}</strong></td><td><span class="badge badge-cert">계약</span></td><td>${r.certtype||'-'}</td><td>${r.stage||'-'}</td><td>${r.manager||'-'}</td></tr>`).join('');
+  const m_labels = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const planData = mk.map(k => (Number(state.revenue[y]?.med?.[k]||0) + Number(state.revenue[y]?.cert?.[k]||0))); 
+  const actData = mk.map(k => Math.round((Number(mA[k]||0) + Number(cA[k]||0)) / 1000000)); 
+  
+  let cP = 0, cA_cum = 0;
+  const cumPlanData = planData.map(v => cP += v);
+  const cumActData = actData.map(v => cA_cum += v);
+
+  if(chartDashMixed) chartDashMixed.destroy();
+  const cEl = document.getElementById('chartDashMixed');
+  if(cEl) {
+      chartDashMixed = new Chart(cEl, {
+          data: {
+              labels: m_labels,
+              datasets: [
+                  { type: 'line', label: '누적 실적', data: cumActData, borderColor: '#E8652A', backgroundColor: '#E8652A', tension: 0.3, yAxisID: 'y1', pointRadius: 4, borderWidth:2 },
+                  { type: 'line', label: '누적 목표', data: cumPlanData, borderColor: 'rgba(180,180,170,0.6)', borderDash: [4,4], tension: 0.3, yAxisID: 'y1', pointRadius: 0, borderWidth:2 },
+                  { type: 'bar', label: '월별 실적', data: actData, backgroundColor: 'rgba(91,110,245,0.9)', yAxisID: 'y', borderRadius: 4 },
+                  { type: 'bar', label: '월별 목표', data: planData, backgroundColor: 'rgba(91,110,245,0.2)', yAxisID: 'y', borderRadius: 4 }
+              ]
+          },
+          options: {
+              responsive: true, maintainAspectRatio: false,
+              interaction: { mode: 'index', intersect: false },
+              plugins: {
+                  legend: { position: 'bottom', labels: { color: '#A8ABBE' } },
+                  tooltip: { callbacks: { label: function(ctx) { return `${ctx.dataset.label}: ${fmt(ctx.raw)}백만원 (${fmtM(ctx.raw*1000000)})`; } } }
+              },
+              scales: {
+                  x: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#A8ABBE' } },
+                  y: { type: 'linear', display: true, position: 'left', title: {display:true, text:'월별 (백만원)', color:'#868C9E'}, grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#A8ABBE' } },
+                  y1: { type: 'linear', display: true, position: 'right', title: {display:true, text:'누적 (백만원)', color:'#868C9E'}, grid: { drawOnChartArea: false }, ticks: { color: '#A8ABBE' } }
+              }
+          }
+      });
+  }
+}
+
+window.switchRevTeam = function(team, el) {
+    revTeam = team;
+    document.querySelectorAll('.team-tab').forEach(b => b.classList.remove('active-med', 'active-cert'));
+    el.classList.add(team === 'cert' ? 'active-cert' : 'active-med');
+    renderRevenue();
 }
 
 function renderRevenue(){
-  const y=currentYear; ensureRevYear(y); const qk=['q1','q2','q3','q4'], teams=revTeam==='total'?['med','cert']:[revTeam];
-  const t={q1:0,q2:0,q3:0,q4:0}, a={q1:0,q2:0,q3:0,q4:0};
-  teams.forEach(tm=>{ const p=state.revenue[y]?.[tm] || {q1:0,q2:0,q3:0,q4:0}; const res=getBilledActual(tm,y); qk.forEach(k=>{t[k]+=Number(p[k]||0);a[k]+=Number(res.qs[k]||0);}); });
+  const y=currentYear; ensureRevYear(y); const teams=revTeam==='total'?['med','cert']:[revTeam];
+  const t={m1:0,m2:0,m3:0,m4:0,m5:0,m6:0,m7:0,m8:0,m9:0,m10:0,m11:0,m12:0}, a={m1:0,m2:0,m3:0,m4:0,m5:0,m6:0,m7:0,m8:0,m9:0,m10:0,m11:0,m12:0};
   
-  const mLabels = {q1:'Q2', q2:'Q3', q3:'Q4', q4:'내년 Q1'};
-  document.getElementById('qCards').innerHTML=qk.map((k,i)=>`<div class="q-card"><div class="q-label">Q${i+1}</div><div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px;"><span>이번 분기 실적</span><span>${t[k]>0?pct(a[k],t[k])+'% 달성':''}</span></div><div class="q-actual">${fmt(a[k])}원</div><div style="font-size:11px;color:var(--text3);margin-top:14px;border-top:1px solid var(--border);padding-top:8px;">${mLabels[k]} 목표 설정</div><input type="number" value="${t[k]}" placeholder="목표액 입력" onchange="updateTarget('${revTeam}','${k}',this.value)" style="width:100%;border:1px solid var(--border2);border-radius:8px;padding:8px;font-size:14px;font-family:var(--mono);background:var(--bg);color:var(--text1);outline:none;margin-top:4px;"></div></div>`).join('');
+  teams.forEach(tm=>{ 
+      const p=state.revenue[y]?.[tm] || {m1:0,m2:0,m3:0,m4:0,m5:0,m6:0,m7:0,m8:0,m9:0,m10:0,m11:0,m12:0}; 
+      const res=getBilledActual(tm,y); 
+      mk.forEach(k=>{t[k]+=Number(p[k]||0); a[k]+=Number(res[k]||0);}); 
+  });
   
-  if(chartRevBar)chartRevBar.destroy(); chartRevBar=new Chart(document.getElementById('chartRevBar'),{type:'bar',data:{labels:qk,datasets:[{label:'목표',data:qk.map(k=>t[k]),backgroundColor:'rgba(91,110,245,.2)',borderWidth:1},{label:'실적',data:qk.map(k=>a[k]),backgroundColor:'rgba(91,110,245,.8)'}]},options:chartOpts()});
-  if(chartRevLine)chartRevLine.destroy();
+  if(document.getElementById('mCards')) {
+      document.getElementById('mCards').innerHTML=mk.map((k,i)=>{
+          const targetK = t[k] * 1000000;
+          const p = targetK > 0 ? pct(a[k], targetK) : 0;
+          return `<div class="m-card"><div class="m-label">${i+1}월</div><div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px;"><span>실적</span><span style="color:${getStatColor(p)}">${targetK>0?p+'%':''}</span></div><div class="m-actual">${fmtM(a[k])}</div><div style="font-size:11px;color:var(--text3);margin-top:14px;border-top:1px solid var(--border);padding-top:8px;">목표 설정 (백만원)</div><input type="number" class="m-input" value="${t[k]}" placeholder="목표 입력" onchange="updateTarget('${revTeam}','${k}',this.value)" ${revTeam==='total'?'disabled style="background:var(--surface); color:var(--text3); cursor:not-allowed;"':''}></div></div>`;
+      }).join('');
+  }
   
-  const fRows=(revTeam==='total'?[...state.med,...state.cert]:state[revTeam]).filter(r=>r.recordType==='contract'&&isRowVisibleInYear(r,y));
+  const m_labels = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const planData = mk.map(k => t[k]);
+  const actData = mk.map(k => Math.round(a[k] / 1000000));
+  
+  let cP = 0, cA_cum = 0;
+  const cumPlanData = planData.map(v => cP += v);
+  const cumActData = actData.map(v => cA_cum += v);
+
+  if(chartRevMixed) chartRevMixed.destroy();
+  const revMixEl = document.getElementById('chartRevMixed');
+  if(revMixEl) {
+      chartRevMixed = new Chart(revMixEl, {
+          data: {
+              labels: m_labels,
+              datasets: [
+                  { type: 'line', label: '누적 실적', data: cumActData, borderColor: revTeam==='cert'?'#19A876':'#5B6EF5', backgroundColor: revTeam==='cert'?'#19A876':'#5B6EF5', tension: 0.3, yAxisID: 'y1', pointRadius: 4, borderWidth:2 },
+                  { type: 'line', label: '누적 목표', data: cumPlanData, borderColor: 'rgba(180,180,170,0.6)', borderDash: [4,4], tension: 0.3, yAxisID: 'y1', pointRadius: 0, borderWidth:2 },
+                  { type: 'bar', label: '월별 실적', data: actData, backgroundColor: revTeam==='cert'?'rgba(25,168,118,0.8)':'rgba(91,110,245,0.8)', yAxisID: 'y', borderRadius: 4 },
+                  { type: 'bar', label: '월별 목표', data: planData, backgroundColor: revTeam==='cert'?'rgba(25,168,118,0.2)':'rgba(91,110,245,0.2)', yAxisID: 'y', borderRadius: 4 }
+              ]
+          },
+          options: {
+              responsive: true, maintainAspectRatio: false,
+              interaction: { mode: 'index', intersect: false },
+              plugins: { legend: { position: 'bottom', labels: { color: '#A8ABBE' } }, tooltip: { callbacks: { label: function(ctx) { return `${ctx.dataset.label}: ${fmt(ctx.raw)}백만원 (${fmtM(ctx.raw*1000000)})`; } } } },
+              scales: { x: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#A8ABBE' } }, y: { type: 'linear', display: true, position: 'left', title: {display:true, text:'월별 (백만원)', color:'#868C9E'}, grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#A8ABBE' } }, y1: { type: 'linear', display: true, position: 'right', title: {display:true, text:'누적 (백만원)', color:'#868C9E'}, grid: { drawOnChartArea: false }, ticks: { color: '#A8ABBE' } } }
+          }
+      });
+  }
+  
+  const svcMap={};
+  const pieRows=(revTeam==='total'?[...state.med,...state.cert]:state[revTeam]).filter(r=>r.recordType!=='consult'&&isRowVisibleInYear(r,y));
+  pieRows.forEach(r=>{
+      let svc = '기타';
+      if (state.med.includes(r)) { 
+          if ((r.grade||'').includes('중국')) svc = '중국의료기기';
+          else if ((r.grade||'').includes('한국') || (r.grade||'').includes('GMP')) svc = '한국의료기기';
+          else svc = '기타 의료기기';
+      } else { svc = r.certtype || '기타 인증'; }
+      let billed=0;
+      (r.billing||[]).forEach((amt,i)=>{
+          const ds = (r.billingDates||[])[i];
+          if (ds && ds > TODAY) return; 
+          billed += toKRW(Number(amt||0),(r.billingCurrencies||[])[i]||'KRW');
+      });
+      if(billed>0) svcMap[svc]=(svcMap[svc]||0)+billed;
+  });
+  const sortedSvc=Object.entries(svcMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  
+  if(chartTop) chartTop.destroy();
+  const chartTopEl = document.getElementById('chartTopServices');
+  if(chartTopEl) {
+      chartTop = new Chart(chartTopEl, { type: 'doughnut', data: { labels: sortedSvc.length?sortedSvc.map(s=>s[0]):['데이터 없음'], datasets: [{ data: sortedSvc.length?sortedSvc.map(s=>s[1]):[1], backgroundColor: ['#E8652A','#5B6EF5','#19A876','#F5A623','#8B5CF6','#EC4899','#14B8A6','#06B6D4'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#A8ABBE', font:{size:11} } }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmtM(Number(ctx.raw)||0)}` } } } } });
+  }
+
   let subAmt=0, subBil=0;
-  document.getElementById('revContractTable').querySelector('tbody').innerHTML=fRows.map((r,i)=>{
-    const tm=state.med.includes(r)?'med':'cert', amtK=toKRW(r.amount,r.amountCurrency), bilK=(r.billing||[]).reduce((s,v,bi)=>s+toKRW(Number(v||0),(r.billingCurrencies||[])[bi]||'KRW'),0);
-    subAmt+=amtK; subBil+=bilK;
-    return`<tr><td>${i+1}</td><td><span class="badge ${tm==='med'?'badge-med':'badge-cert'}">${tm==='med'?'의료기기':'인증팀'}</span></td><td><strong>${r.client}</strong></td><td>${r.product||r.certtype||'-'}</td><td>Q1</td><td>${fmtCurEx(r.amount, r.amountCurrency)}</td><td><span style="color:var(--success);font-weight:700">${fmtM(bilK)}</span></td><td><span style="color:var(--warn);font-weight:700">${fmtM(amtK-bilK)}</span></td><td>${r.manager||'-'}</td></tr>`;
-  }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="5" class="text-right">소 계</td><td class="text-mono color-accent">${fmtM(subAmt)}</td><td class="text-mono color-success">${fmtM(subBil)}</td><td class="text-mono color-warn">${fmtM(subAmt-subBil)}</td><td></td></tr>`;
-  
-  const tC_plan = qk.map(k => (state.revenue[y]?.med?.[k]||0) + (state.revenue[y]?.cert?.[k]||0));
-  const tC_act  = qk.map(k => (getBilledActual('med',y).qs[k]||0) + (getBilledActual('cert',y).qs[k]||0));
-  let tc=0, ac=0; const tCum = tC_plan.map(v => tc += v); const aCum = tC_act.map(v => ac += v);
-  chartRevLine=new Chart(document.getElementById('chartRevLine'),{type:'line',data:{labels:['Q1','Q2','Q3','Q4'],datasets:[{label:'목표 누계',data:tCum,borderColor:'rgba(180,180,170,.6)',borderDash:[4,4],fill:false,tension:.3,pointRadius:4},{label:'실적 누계',data:aCum,borderColor:revTeam==='cert'?'#19A876':'#5B6EF5',fill:false,tension:.3,pointRadius:5}]},options:chartOpts()});
-}
-
-window.updateTarget = async function(team,q,val){ const n=Number(val)||0; if(team==='total') return; state.revenue[currentYear][team][q]=n; await saveState(); renderRevenue(); }
-
-function renderMedContract(){
-  const y=currentYear, rows=state.med.filter(r=>r.recordType==='contract'&&isRowVisibleInYear(r,y));
-  document.getElementById('medContractThead').innerHTML=`<tr><th>#</th><th>업체명</th><th>업체 담당자</th><th>등급</th><th>담당자</th><th>완료목표일</th><th>계약총액</th><th>수입내역 / 잔액</th><th>진행단계</th><th>상태</th><th>관리</th></tr>`;
-  let tAmt=0;
-  document.getElementById('medContractTable').querySelector('tbody').innerHTML=rows.length?rows.map((r,i)=>{
-    tAmt += toKRW(r.amount,r.amountCurrency);
-    let actionBtns = `<button class="btn btn-sm" onclick="editMed('${r.id}')">수정</button> <button class="btn btn-sm btn-danger" onclick="deleteMed('${r.id}')">삭제</button>`;
-    return`<tr><td>${i+1}</td><td><strong>${r.client}</strong></td><td><div>${r.contactName||''}</div><div style="color:var(--text3);font-size:11px">${r.contactPhone||''}</div></td><td><span class="badge badge-gray">${r.grade||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td>${r.duedate||'-'}</td><td>${fmtCurEx(r.amount, r.amountCurrency)}</td><td>${billingMini(r.billing,r.amount,r.billingDates,r.billingCurrencies,r.amountCurrency)}</td><td><span class="badge badge-amber">${r.progress||'-'}</span></td><td>${r.status||'-'}</td><td style="white-space:nowrap">${actionBtns}</td></tr>`;
-  }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="6" class="text-right">계약 총액 누계</td><td class="text-mono color-accent">${fmtM(tAmt)}</td><td colspan="4"></td></tr>` : `<tr class="empty-row"><td colspan="11">데이터가 없습니다.</td></tr>`;
-}
-
-function renderMedConsult(){
-  const y = currentYear, rows = state.med.filter(r => r.recordType === 'consult' && r.year === y);
-  let tQuote = 0;
-  document.getElementById('medConsultTable').querySelector('tbody').innerHTML = rows.length ? rows.map((r, i) => {
-    tQuote += Number(r.quoteAmount||0);
-    let actionBtns = `<button class="btn btn-sm btn-med" onclick="convertToContract('med','${r.id}')">전환</button> <button class="btn btn-sm" onclick="editMed('${r.id}')">수정</button> <button class="btn btn-sm btn-danger" onclick="deleteMed('${r.id}')">삭제</button>`;
-    return `<tr><td>${i+1}</td><td><strong>${r.client}</strong></td><td>${r.product||'-'}</td><td><span class="badge badge-gray">${r.grade||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td>${r.startdate||'-'}</td><td>${r.duedate||'-'}</td><td><span class="badge badge-med">상담</span></td><td>${r.consultStatus||'진행중'}</td><td>${r.quoteDate ? '발송' : '미발송'}</td><td>${r.note||'-'}</td><td>${actionBtns}</td></tr>`;
-  }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="9" class="text-right">견적 발송 누계</td><td class="text-mono color-accent">${fmtM(tQuote)}</td><td colspan="2"></td></tr>` : `<tr class="empty-row"><td colspan="12">상담 내역이 없습니다.</td></tr>`;
-}
-
-function renderCertContract(){
-  const y=currentYear, rows=state.cert.filter(r=>r.recordType==='contract'&&isRowVisibleInYear(r,y));
-  document.getElementById('certContractThead').innerHTML=`<tr><th>#</th><th>업체명</th><th>업체 담당자</th><th>인증종류</th><th>담당자</th><th>계약일</th><th>계약총액</th><th>수입내역 / 잔액</th><th>진행단계</th><th>발급일</th><th>관리</th></tr>`;
-  let tAmt=0;
-  document.getElementById('certContractTable').querySelector('tbody').innerHTML=rows.length?rows.map((r,i)=>{
-    tAmt += toKRW(r.amount,r.amountCurrency);
-    let actionBtns = `<button class="btn btn-sm" onclick="editCert('${r.id}')">수정</button> <button class="btn btn-sm btn-danger" onclick="deleteCert('${r.id}')">삭제</button>`;
-    return`<tr><td>${i+1}</td><td><strong>${r.client}</strong></td><td><div>${r.contactName||''}</div><div style="color:var(--text3);font-size:11px">${r.contactPhone||''}</div></td><td><span class="badge badge-cert">${r.certtype||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td>${r.contractdate||'-'}</td><td>${fmtCurEx(r.amount, r.amountCurrency)}</td><td>${billingMini(r.billing,r.amount,r.billingDates,r.billingCurrencies,r.amountCurrency)}</td><td><span class="badge badge-green">${r.stage||'-'}</span></td><td>${r.issuedate||'-'}</td><td style="white-space:nowrap">${actionBtns}</td></tr>`;
-  }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="6" class="text-right">계약 총액 누계</td><td class="text-mono color-accent">${fmtM(tAmt)}</td><td colspan="4"></td></tr>` : `<tr class="empty-row"><td colspan="11">데이터가 없습니다.</td></tr>`;
-}
-
-function renderCertConsult(){
-  const y = currentYear, rows = state.cert.filter(r => r.recordType === 'consult' && r.year === y);
-  let tQuote=0;
-  document.getElementById('certConsultTable').querySelector('tbody').innerHTML = rows.length ? rows.map((r, i) => {
-    tQuote += Number(r.quoteAmount||0);
-    let actionBtns = `<button class="btn btn-sm btn-cert" onclick="convertToContract('cert','${r.id}')">전환</button> <button class="btn btn-sm" onclick="editCert('${r.id}')">수정</button> <button class="btn btn-sm btn-danger" onclick="deleteCert('${r.id}')">삭제</button>`;
-    return `<tr><td>${i+1}</td><td><strong>${r.client}</strong></td><td><span class="badge badge-cert">${r.certtype||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td>${r.date||'-'}</td><td>${r.contracted||'진행중'}</td><td>${r.quoteDate || '-'}</td><td>${r.note||'-'}</td><td>${actionBtns}</td></tr>`;
-  }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="6" class="text-right">견적 발송 누계</td><td class="text-mono color-accent">${fmtM(tQuote)}</td><td colspan="2"></td></tr>` : `<tr class="empty-row"><td colspan="9">상담 내역이 없습니다.</td></tr>`;
-}
-
-window.openMedModal = function(type){ medEditId=null; medIsContract=(type==='contract'); document.getElementById('modal-med').classList.add('open'); ['m-client','m-product','m-grade','m-biztype','m-manager','m-startdate','m-duedate','m-status','m-progress','m-amount','m-expense','m-consult-status','m-fail-reason','m-consult-etc','m-quote-date','m-quote-amount','m-quote-file','m-contact-name','m-contact-phone','m-contact-email','m-note','m-renewcycle','m-expiredate'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=''}); document.getElementById('m-stage-wrap').innerHTML=''; buildBillingGrid('medBillingGrid','medBillingTotal','m',[],[],[]); document.getElementById('medContractFields').style.display=medIsContract?'contents':'none'; document.getElementById('medConsultSection').style.display=medIsContract?'none':'contents'; }
-
-window.openCertModal = function(type){ certEditId=null; certIsContract=(type==='contract'); document.getElementById('modal-cert').classList.add('open'); ['c-client','c-certtype','c-certtype-etc','c-manager','c-amount','c-expense','c-contractdate','c-stage','c-issuedate','c-contracted','c-date','c-fail-reason','c-quote-date','c-quote-amount','c-quote-file','c-contact-name','c-contact-phone','c-contact-email','c-etc-memo','c-note','c-renewcycle','c-expiredate'].forEach(id=>{if(document.getElementById(id))document.getElementById(id).value=''}); buildBillingGrid('certBillingGrid','certBillingTotal','c',[],[],[]); document.getElementById('certContractFields').style.display=certIsContract?'contents':'none'; document.getElementById('certConsultSection').style.display=certIsContract?'none':'contents'; }
-
-window.updateMedStageOptions = function(){ const b=document.getElementById('m-biztype').value, w=document.getElementById('m-stage-wrap'), s={'인허가':['자료수집 및 규제검토','기술문서 작성','신청서 제출','시험 검사','심사 및 보완','인허가 완료'],'QMS':['현황분석','절차서 작성','직원교육','내부감사','인증심사','CGMP 완료']}[b]||[]; if(!s.length){w.innerHTML='<span style="font-size:12px;color:var(--text3)">업무 유형을 먼저 선택하세요</span>';return;} const c=medEditId?(state.med.find(r=>r.id===medEditId)?.stages||[]):[]; w.innerHTML=s.map(st=>`<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:8px;background:${c.includes(st)?'var(--med-light)':'var(--surface)'};color:${c.includes(st)?'var(--med)':'var(--text2)'};font-weight:600;"><input type="checkbox" value="${st}" ${c.includes(st)?'checked':''} style="display:none" onchange="this.parentElement.style.background=this.checked?'var(--med-light)':'var(--surface)';this.parentElement.style.color=this.checked?'var(--med)':'var(--text2)'">${st}</label>`).join(''); }
-
-window.editMed = function(id){
-  const r=state.med.find(x=>x.id===id); if(!r)return; medEditId=id; medIsContract=(r.recordType==='contract'); document.getElementById('modal-med').classList.add('open');
-  document.getElementById('m-client').value=r.client||''; document.getElementById('m-product').value=r.product||''; document.getElementById('m-grade').value=r.grade||''; document.getElementById('m-biztype').value=r.biztype||''; updateMedStageOptions();
-  (r.stages||[]).forEach(st=>{ const cb=document.querySelector(`#m-stage-wrap input[value="${st}"]`); if(cb){ cb.checked=true; cb.parentElement.style.background='var(--med-light)'; cb.parentElement.style.color='var(--med)'; } });
-  document.getElementById('m-manager').value=r.manager||''; document.getElementById('m-startdate').value=r.startdate||''; document.getElementById('m-duedate').value=r.duedate||''; document.getElementById('m-status').value=r.status||'진행중'; document.getElementById('m-progress').value=r.progress||''; document.getElementById('m-amount').value=r.amount||''; document.getElementById('m-amount-currency').value=r.amountCurrency||'KRW'; document.getElementById('m-expense').value=r.expense||''; document.getElementById('m-expense-currency').value=r.expenseCurrency||'KRW'; document.getElementById('m-consult-status').value=r.consultStatus||''; document.getElementById('m-fail-reason').value=r.failReason||''; document.getElementById('m-note').value=r.note||''; document.getElementById('m-quote-amount').value=r.quoteAmount||'';
-  buildBillingGrid('medBillingGrid','medBillingTotal','m',r.billing,r.billingDates,r.billingCurrencies);
-  document.getElementById('medContractFields').style.display=medIsContract?'contents':'none'; document.getElementById('medConsultSection').style.display=medIsContract?'none':'contents';
-}
-
-window.editCert = function(id){
-  const r=state.cert.find(x=>x.id===id); if(!r)return; certEditId=id; certIsContract=(r.recordType==='contract'); document.getElementById('modal-cert').classList.add('open');
-  document.getElementById('c-client').value=r.client||''; document.getElementById('c-certtype').value=r.certtype||''; document.getElementById('c-manager').value=r.manager||''; document.getElementById('c-amount').value=r.amount||''; document.getElementById('c-amount-currency').value=r.amountCurrency||'KRW'; document.getElementById('c-expense').value=r.expense||''; document.getElementById('c-expense-currency').value=r.expenseCurrency||'KRW'; document.getElementById('c-contractdate').value=r.contractdate||''; document.getElementById('c-stage').value=r.stage||''; document.getElementById('c-issuedate').value=r.issuedate||''; document.getElementById('c-contracted').value=r.contracted||''; document.getElementById('c-date').value=r.date||''; document.getElementById('c-fail-reason').value=r.failReason||''; document.getElementById('c-note').value=r.note||''; document.getElementById('c-quote-amount').value=r.quoteAmount||'';
-  buildBillingGrid('certBillingGrid','certBillingTotal','c',r.billing,r.billingDates,r.billingCurrencies);
-  document.getElementById('certContractFields').style.display=certIsContract?'contents':'none'; document.getElementById('certConsultSection').style.display=certIsContract?'none':'contents';
-}
-
-window.convertToContract = function(team, id) {
-  if(!confirm('계약업체로 전환하시겠습니까? (이전 상담 데이터는 보존되며 속성이 변경됩니다)')) return;
-  if(team === 'med') {
-    const r = state.med.find(x => x.id === id); if(!r) return;
-    medEditId = r.id; 
-    medIsContract = true;
-    document.getElementById('modal-med').classList.add('open');
-    document.getElementById('m-client').value=r.client||''; document.getElementById('m-product').value=r.product||''; document.getElementById('m-grade').value=r.grade||''; document.getElementById('m-biztype').value=r.biztype||''; updateMedStageOptions(); document.getElementById('m-manager').value=r.manager||''; document.getElementById('m-note').value=r.note||'';
-    document.getElementById('medContractFields').style.display='contents'; document.getElementById('medConsultSection').style.display='none';
-  } else {
-    const r = state.cert.find(x => x.id === id); if(!r) return;
-    certEditId = r.id; 
-    certIsContract = true;
-    document.getElementById('modal-cert').classList.add('open');
-    document.getElementById('c-client').value=r.client||''; document.getElementById('c-certtype').value=r.certtype||''; document.getElementById('c-manager').value=r.manager||''; document.getElementById('c-note').value=r.note||'';
-    document.getElementById('certContractFields').style.display='contents'; document.getElementById('certConsultSection').style.display='none';
+  const rTable = document.getElementById('revContractTable');
+  if(rTable) {
+      rTable.querySelector('tbody').innerHTML=pieRows.map((r,i)=>{
+        const tm=state.med.includes(r)?'med':'cert', amtK=toKRW(r.amount,r.amountCurrency);
+        let bilK=0, latestM='-';
+        (r.billing||[]).forEach((amt,bi)=>{ 
+           const ds=(r.billingDates||[])[bi];
+           if(ds && ds <= TODAY) { bilK+=toKRW(Number(amt||0),(r.billingCurrencies||[])[bi]||'KRW'); latestM=ds.substring(5,7)+'월'; }
+        });
+        subAmt+=amtK; subBil+=bilK;
+        return`<tr><td style="text-align:center">${i+1}</td><td><span class="badge ${tm==='med'?'badge-med':'badge-cert'}">${tm==='med'?'의료기기':'인증팀'}</span></td><td><strong>${r.client}</strong></td><td>${r.product||r.certtype||'-'}</td><td style="text-align:center">${latestM}</td><td>${fmtCurEx(r.amount, r.amountCurrency)}</td><td><span style="color:var(--success);font-weight:700">${fmtM(bilK)}</span></td><td><span style="color:var(--warn);font-weight:700">${fmtM(amtK-bilK)}</span></td><td>${r.manager||'-'}</td></tr>`;
+      }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="5" class="text-right">소 계</td><td class="text-mono color-accent">${fmtM(subAmt)}</td><td class="text-mono color-success">${fmtM(subBil)}</td><td class="text-mono color-warn">${fmtM(subAmt-subBil)}</td><td></td></tr>`;
   }
 }
 
-window.saveMed = async function(){
-  const id = medEditId || uid();
-  const r={id,year:currentYear,recordType:medIsContract?'contract':'consult',client:document.getElementById('m-client').value,product:document.getElementById('m-product').value,grade:document.getElementById('m-grade').value,biztype:document.getElementById('m-biztype').value,manager:document.getElementById('m-manager').value,startdate:document.getElementById('m-startdate').value,duedate:document.getElementById('m-duedate').value,status:document.getElementById('m-status').value,progress:document.getElementById('m-progress').value,amount:Number(document.getElementById('m-amount').value),amountCurrency:document.getElementById('m-amount-currency').value,expense:Number(document.getElementById('m-expense').value||0),expenseCurrency:document.getElementById('m-expense-currency').value,billing:getBillingValues('m'),billingDates:getBillingDates('m'),billingCurrencies:getBillingCurrencies('m'),consultStatus:document.getElementById('m-consult-status').value,failReason:document.getElementById('m-fail-reason').value,note:document.getElementById('m-note').value,q:1,stages:Array.from(document.querySelectorAll('#m-stage-wrap input:checked')).map(x=>x.value),quoteAmount:Number(document.getElementById('m-quote-amount').value||0)};
-  if(medEditId){ const idx=state.med.findIndex(x=>x.id===medEditId); if(idx>=0)state.med[idx]=r; } else { state.med.push(r); }
-  await saveMedRecord(r); closeModal('med'); renderView(currentView);
+window.updateTarget = async function(team, m, val){ 
+  if(team === 'total') {
+     alert('전체 합산 뷰에서는 목표 금액을 직접 수정할 수 없습니다. 개별 팀 탭에서 입력하세요.');
+     renderRevenue();
+     return;
+  }
+  const n=Number(val)||0; state.revenue[currentYear][team][m]=n; await saveState(); showToast('월별 목표가 변경되었습니다.'); renderRevenue(); 
 }
 
-window.saveCert = async function(){
-  const id = certEditId || uid();
-  const r={id,year:currentYear,recordType:certIsContract?'contract':'consult',client:document.getElementById('c-client').value,certtype:document.getElementById('c-certtype').value,manager:document.getElementById('c-manager').value,amount:Number(document.getElementById('c-amount').value),amountCurrency:document.getElementById('c-amount-currency').value,expense:Number(document.getElementById('c-expense').value||0),expenseCurrency:document.getElementById('c-expense-currency').value,contractdate:document.getElementById('c-contractdate').value,date:document.getElementById('c-date').value,stage:document.getElementById('c-stage').value,issuedate:document.getElementById('c-issuedate').value,contracted:document.getElementById('c-contracted').value,billing:getBillingValues('c'),billingDates:getBillingDates('c'),billingCurrencies:getBillingCurrencies('c'),failReason:document.getElementById('c-fail-reason').value,note:document.getElementById('c-note').value,q:1,quoteAmount:Number(document.getElementById('c-quote-amount').value||0)};
-  if(certEditId){ const idx=state.cert.findIndex(x=>x.id===certEditId); if(idx>=0)state.cert[idx]=r; } else { state.cert.push(r); }
-  await saveCertRecord(r); closeModal('cert'); renderView(currentView);
+window.handleSort = function(table, col) {
+  if(sortConf[table].col === col) { sortConf[table].asc = !sortConf[table].asc; }
+  else { sortConf[table].col = col; sortConf[table].asc = true; }
+  if(table === 'medC') renderMedContract();
+  if(table === 'medCons' || table === 'medConsArch') renderMedConsult();
+  if(table === 'certC') renderCertContract();
+  if(table === 'certCons' || table === 'certConsArch') renderCertConsult();
 }
 
-window.deleteMed = async function(id){ 
-  if(confirm('해당 항목을 삭제하시겠습니까?')){ 
-    state.med = state.med.filter(x=>x.id!==id); 
-    try { await sb.from('med_records').delete().eq('id', id); } catch(e){ console.error(e); } 
-    renderView(currentView); 
-  } 
-}
-window.deleteCert = async function(id){ 
-  if(confirm('해당 항목을 삭제하시겠습니까?')){ 
-    state.cert = state.cert.filter(x=>x.id!==id); 
-    try { await sb.from('cert_records').delete().eq('id', id); } catch(e){ console.error(e); } 
-    renderView(currentView); 
-  } 
+function renderMedContract(){
+  const y=currentYear;
+  const thEl = document.getElementById('medContractThead');
+  if(thEl) thEl.innerHTML=`<tr>
+    <th>#</th>
+    <th onclick="handleSort('medC','client')" style="cursor:pointer">업체명<br><span style="font-size:10px;font-weight:400">업체 담당자</span> ↕</th>
+    <th onclick="handleSort('medC','grade')" style="cursor:pointer">품목<br><span style="font-size:10px;font-weight:400">등급</span> ↕</th>
+    <th>업무유형</th>
+    <th onclick="handleSort('medC','manager')" style="cursor:pointer">담당자 ↕</th>
+    <th onclick="handleSort('medC','date')" style="cursor:pointer">접수일 ↕</th>
+    <th onclick="handleSort('medC','duedate')" style="cursor:pointer">완료목표일 ↕</th>
+    <th onclick="handleSort('medC','amount')" style="cursor:pointer">계약총액 ↕</th>
+    <th>수입내역<br><span style="font-size:10px;font-weight:400">잔액</span></th>
+    <th>진행단계</th>
+    <th>상태</th>
+    <th>관리</th>
+  </tr>`;
+  
+  let rows=state.med.filter(r=>r.recordType==='contract'&&isRowVisibleInYear(r,y));
+  rows.sort((a,b) => {
+     let va='', vb='';
+     if(sortConf.medC.col==='client') { va=a.client; vb=b.client; }
+     if(sortConf.medC.col==='grade') { va=a.grade||''; vb=b.grade||''; }
+     if(sortConf.medC.col==='manager') { va=a.manager; vb=b.manager; }
+     if(sortConf.medC.col==='date') { va=a.startdate||''; vb=b.startdate||''; }
+     if(sortConf.medC.col==='duedate') { va=a.duedate||''; vb=b.duedate||''; }
+     if(sortConf.medC.col==='amount') { va=toKRW(a.amount,a.amountCurrency); vb=toKRW(b.amount,b.amountCurrency); }
+     if(va < vb) return sortConf.medC.asc ? -1 : 1;
+     if(va > vb) return sortConf.medC.asc ? 1 : -1;
+     return 0;
+  });
+
+  let tAmt=0;
+  const tEl = document.getElementById('medContractTable');
+  if(tEl) {
+      tEl.querySelector('tbody').innerHTML=rows.length?rows.map((r,i)=>{
+        tAmt += toKRW(r.amount,r.amountCurrency);
+        let actionBtns = `<button class="btn btn-sm" onclick="editMed('${r.id}')">수정</button>`;
+        if (currentUser === SUPER_ADMIN) actionBtns += `<br><button class="btn btn-sm btn-danger" onclick="deleteMed('${r.id}')" style="margin-top:4px">삭제</button>`;
+        
+        const p1 = `<strong>${r.client}</strong><br><span style="font-size:11px;color:var(--text3)">${r.contactName||''} ${r.contactPhone||''}</span>`;
+        const p2 = `${r.product||'-'}<br><span class="badge badge-gray">${r.grade||'-'}</span>`;
+        return`<tr><td>${i+1}</td><td>${p1}</td><td>${p2}</td><td><span class="badge badge-med">${r.biztype||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td class="text-mono">${r.startdate||'-'}</td><td class="text-mono">${r.duedate||'-'}</td><td>${fmtCurEx(r.amount, r.amountCurrency)}</td><td>${billingMini(r.billing,r.amount,r.billingDates,r.billingCurrencies,r.amountCurrency)}</td><td><span class="badge badge-amber">${r.progress||'-'}</span></td><td>${r.status||'-'}</td><td style="white-space:nowrap">${actionBtns}</td></tr>`;
+      }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="7" class="text-right">계약 총액 누계</td><td class="text-mono color-accent">${fmtM(tAmt)}</td><td colspan="4"></td></tr>` : `<tr class="empty-row"><td colspan="12">데이터가 없습니다.</td></tr>`;
+  }
 }
 
-// ── KPI / EVALUATION ──
-window.renderKpi = function(){ document.getElementById('kpiYear').textContent=currentYear+'년 부문 성과지표'; if(kpiTab==='qual')renderKpiQual(); else if(kpiTab==='edu')renderKpiEdu(); else if(kpiTab==='profit')renderKpiProfit(); }
-window.switchKpiTab = function(tab,el){ kpiTab=tab; document.querySelectorAll('[id^="kpi-tab-"]').forEach(b=>b.className='team-tab'); el.className='team-tab active-cert'; document.getElementById('kpi-sect-qual').style.display=tab==='qual'?'block':'none'; document.getElementById('kpi-sect-edu').style.display=tab==='edu'?'block':'none'; document.getElementById('kpi-sect-profit').style.display=tab==='profit'?'block':'none'; renderKpi(); }
+function renderMedConsult(){
+  const y = currentYear;
+  const thEl = document.getElementById('medConsultThead');
+  if(thEl) thEl.innerHTML=`<tr>
+    <th>#</th>
+    <th>업체명</th>
+    <th onclick="handleSort('medCons','grade')" style="cursor:pointer">국가/등급 ↕</th>
+    <th>품목</th>
+    <th>업무유형</th>
+    <th onclick="handleSort('medCons','manager')" style="cursor:pointer">담당자 ↕</th>
+    <th onclick="handleSort('medCons','startdate')" style="cursor:pointer">상담일 ↕</th>
+    <th>진행상태</th>
+    <th>견적서 발송일</th>
+    <th>보류/불가 사유</th>
+    <th>관리</th>
+  </tr>`;
+
+  let allRows = state.med.filter(r => r.recordType === 'consult' && r.year === y);
+  let activeRows = allRows.filter(r => !['계약보류','계약불가','취소'].includes(r.consultStatus));
+  let archiveRows = allRows.filter(r => ['계약보류','계약불가','취소'].includes(r.consultStatus));
+
+  const doSort = (arr, confKey) => {
+    arr.sort((a,b) => {
+       let va='', vb='';
+       if(sortConf[confKey].col==='grade') { va=a.grade||''; vb=b.grade||''; }
+       if(sortConf[confKey].col==='manager') { va=a.manager; vb=b.manager; }
+       if(sortConf[confKey].col==='startdate') { va=a.startdate||''; vb=b.startdate||''; }
+       if(va < vb) return sortConf[confKey].asc ? -1 : 1;
+       if(va > vb) return sortConf[confKey].asc ? 1 : -1;
+       return 0;
+    });
+  };
+  doSort(activeRows, 'medCons'); doSort(archiveRows, 'medConsArch');
+
+  let tQuote = 0;
+  const mC = document.getElementById('medConsultTable');
+  if(mC) {
+      mC.querySelector('tbody').innerHTML = activeRows.length ? activeRows.map((r, i) => {
+        tQuote += Number(r.quoteAmount||0);
+        let actionBtns = `<button class="btn btn-sm btn-med" onclick="convertToContract('med','${r.id}')">계약전환</button><br><button class="btn btn-sm" onclick="editMed('${r.id}')" style="margin-top:4px">수정</button>`;
+        if (currentUser === SUPER_ADMIN) actionBtns += ` <button class="btn btn-sm btn-danger" onclick="deleteMed('${r.id}')" style="margin-top:4px">삭제</button>`;
+        return `<tr><td>${i+1}</td><td><strong>${r.client}</strong></td><td><span class="badge badge-gray">${r.grade||'-'}</span></td><td>${r.product||'-'}</td><td><span class="badge badge-med">${r.biztype||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td>${r.startdate||'-'}</td><td>${r.consultStatus||'진행중'}</td><td>${r.quoteDate||'-'}</td><td>${r.failReason||r.consultEtc||'-'}</td><td>${actionBtns}</td></tr>`;
+      }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="8" class="text-right">견적 발송 누계</td><td class="text-mono color-accent">${fmtM(tQuote)}</td><td colspan="2"></td></tr>` : `<tr class="empty-row"><td colspan="11">진행중인 상담 내역이 없습니다.</td></tr>`;
+  }
+  const mCA = document.getElementById('medConsultArchiveTable');
+  if(mCA) {
+      mCA.querySelector('tbody').innerHTML = archiveRows.length ? archiveRows.map((r, i) => {
+        let actionBtns = `<button class="btn btn-sm" onclick="editMed('${r.id}')">재상담(수정)</button>`;
+        if (currentUser === SUPER_ADMIN) actionBtns += `<br><button class="btn btn-sm btn-danger" onclick="deleteMed('${r.id}')" style="margin-top:4px">삭제</button>`;
+        return `<tr style="opacity:0.85; background:rgba(255,165,0,0.02)"><td>${i+1}</td><td><strong>${r.client}</strong></td><td><span class="badge badge-gray">${r.grade||'-'}</span></td><td>${r.product||'-'}</td><td><span class="badge badge-med">${r.biztype||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td>${r.startdate||'-'}</td><td><span class="badge badge-red">${r.consultStatus}</span></td><td>${r.quoteDate||'-'}</td><td><strong style="color:var(--warn)">${r.failReason||r.consultEtc||'-'}</strong></td><td>${actionBtns}</td></tr>`;
+      }).join('') : `<tr class="empty-row"><td colspan="11">보류 및 실주 내역이 없습니다.</td></tr>`;
+  }
+}
+
+function renderCertContract(){
+  const y=currentYear;
+  const thEl = document.getElementById('certContractThead');
+  if(thEl) thEl.innerHTML=`<tr>
+    <th>#</th>
+    <th onclick="handleSort('certC','client')" style="cursor:pointer">업체명<br><span style="font-size:10px;font-weight:400">업체 담당자</span> ↕</th>
+    <th onclick="handleSort('certC','certtype')" style="cursor:pointer">인증종류 ↕</th>
+    <th onclick="handleSort('certC','manager')" style="cursor:pointer">담당자 ↕</th>
+    <th onclick="handleSort('certC','date')" style="cursor:pointer">계약일 ↕</th>
+    <th onclick="handleSort('certC','issuedate')" style="cursor:pointer">발급일 ↕</th>
+    <th onclick="handleSort('certC','amount')" style="cursor:pointer">계약총액 ↕</th>
+    <th>수입내역<br><span style="font-size:10px;font-weight:400">잔액</span></th>
+    <th onclick="handleSort('certC','stage')" style="cursor:pointer">진행단계 ↕</th>
+    <th>관리</th>
+  </tr>`;
+  if(document.getElementById('certContractDoneThead') && thEl) document.getElementById('certContractDoneThead').innerHTML = thEl.innerHTML;
+  
+  let allRows=state.cert.filter(r=>r.recordType==='contract'&&isRowVisibleInYear(r,y));
+  let ongoingRows = allRows.filter(r => r.stage !== '완료' && r.status !== '완료');
+  let doneRows = allRows.filter(r => r.stage === '완료' || r.status === '완료');
+
+  const doSort = (arr) => {
+      arr.sort((a,b) => {
+         let va='', vb='';
+         if(sortConf.certC.col==='client') { va=a.client; vb=b.client; }
+         if(sortConf.certC.col==='certtype') { va=a.certtype; vb=b.certtype; }
+         if(sortConf.certC.col==='manager') { va=a.manager; vb=b.manager; }
+         if(sortConf.certC.col==='date') { va=a.contractdate||''; vb=b.contractdate||''; }
+         if(sortConf.certC.col==='issuedate') { va=a.issuedate||''; vb=b.issuedate||''; }
+         if(sortConf.certC.col==='amount') { va=toKRW(a.amount,a.amountCurrency); vb=toKRW(b.amount,b.amountCurrency); }
+         if(sortConf.certC.col==='stage') { va=a.stage||''; vb=b.stage||''; }
+         if(va < vb) return sortConf.certC.asc ? -1 : 1;
+         if(va > vb) return sortConf.certC.asc ? 1 : -1;
+         return 0;
+      });
+  };
+  doSort(ongoingRows); doSort(doneRows);
+
+  let tAmt1=0;
+  const cC = document.getElementById('certContractTable');
+  if(cC) {
+      cC.querySelector('tbody').innerHTML=ongoingRows.length?ongoingRows.map((r,i)=>{
+        tAmt1 += toKRW(r.amount,r.amountCurrency);
+        let actionBtns = `<button class="btn btn-sm" onclick="editCert('${r.id}')">수정</button>`;
+        if (currentUser === SUPER_ADMIN) actionBtns += `<br><button class="btn btn-sm btn-danger" onclick="deleteCert('${r.id}')" style="margin-top:4px">삭제</button>`;
+        
+        const p1 = `<strong>${r.client}</strong><br><span style="font-size:11px;color:var(--text3)">${r.contactName||''} ${r.contactPhone||''}</span>`;
+        return`<tr><td>${i+1}</td><td>${p1}</td><td><span class="badge badge-cert">${r.certtype||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td class="text-mono">${r.contractdate||'-'}</td><td class="text-mono">${r.issuedate||'-'}</td><td>${fmtCurEx(r.amount, r.amountCurrency)}</td><td>${billingMini(r.billing,r.amount,r.billingDates,r.billingCurrencies,r.amountCurrency)}</td><td><span class="badge badge-green">${r.stage||'-'}</span></td><td style="white-space:nowrap">${actionBtns}</td></tr>`;
+      }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="6" class="text-right">계약 총액 누계</td><td class="text-mono color-accent">${fmtM(tAmt1)}</td><td colspan="3"></td></tr>` : `<tr class="empty-row"><td colspan="10">진행중인 데이터가 없습니다.</td></tr>`;
+  }
+
+  let tAmt2=0;
+  const cD = document.getElementById('certContractDoneTable');
+  if(cD) {
+      cD.querySelector('tbody').innerHTML=doneRows.length?doneRows.map((r,i)=>{
+        tAmt2 += toKRW(r.amount,r.amountCurrency);
+        let actionBtns = `<button class="btn btn-sm" onclick="editCert('${r.id}')">수정</button>`;
+        if (currentUser === SUPER_ADMIN) actionBtns += `<br><button class="btn btn-sm btn-danger" onclick="deleteCert('${r.id}')" style="margin-top:4px">삭제</button>`;
+        
+        const amtK=toKRW(r.amount,r.amountCurrency);
+        const bilK=(r.billing||[]).reduce((s,v,bi)=>s+toKRW(Number(v||0),(r.billingCurrencies||[])[bi]||'KRW'),0);
+        const remain = amtK - bilK;
+        const remainBadge = remain <= 0 ? `<div style="margin-top:4px"><span class="badge badge-green" style="font-size:12px;padding:4px 8px">[완납]</span></div>` : `<div style="margin-top:4px"><span class="badge badge-red" style="font-size:12px;padding:4px 8px">[미수금 ${fmtM(remain)}]</span></div>`;
+        const p1 = `<strong>${r.client}</strong><br><span style="font-size:11px;color:var(--text3)">${r.contactName||''} ${r.contactPhone||''}</span>`;
+        
+        return`<tr><td>${i+1}</td><td>${p1}</td><td><span class="badge badge-cert">${r.certtype||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td class="text-mono">${r.contractdate||'-'}</td><td class="text-mono">${r.issuedate||'-'}</td><td>${fmtCurEx(r.amount, r.amountCurrency)}</td><td>${billingMini(r.billing,r.amount,r.billingDates,r.billingCurrencies,r.amountCurrency)}${remainBadge}</td><td><span class="badge badge-gray">${r.stage||'-'}</span></td><td style="white-space:nowrap">${actionBtns}</td></tr>`;
+      }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="6" class="text-right">계약 총액 누계</td><td class="text-mono color-accent">${fmtM(tAmt2)}</td><td colspan="3"></td></tr>` : `<tr class="empty-row"><td colspan="10">완료된 데이터가 없습니다.</td></tr>`;
+  }
+}
+
+function renderCertConsult(){
+  const y = currentYear;
+  const thEl = document.getElementById('certConsultThead');
+  if(thEl) thEl.innerHTML=`<tr>
+    <th>#</th>
+    <th onclick="handleSort('certCons','client')" style="cursor:pointer">업체명 ↕</th>
+    <th>구분(인증)</th>
+    <th onclick="handleSort('certCons','manager')" style="cursor:pointer">담당자 ↕</th>
+    <th onclick="handleSort('certCons','date')" style="cursor:pointer">상담일 ↕</th>
+    <th>진행상태</th>
+    <th>견적서 발송일</th>
+    <th>비고</th>
+    <th>관리</th>
+  </tr>`;
+
+  let allRows = state.cert.filter(r => r.recordType === 'consult' && r.year === y);
+  let activeRows = allRows.filter(r => !['계약보류','계약불가','취소'].includes(r.contracted));
+  let archiveRows = allRows.filter(r => ['계약보류','계약불가','취소'].includes(r.contracted));
+
+  const doSort = (arr, confKey) => {
+    arr.sort((a,b) => {
+       let va='', vb='';
+       if(sortConf[confKey].col==='client') { va=a.client||''; vb=b.client||''; }
+       if(sortConf[confKey].col==='manager') { va=a.manager; vb=b.manager; }
+       if(sortConf[confKey].col==='date') { va=a.date||''; vb=b.date||''; }
+       if(va < vb) return sortConf[confKey].asc ? -1 : 1;
+       if(va > vb) return sortConf[confKey].asc ? 1 : -1;
+       return 0;
+    });
+  };
+  doSort(activeRows, 'certCons'); doSort(archiveRows, 'certConsArch');
+
+  let tQuote=0;
+  const cC = document.getElementById('certConsultTable');
+  if(cC) {
+      cC.querySelector('tbody').innerHTML = activeRows.length ? activeRows.map((r, i) => {
+        tQuote += Number(r.quoteAmount||0);
+        let actionBtns = `<button class="btn btn-sm btn-cert" onclick="convertToContract('cert','${r.id}')">계약전환</button><br><button class="btn btn-sm" onclick="editCert('${r.id}')" style="margin-top:4px">수정</button>`;
+        if (currentUser === SUPER_ADMIN) actionBtns += ` <button class="btn btn-sm btn-danger" onclick="deleteCert('${r.id}')" style="margin-top:4px">삭제</button>`;
+        return `<tr><td>${i+1}</td><td><strong>${r.client}</strong></td><td><span class="badge badge-cert">${r.certtype||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td>${r.date||'-'}</td><td>${r.contracted||'진행중'}</td><td>${r.quoteDate||'-'}</td><td>${r.note||'-'}</td><td>${actionBtns}</td></tr>`;
+      }).join('')+`<tr style="background:var(--surface);font-weight:800;border-top:2px solid var(--border2)"><td colspan="6" class="text-right">견적 발송 누계</td><td class="text-mono color-accent">${fmtM(tQuote)}</td><td colspan="2"></td></tr>` : `<tr class="empty-row"><td colspan="9">진행중인 상담 내역이 없습니다.</td></tr>`;
+  }
+  
+  const cCA = document.getElementById('certConsultArchiveTable');
+  if(cCA) {
+      cCA.querySelector('tbody').innerHTML = archiveRows.length ? archiveRows.map((r, i) => {
+        let actionBtns = `<button class="btn btn-sm" onclick="editCert('${r.id}')">재상담(수정)</button>`;
+        if (currentUser === SUPER_ADMIN) actionBtns += `<br><button class="btn btn-sm btn-danger" onclick="deleteCert('${r.id}')" style="margin-top:4px">삭제</button>`;
+        return `<tr style="opacity:0.85; background:rgba(255,165,0,0.02)"><td>${i+1}</td><td><strong>${r.client}</strong></td><td><span class="badge badge-cert">${r.certtype||'-'}</span></td><td><strong>${r.manager||'-'}</strong></td><td>${r.date||'-'}</td><td><span class="badge badge-red">${r.contracted}</span></td><td>${r.quoteDate||'-'}</td><td><strong style="color:var(--warn)">${r.failReason||r.etcMemo||'-'}</strong></td><td>${actionBtns}</td></tr>`;
+      }).join('') : `<tr class="empty-row"><td colspan="9">보류 및 실주 내역이 없습니다.</td></tr>`;
+  }
+}
+
+window.switchKpiTab = function(tab,el){ 
+  kpiTab=tab; 
+  document.querySelectorAll('[id^="kpi-tab-"]').forEach(b=>b.className='team-tab'); 
+  el.className='team-tab active-cert'; 
+  renderKpi(); 
+}
+
 window.updateQualRemark = function(member, idx, value){ if(!qualData[member]||!qualData[member][idx]) return; qualData[member][idx].remark = value; if(!state.qualData) state.qualData={}; state.qualData[member] = qualData[member]; saveState(); }
 function getEduDateRecord(m,qn,y){return(state.kpiEdu||{})[`${m}__${qn}__${y}`]||'';}
 window.setEduDateRecord = function(m,qn,y,v){ if(!state.kpiEdu)state.kpiEdu={}; state.kpiEdu[`${m}__${qn}__${y}`]=v; saveState(); renderKpiQual(); }
+
+window.renderKpi = function(){ 
+  const cont = document.getElementById('kpi-profit-content');
+  const tEl = document.getElementById('kpiYear');
+  if(tEl) tEl.textContent = currentYear + '년 부문 성과지표';
+  
+  if(document.getElementById('kpi-sect-qual')) document.getElementById('kpi-sect-qual').style.display = kpiTab === 'qual' ? 'block' : 'none';
+  if(document.getElementById('kpi-sect-edu')) document.getElementById('kpi-sect-edu').style.display = kpiTab === 'edu' ? 'block' : 'none';
+  if(document.getElementById('kpi-sect-profit')) document.getElementById('kpi-sect-profit').style.display = kpiTab === 'profit' ? 'block' : 'none';
+
+  if(kpiTab === 'qual') {
+      renderKpiQual(); 
+  } else if(kpiTab === 'edu') {
+      renderKpiEdu();
+  } else if(kpiTab === 'profit') {
+      if(cont) {
+          if (!EXECS.includes(currentUser)) {
+              cont.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text3);">이 메뉴는 임원진 전용입니다.</div>`;
+          } else {
+              renderKpiProfit();
+          }
+      }
+  }
+}
 
 function renderKpiQual(){
   const y=currentYear, cont=document.getElementById('qualCards'); if(!cont)return;
   const base=JSON.parse(JSON.stringify(QUAL_MASTER)); if(state.qualData){ Object.keys(state.qualData).forEach(m=>{ if(state.qualData[m]?.length>0) base[m]=state.qualData[m]; }); } Object.assign(qualData,base);
   cont.innerHTML=Object.keys(base).map(m=>{
     const quals=base[m]||[], legal=quals.filter(q=>q.edu), allDone=legal.every(q=>getEduDateRecord(m,q.name,y)), ls=!legal.length?null:allDone?'done':'pending';
-    return`<div class="card" style="margin-bottom:20px;border-top:4px solid var(--border2)">
+    return `<div class="card" style="margin-bottom:20px;border-top:4px solid var(--border2)">
       <div class="card-header"><div style="display:flex;align-items:center;gap:12px"><span style="font-weight:900;font-size:16px">${m}</span><span class="badge badge-gray">${quals.length}개 보유</span></div>${ls==='pending'?`<span class="badge badge-red">⚠ ${y}년 법정교육 미이수</span>`:ls==='done'?`<span class="badge badge-green">✓ 이수완료</span>`:''}</div>
       <div class="card-body" style="padding:0"><div class="table-wrap"><table>
         <thead><tr><th>자격·허가명</th><th>취득일</th><th>발급기관</th><th>교육주기</th><th>비고 (해당 업무)</th><th>${y}년 이수일</th></tr></thead>
-        <tbody>${quals.map((q, qIndex)=>{ const done=q.edu?getEduDateRecord(m,q.name,y):''; return`<tr><td><strong>${q.name}</strong></td><td>${q.date||'-'}</td><td>${q.org||'-'}</td><td>${q.edu?q.edu.cycle:'-'}</td><td><input type="text" value="${q.remark||''}" onchange="updateQualRemark('${m}', ${qIndex}, this.value)" style="border:none;background:transparent;color:var(--text1);width:100%;"></td><td>${q.edu?`<input type="date" value="${done}" onchange="setEduDateRecord('${m}','${q.name}','${y}',this.value)">`:'-'}</td></tr>`; }).join('')}</tbody>
+        <tbody>${quals.map((q, qIndex)=>{ const done=q.edu?getEduDateRecord(m,q.name,y):''; return `<tr><td><strong>${q.name}</strong></td><td>${q.date||'-'}</td><td>${q.org||'-'}</td><td>${q.edu?q.edu.cycle:'-'}</td><td><input type="text" value="${q.remark||''}" onchange="updateQualRemark('${m}', ${qIndex}, this.value)" style="border:none;background:transparent;color:var(--text1);width:100%;"></td><td>${q.edu?`<input type="date" value="${done}" onchange="setEduDateRecord('${m}','${q.name}','${y}',this.value)">`:'-'}</td></tr>`; }).join('')}</tbody>
       </table></div></div></div>`;
   }).join('');
 }
 
 window.renderKpiEdu = function(){
-  const y=currentYear, memberF=document.getElementById('eduMemberSel').value, typeF=document.getElementById('eduTypeSel').value;
+  const y=currentYear;
+  const memEl=document.getElementById('eduMemberSel');
+  const typEl=document.getElementById('eduTypeSel');
+  const memberF = memEl ? memEl.value : '';
+  const typeF = typEl ? typEl.value : '';
+  
   const records=(state.eduRecords||[]).filter(r=>{ const inY=r.dateStart&&r.dateStart.startsWith(String(y)); return inY&&(!memberF||r.member===memberF)&&(!typeF||r.type===typeF); });
   const cont=document.getElementById('eduList');
+  if(!cont) return;
   if(!records.length){cont.innerHTML=`<div class="card"><div class="card-body" style="text-align:center;color:var(--text3);padding:40px;">${y}년 교육 내역이 없습니다.</div></div>`;return;}
   
   cont.innerHTML=records.map(r=>{
@@ -1338,12 +1728,17 @@ window.renderKpiEdu = function(){
   }).join('');
 }
 
-window.openEduAddModal = function(){ document.getElementById('modal-edu-add').classList.add('open'); }
+window.openEduAddModal = function(){ 
+  const el = document.getElementById('modal-edu-add');
+  if(el) el.classList.add('open'); 
+}
+
 window.saveEduRecord = async function(){
   const m=document.getElementById('edu-member').value, t=document.getElementById('edu-type').value; if(!m||!t){alert('필수값을 입력해 주세요.');return;}
   const r={id:uid(),member:m,type:t,dateStart:document.getElementById('edu-date-start').value,dateEnd:document.getElementById('edu-date-end').value,org:document.getElementById('edu-org').value,content:document.getElementById('edu-content').value,cert:document.getElementById('edu-cert').value,license:document.getElementById('edu-license').value,licenseName:document.getElementById('edu-license-name').value,direct:document.getElementById('edu-direct').value,indirect:document.getElementById('edu-indirect').value,note:document.getElementById('edu-note').value};
   if(!state.eduRecords)state.eduRecords=[]; state.eduRecords.push(r); await saveState(); closeModal('edu-add'); renderKpiEdu();
 }
+
 window.deleteEduRecord = async function(id){ if(!confirm('삭제하시겠습니까?'))return; state.eduRecords=(state.eduRecords||[]).filter(x=>x.id!==id); await saveState(); renderKpiEdu(); }
 
 function renderKpiProfit(){
@@ -1352,33 +1747,53 @@ function renderKpiProfit(){
   const rows = [...(state.med||[]), ...(state.cert||[])].filter(r => r.recordType === 'contract' && isRowVisibleInYear(r, y));
 
   const userStats = {};
-  rows.forEach(r => { const m = r.manager || '미지정'; if(!userStats[m]) userStats[m] = { count:0, amt:0, exp:0 }; userStats[m].count++; userStats[m].amt += toKRW(r.amount, r.amountCurrency); userStats[m].exp += toKRW(r.expense, r.expenseCurrency); });
-  let statArr = Object.keys(userStats).map(m => { const s = userStats[m]; s.name = m; s.profit = s.amt - s.exp; s.margin = s.amt > 0 ? Math.round((s.profit / s.amt) * 100) : 0; return s; });
+  rows.forEach(r => { 
+      const m = r.manager || '미지정'; 
+      if(!userStats[m]) userStats[m] = { count:0, amt:0, exp:0 }; 
+      userStats[m].count++; 
+      userStats[m].amt += toKRW(r.amount, r.amountCurrency); 
+      userStats[m].exp += toKRW(r.expense, r.expenseCurrency); 
+  });
+  
+  let statArr = Object.keys(userStats).map(m => { 
+      const s = userStats[m]; s.name = m; 
+      s.profit = s.amt - s.exp; 
+      s.margin = s.amt > 0 ? Math.round((s.profit / s.amt) * 100) : 0; 
+      return s; 
+  });
   statArr.sort((a,b) => b.profit - a.profit);
 
   let html = `<div class="card" style="margin-bottom:20px"><div class="card-body" style="padding:0"><div class="table-wrap"><table>
-    <thead><tr style="background:var(--bg)"><th>순위</th><th>담당자</th><th>계약건수</th><th>계약총액</th><th>순이익금</th><th>평균 마진율</th></tr></thead><tbody>`;
+    <thead><tr style="background:var(--bg)"><th>순위</th><th>담당자</th><th>계약건수</th><th>계약총액</th><th>총 지출비용</th><th>순이익금</th><th>평균 마진율</th></tr></thead><tbody>`;
   statArr.forEach((s, idx) => {
-     html += `<tr><td>${idx + 1}</td><td><strong>${s.name}</strong></td><td>${s.count}건</td><td>${fmtM(s.amt)}</td><td style="color:var(--success);font-weight:700">${fmtM(s.profit)}</td><td><div class="margin-badge">${s.margin}%</div></td></tr>`;
+     html += `<tr><td>${idx + 1}</td><td><strong>${s.name}</strong></td><td>${s.count}건</td><td>${fmtM(s.amt)}</td><td style="color:var(--danger)">${fmtM(s.exp)}</td><td style="color:var(--success);font-weight:700">${fmtM(s.profit)}</td><td><div class="margin-badge">${s.margin}%</div></td></tr>`;
   });
   cont.innerHTML = html + `</tbody></table></div></div></div>`;
 }
 
-window.openQualModal = function(){document.getElementById('modal-qual').classList.add('open');}
-window.verifyQualAdmin = function(){ if(document.getElementById('qual-admin-pw').value===state.pw){document.getElementById('qual-edit-area').style.display='block';} }
+window.openQualModal = function(){
+  const m = document.getElementById('modal-qual');
+  if(m) m.classList.add('open');
+}
+window.verifyQualAdmin = function(){ if(document.getElementById('qual-admin-pw').value===(state.passwords[SUPER_ADMIN]||DEFAULT_PW)){document.getElementById('qual-edit-area').style.display='block';}else{document.getElementById('qual-pw-msg').textContent='비밀번호가 일치하지 않습니다.';} }
 window.loadQualMember = function(){ const m=document.getElementById('qual-member-sel').value, list=document.getElementById('qual-member-list'); if(!m){list.innerHTML='';return;} const qs=qualData[m]||[]; list.innerHTML=qs.map((q,i)=>`<div style="margin-bottom:6px;">${q.name} <button class="btn btn-sm btn-danger" onclick="removeQualItem('${m}',${i})">삭제</button></div>`).join(''); }
 window.addQualItem = function(){ const m=document.getElementById('qual-member-sel').value; if(!m)return; if(!qualData[m])qualData[m]=[]; qualData[m].push({name:'새 자격 (수정요망)',date:'',org:'',edu:null,remark:''}); loadQualMember(); }
 window.removeQualItem = function(m,i){ qualData[m].splice(i,1); loadQualMember(); }
-window.saveQualData = async function(){ state.qualData=qualData; await saveState(); closeModal('qual'); renderKpiQual(); }
+window.saveQualData = async function(){ state.qualData=qualData; await saveState(); closeModal('qual'); renderKpiQual(); showToast('자격 데이터가 저장되었습니다.'); }
 
-// ── TASKS ──
 window.renderTasks = function(){
   const tf=document.getElementById('taskTypeFilter')?.value||'', pf=document.getElementById('taskPrioFilter')?.value||'', sf=document.getElementById('taskStatusFilter')?.value||'', sbSel=document.getElementById('taskSortSel')?.value||'date';
-  
+  const isSuperAdmin = currentUser === SUPER_ADMIN;
+  const isManager = MANAGERS.includes(currentUser);
+
   let ts=(state.tasks||[]).filter(t=>{
+    const isTargetUser = isSuperAdmin || t.to === currentUser || t.from === currentUser;
+    if(!isTargetUser) return false;
+
     if(tf&&(t.type||'order')!==tf)return false; if(pf&&t.priority!==pf)return false;
     if(sf){const d=!!t.completedDate; if(sf==='완료'&&!d)return false; if(sf==='진행중'&&d)return false;} return true;
   });
+  
   ts.sort((a,b)=>{
     const ar=a.confirmedDate?2:a.completedDate?1:0, br=b.confirmedDate?2:b.completedDate?1:0;
     if(ar!==br)return ar-br;
@@ -1387,56 +1802,494 @@ window.renderTasks = function(){
   });
 
   const todayStr=new Date().toISOString().slice(0,10);
-  document.getElementById('taskList').innerHTML = ts.map(t=>{
-    const idn=!!t.completedDate, isO=(t.type||'order')==='order', pc=PRIORITY_COLOR[t.priority]||'var(--text3)', od=!idn&&t.due&&t.due<todayStr;
-    const cc = !idn;
-    let actionBtns = `<button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">삭제</button>`;
-    
-    const lkP = t.linkedProject ? `<div style="margin-bottom:12px;font-size:12px;color:var(--text2);background:rgba(255,255,255,.03);padding:6px 10px;border-radius:6px;display:inline-block;border:1px solid var(--border)">🔗 연관: <strong style="color:var(--med)">${t.linkedProject}</strong></div>` : '';
+  const tList = document.getElementById('taskList');
+  if(tList) {
+      tList.innerHTML = ts.map(t=>{
+        const idn=!!t.completedDate, isO=(t.type||'order')==='order', pc=PRIORITY_COLOR[t.priority]||'var(--text3)', od=!idn&&t.due&&t.due<todayStr;
+        
+        const canComplete = !idn && t.to === currentUser;
+        let actionBtns = isSuperAdmin ? `<button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">삭제</button>` : '';
+        
+        const lkP = t.linkedProject ? `<div style="margin-bottom:12px;font-size:12px;color:var(--text2);background:rgba(255,255,255,.03);padding:6px 10px;border-radius:6px;display:inline-block;border:1px solid var(--border)">🔗 연관: <strong style="color:var(--med)">${t.linkedProject}</strong></div>` : '';
 
-    return `<div class="card" style="margin-bottom:14px;border-left:5px solid ${idn?'var(--border)':pc};opacity:${idn?0.6:1};transition:all .2s">
-      <div style="padding:20px">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-          <span style="font-size:12px;font-weight:800;color:${pc}">${PRIORITY_LABEL[t.priority]||t.priority}</span>
-          <span class="badge ${isO?'badge-cert':'badge-med'}">${isO?'📋 업무지시':'🤝 협조요청'}</span>
-          <span class="badge badge-gray">${t.team}</span>
-          ${od?'<span class="badge badge-red" style="animation:pulse 1.5s infinite">⚠ 기한초과</span>':''}
-          ${idn?'<span class="badge badge-green">✓ 완료</span>':''}
-          <span style="margin-left:auto;font-size:12px;color:var(--text3)">지시: <strong style="color:var(--text2)">${t.date||'-'}</strong> ${t.due?' | 마감: <strong style="color:var(--text2)">'+t.due+'</strong>':''}</span>
-        </div>
-        ${lkP}
-        <div style="${idn?'text-decoration:line-through;color:var(--text3);':''}font-size:14px;font-weight:600;line-height:1.6;margin-bottom:14px;white-space:pre-wrap;color:var(--text1)">${t.content||''}</div>
-        <div style="display:flex;gap:20px;font-size:13px;color:var(--text3);margin-bottom:14px;background:var(--surface);padding:10px 16px;border-radius:8px">
-          <span>📤 발신: <strong style="color:var(--text1)">${t.from||'-'}</strong></span>
-          <span>📥 수신: <strong style="color:${idn?'var(--success)':'var(--accent)'}">${t.to||'-'}</strong></span>
-          <span style="margin-left:auto" class="badge badge-gray">⏱ 예상: ${t.estHours||0}h / 실제: ${t.actHours||'-'}h</span>
-        </div>
-        ${idn?`<div style="font-size:12px;padding:12px 16px;background:var(--success-light);border:1px solid var(--success);border-radius:8px;color:var(--success);margin-bottom:14px;font-weight:600">✅ 완료보고 (${t.completedDate}): <span style="font-weight:400">${t.completeNote||'내용 없음'}</span></div>`:''}
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          ${cc?`<button class="btn btn-success" onclick="openTaskComplete('${t.id}')" style="background:var(--success);color:#fff;border-color:var(--success)">완료 보고하기</button>`:''}
-          ${idn&&!t.confirmedDate?`<button class="btn" style="border-color:var(--med);color:var(--med)" onclick="confirmTask('${t.id}')">✓ 관리자 확인</button>`:''}
-          ${t.confirmedDate?`<span style="font-size:12px;color:var(--text3);padding:8px 0">관리자 확인: ${t.confirmedDate}</span>`:''}
-          ${cc?`<button class="btn" onclick="openTaskEdit('${t.id}')">내용 수정</button>`:''}
-          ${actionBtns}
-        </div>
-      </div>
-    </div>`;
-  }).join('') || '<div class="card"><div class="card-body" style="text-align:center;padding:48px;color:var(--text3);font-size:14px">조건에 맞는 내역이 없습니다.</div></div>';
+        return `<div class="card" style="margin-bottom:14px;border-left:5px solid ${idn?'var(--border)':pc};opacity:${idn?0.6:1};transition:all .2s">
+          <div style="padding:20px">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+              <span style="font-size:12px;font-weight:800;color:${pc}">${PRIORITY_LABEL[t.priority]||t.priority}</span>
+              <span class="badge ${isO?'badge-cert':'badge-med'}">${isO?'📋 업무지시':'🤝 협조요청'}</span>
+              <span class="badge badge-gray">${t.team}</span>
+              ${od?'<span class="badge badge-red" style="animation:pulse 1.5s infinite">⚠ 기한초과</span>':''}
+              ${idn?'<span class="badge badge-green">✓ 완료</span>':''}
+              <span style="margin-left:auto;font-size:12px;color:var(--text3)">지시: <strong style="color:var(--text2)">${t.date||'-'}</strong> ${t.due?' | 마감: <strong style="color:var(--text2)">'+t.due+'</strong>':''}</span>
+            </div>
+            ${lkP}
+            <div style="${idn?'text-decoration:line-through;color:var(--text3);':''}font-size:14px;font-weight:600;line-height:1.6;margin-bottom:14px;white-space:pre-wrap;color:var(--text1)">${t.content||''}</div>
+            <div style="display:flex;gap:20px;font-size:13px;color:var(--text3);margin-bottom:14px;background:var(--surface);padding:10px 16px;border-radius:8px">
+              <span>📤 발신: <strong style="color:var(--text1)">${t.from||'-'}</strong></span>
+              <span>📥 수신: <strong style="color:${idn?'var(--success)':'var(--accent)'}">${t.to||'-'}</strong></span>
+              <span style="margin-left:auto" class="badge badge-gray">⏱ 예상: ${t.estHours||0}h / 실제: ${t.actHours||'-'}h</span>
+            </div>
+            ${idn?`<div style="font-size:12px;padding:12px 16px;background:var(--success-light);border:1px solid var(--success);border-radius:8px;color:var(--success);margin-bottom:14px;font-weight:600">✅ 완료보고 (${t.completedDate}): <span style="font-weight:400">${t.completeNote||'내용 없음'}</span></div>`:''}
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              ${canComplete?`<button class="btn btn-success" onclick="openTaskComplete('${t.id}')" style="background:var(--success);color:#fff;border-color:var(--success)">완료 보고하기</button>`:''}
+              ${idn&&!t.confirmedDate&&(t.from===currentUser||isSuperAdmin)?`<button class="btn" style="border-color:var(--med);color:var(--med)" onclick="confirmTask('${t.id}')">✓ 발신자(관리자) 확인</button>`:''}
+              ${t.confirmedDate?`<span style="font-size:12px;color:var(--text3);padding:8px 0">확인완료: ${t.confirmedDate}</span>`:''}
+              ${!idn&&(t.from===currentUser||isSuperAdmin)?`<button class="btn" onclick="openTaskEdit('${t.id}')">내용 수정</button>`:''}
+            </div>
+          </div>
+        </div>`;
+      }).join('') || '<div class="card"><div class="card-body" style="text-align:center;padding:48px;color:var(--text3);font-size:14px">조건에 맞는 내역이 없습니다.</div></div>';
+  }
 }
 
-window.updateTaskToOptions = function(team){ const m=TEAM_MEMBERS[team]||TEAM_MEMBERS['공통']; document.getElementById('task-to').innerHTML='<option value="">담당자 선택</option>'+m.filter(x=>x!==currentUser).map(x=>`<option value="${x}">${x}</option>`).join(''); }
-window.openTaskModal = function(type){ document.getElementById('modal-task').classList.add('open'); document.getElementById('task-from').value=currentUser; document.getElementById('task-type-hidden').value=type; updateTaskToOptions('공통'); }
-window.saveTask = async function(){
-  const r = {id:uid(), type:document.getElementById('task-type-hidden').value, team:document.getElementById('task-team').value, priority:document.getElementById('task-priority').value, from:currentUser, to:document.getElementById('task-to').value, linkedProject:'', estHours:document.getElementById('task-est-hours').value, date:document.getElementById('task-date').value, due:document.getElementById('task-due').value, content:document.getElementById('task-content').value, completedDate:''};
-  if(!state.tasks)state.tasks=[]; state.tasks.push(r); await saveState(); closeModal('task'); renderTasks();
+window.updateTaskToOptions = function(team){ 
+  const m = TEAM_MEMBERS[team]||TEAM_MEMBERS['공통']; 
+  const tEl = document.getElementById('task-to');
+  if(tEl) tEl.innerHTML='<option value="">담당자 선택</option>' + m.filter(x=>x!==currentUser && !NO_TASK_USERS.includes(x)).map(x=>`<option value="${x}">${x}</option>`).join(''); 
 }
 window.openTaskEdit = function(id){
-  const t=(state.tasks||[]).find(x=>x.id===id); if(!t)return; editingTaskId=id; document.getElementById('taskModalTitle').textContent=t.type==='order'?'📋 업무지시 수정':'🤝 협조요청 수정';
-  document.getElementById('task-type-hidden').value=t.type||'order'; document.getElementById('task-from').value=t.from||''; document.getElementById('task-date').value=t.date||''; document.getElementById('task-due').value=t.due||''; document.getElementById('task-team').value=t.team||'공통'; updateTaskToOptions(t.team||'공통'); document.getElementById('task-to').value=t.to||''; document.getElementById('task-project').value=t.linkedProject||''; document.getElementById('task-est-hours').value=t.estHours||''; document.getElementById('task-content').value=t.content||''; document.getElementById('task-priority').value=t.priority||'일반'; document.getElementById('modal-task').classList.add('open');
+  const t=(state.tasks||[]).find(x=>x.id===id); if(!t)return; editingTaskId=id; 
+  if(document.getElementById('taskModalTitle')) document.getElementById('taskModalTitle').textContent=t.type==='order'?'📋 업무지시 수정':'🤝 협조요청 수정';
+  if(document.getElementById('task-type-hidden')) document.getElementById('task-type-hidden').value=t.type||'order'; 
+  if(document.getElementById('task-from')) document.getElementById('task-from').value=t.from||''; 
+  if(document.getElementById('task-date')) document.getElementById('task-date').value=t.date||''; 
+  if(document.getElementById('task-due')) document.getElementById('task-due').value=t.due||''; 
+  if(document.getElementById('task-team')) document.getElementById('task-team').value=t.team||'공통'; 
+  updateTaskToOptions(t.team||'공통'); 
+  if(document.getElementById('task-to')) document.getElementById('task-to').value=t.to||''; 
+  if(document.getElementById('task-project')) document.getElementById('task-project').value=t.linkedProject||''; 
+  if(document.getElementById('task-est-hours')) document.getElementById('task-est-hours').value=t.estHours||''; 
+  if(document.getElementById('task-content')) document.getElementById('task-content').value=t.content||''; 
+  if(document.getElementById('task-priority')) document.getElementById('task-priority').value=t.priority||'일반'; 
+  
+  const m = document.getElementById('modal-task');
+  if(m) m.classList.add('open');
 }
-window.deleteTask = async function(id){ if(confirm('삭제하시겠습니까?')){ state.tasks = state.tasks.filter(x=>x.id!==id); await saveState(); renderTasks(); } }
-window.openTaskComplete = function(id){ completingTaskId=id; document.getElementById('task-complete-date').value=new Date().toISOString().slice(0,10); document.getElementById('modal-task-complete').classList.add('open'); }
-window.confirmTaskComplete = async function(){ const t=(state.tasks||[]).find(x=>x.id===completingTaskId); if(!t)return; t.completedDate=document.getElementById('task-complete-date').value; t.actHours=document.getElementById('task-act-hours').value; t.completeNote=document.getElementById('task-complete-note').value; await saveState(); closeModal('task-complete'); renderTasks(); }
-window.confirmTask = async function(id){ const t=(state.tasks||[]).find(x=>x.id===id); if(!t)return; t.confirmedDate=new Date().toISOString().slice(0,10); await saveState(); renderTasks(); }
+window.deleteTask = async function(id){ if(confirm('삭제하시겠습니까?')){ state.tasks = state.tasks.filter(x=>x.id!==id); await saveState(); renderTasks(); renderDashboard(); } }
+window.openTaskComplete = function(id){ completingTaskId=id; if(document.getElementById('task-complete-date')) document.getElementById('task-complete-date').value=new Date().toISOString().slice(0,10); if(document.getElementById('task-act-hours')) document.getElementById('task-act-hours').value=''; if(document.getElementById('task-complete-note')) document.getElementById('task-complete-note').value=''; 
+const m = document.getElementById('modal-task-complete'); if(m) m.classList.add('open'); }
+window.confirmTaskComplete = async function(){ const t=(state.tasks||[]).find(x=>x.id===completingTaskId); if(!t)return; if(document.getElementById('task-complete-date')) t.completedDate=document.getElementById('task-complete-date').value; if(document.getElementById('task-act-hours')) t.actHours=document.getElementById('task-act-hours').value; if(document.getElementById('task-complete-note')) t.completeNote=document.getElementById('task-complete-note').value; await saveState(); closeModal('task-complete'); showToast('업무 완료가 보고되었습니다.'); renderTasks(); renderDashboard(); }
+window.confirmTask = async function(id){ const t=(state.tasks||[]).find(x=>x.id===id); if(!t)return; t.confirmedDate=new Date().toISOString().slice(0,10); await saveState(); showToast('업무가 최종 확인되었습니다.'); renderTasks(); renderDashboard(); }
+
+// 1. 의료기기팀 추가/수정/삭제/저장
+window.openMedModal = function(type) {
+  medEditId = null;
+  medIsContract = (type === 'contract');
+  const tEl = document.getElementById('medModalTitle');
+  if(tEl) tEl.textContent = medIsContract ? '의료기기팀 계약업체 추가' : '의료기기팀 상담 추가';
+  document.querySelectorAll('.contract-only-med').forEach(el => el.style.display = medIsContract ? '' : 'none');
+  const qEl = document.getElementById('medQuoteSection');
+  if(qEl) qEl.style.display = medIsContract ? 'none' : 'block';
+  
+  const inputs = ['m-client','m-product','m-grade','m-biztype','m-manager','m-startdate','m-duedate','m-status','m-progress','m-amount','m-expense','m-renewcycle','m-expiredate','m-consult-status','m-fail-reason','m-consult-etc','m-quote-date','m-quote-amount','m-quote-file','m-contact-name','m-contact-phone','m-contact-email','m-note'];
+  inputs.forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = ''; });
+  if(document.getElementById('m-amount-currency')) document.getElementById('m-amount-currency').value = 'KRW';
+  if(document.getElementById('m-quote-currency')) document.getElementById('m-quote-currency').value = 'KRW';
+  
+  if(document.getElementById('m-exp-audit')) document.getElementById('m-exp-audit').value = '';
+  if(document.getElementById('m-exp-test')) document.getElementById('m-exp-test').value = '';
+  if(document.getElementById('m-exp-trip')) document.getElementById('m-exp-trip').value = '';
+  if(document.getElementById('m-dynamic-expense-wrap')) document.getElementById('m-dynamic-expense-wrap').innerHTML = '';
+  
+  if(document.getElementById('m-fail-reason-wrap')) document.getElementById('m-fail-reason-wrap').style.display = 'none';
+  buildBillingGrid('medBillingGrid','medBillingTotal','m',[],[],[]);
+  updateMedStageOptions();
+  
+  const m = document.getElementById('modal-med');
+  if(m) m.classList.add('open');
+};
+
+window.editMed = function(id) {
+  const r = state.med.find(x => x.id === id); if(!r) return;
+  medEditId = id;
+  medIsContract = (r.recordType === 'contract');
+  const tEl = document.getElementById('medModalTitle');
+  if(tEl) tEl.textContent = medIsContract ? '의료기기팀 계약 수정' : '의료기기팀 상담 수정';
+  document.querySelectorAll('.contract-only-med').forEach(el => el.style.display = medIsContract ? '' : 'none');
+  const qEl = document.getElementById('medQuoteSection');
+  if(qEl) qEl.style.display = medIsContract ? 'none' : 'block';
+  
+  if(document.getElementById('m-client')) document.getElementById('m-client').value = r.client || '';
+  if(document.getElementById('m-product')) document.getElementById('m-product').value = r.product || '';
+  if(document.getElementById('m-grade')) document.getElementById('m-grade').value = r.grade || '';
+  if(document.getElementById('m-biztype')) document.getElementById('m-biztype').value = r.biztype || '';
+  if(document.getElementById('m-manager')) document.getElementById('m-manager').value = r.manager || '';
+  if(document.getElementById('m-startdate')) document.getElementById('m-startdate').value = r.startdate || '';
+  if(document.getElementById('m-duedate')) document.getElementById('m-duedate').value = r.duedate || '';
+  if(document.getElementById('m-status')) document.getElementById('m-status').value = r.status || '진행중';
+  if(document.getElementById('m-progress')) document.getElementById('m-progress').value = r.progress || '';
+  if(document.getElementById('m-amount')) document.getElementById('m-amount').value = r.amount || '';
+  if(document.getElementById('m-amount-currency')) document.getElementById('m-amount-currency').value = r.amountCurrency || 'KRW';
+  
+  if(document.getElementById('m-expense')) document.getElementById('m-expense').value = r.expense || '';
+  
+  if(document.getElementById('m-exp-audit')) document.getElementById('m-exp-audit').value = '';
+  if(document.getElementById('m-exp-test')) document.getElementById('m-exp-test').value = '';
+  if(document.getElementById('m-exp-trip')) document.getElementById('m-exp-trip').value = '';
+  if(document.getElementById('m-dynamic-expense-wrap')) document.getElementById('m-dynamic-expense-wrap').innerHTML = ''; 
+  
+  if(document.getElementById('m-renewcycle')) document.getElementById('m-renewcycle').value = r.renewcycle || '';
+  if(document.getElementById('m-expiredate')) document.getElementById('m-expiredate').value = r.expiredate || '';
+  if(document.getElementById('m-consult-status')) document.getElementById('m-consult-status').value = r.consultStatus || '';
+  if(document.getElementById('m-fail-reason')) document.getElementById('m-fail-reason').value = r.failReason || '';
+  if(document.getElementById('m-fail-reason-wrap')) document.getElementById('m-fail-reason-wrap').style.display = (r.consultStatus==='계약불가'||r.consultStatus==='계약보류') ? 'block' : 'none';
+  if(document.getElementById('m-consult-etc')) document.getElementById('m-consult-etc').value = r.consultEtc || '';
+  if(document.getElementById('m-quote-date')) document.getElementById('m-quote-date').value = r.quoteDate || '';
+  if(document.getElementById('m-quote-amount')) document.getElementById('m-quote-amount').value = r.quoteAmount || '';
+  if(document.getElementById('m-quote-currency')) document.getElementById('m-quote-currency').value = r.quoteCurrency || 'KRW';
+  if(document.getElementById('m-quote-file')) document.getElementById('m-quote-file').value = r.quoteFile || '';
+  if(document.getElementById('m-contact-name')) document.getElementById('m-contact-name').value = r.contactName || '';
+  if(document.getElementById('m-contact-phone')) document.getElementById('m-contact-phone').value = r.contactPhone || '';
+  if(document.getElementById('m-contact-email')) document.getElementById('m-contact-email').value = r.contactEmail || '';
+  if(document.getElementById('m-note')) document.getElementById('m-note').value = r.note || '';
+  
+  buildBillingGrid('medBillingGrid','medBillingTotal','m', r.billing||[], r.billingDates||[], r.billingCurrencies||[]);
+  updateMedStageOptions();
+  
+  const m = document.getElementById('modal-med');
+  if(m) m.classList.add('open');
+};
+
+window.saveMed = async function() {
+  const clientEl = document.getElementById('m-client');
+  if(!clientEl || !clientEl.value) { alert('업체명을 입력하세요.'); return; }
+  
+  let bAmt=[], bDate=[], bCur=[];
+  for(let i=0; i<5; i++){
+    const ba = document.getElementById(`m-b${i}`);
+    const bd = document.getElementById(`m-bd${i}`);
+    const bc = document.getElementById(`m-bc${i}`);
+    bAmt.push(Number(ba ? ba.value : 0));
+    bDate.push(bd ? bd.value : '');
+    bCur.push(bc ? bc.value : 'KRW');
+  }
+  
+  const record = {
+    id: medEditId || uid(),
+    year: medEditId ? (state.med.find(x=>x.id===medEditId)?.year || currentYear) : currentYear,
+    recordType: medIsContract ? 'contract' : 'consult',
+    client: clientEl.value,
+    product: document.getElementById('m-product') ? document.getElementById('m-product').value : '',
+    grade: document.getElementById('m-grade') ? document.getElementById('m-grade').value : '',
+    biztype: document.getElementById('m-biztype') ? document.getElementById('m-biztype').value : '',
+    manager: document.getElementById('m-manager') ? document.getElementById('m-manager').value : '',
+    startdate: document.getElementById('m-startdate') ? document.getElementById('m-startdate').value : '',
+    duedate: document.getElementById('m-duedate') ? document.getElementById('m-duedate').value : '',
+    status: document.getElementById('m-status') ? document.getElementById('m-status').value : '진행중',
+    progress: document.getElementById('m-progress') ? document.getElementById('m-progress').value : '',
+    amount: Number(document.getElementById('m-amount') ? document.getElementById('m-amount').value : 0),
+    amountCurrency: document.getElementById('m-amount-currency') ? document.getElementById('m-amount-currency').value : 'KRW',
+    expense: Number(document.getElementById('m-expense') ? document.getElementById('m-expense').value : 0),
+    expenseCurrency: 'KRW',
+    renewcycle: document.getElementById('m-renewcycle') ? document.getElementById('m-renewcycle').value : '',
+    expiredate: document.getElementById('m-expiredate') ? document.getElementById('m-expiredate').value : '',
+    consultStatus: document.getElementById('m-consult-status') ? document.getElementById('m-consult-status').value : '',
+    failReason: document.getElementById('m-fail-reason') ? document.getElementById('m-fail-reason').value : '',
+    consultEtc: document.getElementById('m-consult-etc') ? document.getElementById('m-consult-etc').value : '',
+    quoteDate: document.getElementById('m-quote-date') ? document.getElementById('m-quote-date').value : '',
+    quoteAmount: Number(document.getElementById('m-quote-amount') ? document.getElementById('m-quote-amount').value : 0),
+    quoteCurrency: document.getElementById('m-quote-currency') ? document.getElementById('m-quote-currency').value : 'KRW',
+    quoteFile: document.getElementById('m-quote-file') ? document.getElementById('m-quote-file').value : '',
+    contactName: document.getElementById('m-contact-name') ? document.getElementById('m-contact-name').value : '',
+    contactPhone: document.getElementById('m-contact-phone') ? document.getElementById('m-contact-phone').value : '',
+    contactEmail: document.getElementById('m-contact-email') ? document.getElementById('m-contact-email').value : '',
+    note: document.getElementById('m-note') ? document.getElementById('m-note').value : '',
+    billing: bAmt, billingDates: bDate, billingCurrencies: bCur
+  };
+  
+  if(!medEditId) state.med.push(record);
+  else { const idx = state.med.findIndex(x=>x.id===medEditId); if(idx>-1) state.med[idx] = Object.assign(state.med[idx], record); }
+  
+  await saveMedRecord(record);
+  closeModal('med'); showToast('저장되었습니다.');
+  if(medIsContract) renderMedContract(); else renderMedConsult();
+  renderDashboard();
+};
+
+window.deleteMed = async function(id) {
+  if(!confirm('정말 삭제하시겠습니까?')) return;
+  state.med = state.med.filter(x => x.id !== id);
+  try { await sb.from('med_records').delete().eq('id', id); } catch(e) {}
+  showToast('삭제되었습니다.');
+  renderMedContract(); renderMedConsult(); renderDashboard();
+};
+
+window.updateMedStageOptions = function() {
+  const bEl = document.getElementById('m-biztype');
+  if(!bEl) return;
+  const b = bEl.value;
+  const w = document.getElementById('m-stage-wrap');
+  if(!w) return;
+  if(b === '인허가') {
+    w.innerHTML = `<label><input type="checkbox" value="계약/접수" checked> 계약/접수</label> <label><input type="checkbox" value="기술문서/시험"> 기술문서/시험</label> <label><input type="checkbox" value="심사제출/보완"> 심사제출/보완</label> <label><input type="checkbox" value="승인/완료"> 승인/완료</label>`;
+  } else if(b === 'QMS') {
+    w.innerHTML = `<label><input type="checkbox" value="계약/접수" checked> 계약/접수</label> <label><input type="checkbox" value="문서구축"> 문서구축</label> <label><input type="checkbox" value="현장심사/보완"> 현장심사/보완</label> <label><input type="checkbox" value="승인/완료"> 승인/완료</label>`;
+  } else {
+    w.innerHTML = `<span style="font-size:12px;color:var(--text3)">업무 유형을 먼저 선택하세요</span>`;
+  }
+};
+
+// 2. 인증팀 추가/수정/삭제/저장
+window.openCertModal = function(type) {
+  certEditId = null;
+  certIsContract = (type === 'contract');
+  const tEl = document.getElementById('certModalTitle');
+  if(tEl) tEl.textContent = certIsContract ? '제품환경인증팀 계약업체 추가' : '제품환경인증팀 상담 추가';
+  
+  if(document.getElementById('certContractFields')) document.getElementById('certContractFields').style.display = certIsContract ? 'contents' : 'none';
+  if(document.getElementById('certConsultSection')) document.getElementById('certConsultSection').style.display = certIsContract ? 'none' : 'contents';
+  
+  const inputs = ['c-client','c-certtype','c-certtype-etc','c-manager','c-contractdate','c-stage','c-issuedate','c-amount','c-expense','c-renewcycle','c-expiredate','c-contracted','c-date','c-fail-reason','c-quote-date','c-quote-amount','c-quote-file','c-contact-name','c-contact-phone','c-contact-email','c-etc-memo','c-note'];
+  inputs.forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = ''; });
+  
+  if(document.getElementById('c-amount-currency')) document.getElementById('c-amount-currency').value = 'KRW';
+  if(document.getElementById('c-quote-currency')) document.getElementById('c-quote-currency').value = 'KRW';
+  
+  if(document.getElementById('c-exp-audit')) document.getElementById('c-exp-audit').value = '';
+  if(document.getElementById('c-exp-test')) document.getElementById('c-exp-test').value = '';
+  if(document.getElementById('c-exp-trip')) document.getElementById('c-exp-trip').value = '';
+  if(document.getElementById('c-dynamic-expense-wrap')) document.getElementById('c-dynamic-expense-wrap').innerHTML = '';
+  
+  if(document.getElementById('c-certtype-etc-wrap')) document.getElementById('c-certtype-etc-wrap').style.display = 'none';
+  if(document.getElementById('c-fail-reason-wrap')) document.getElementById('c-fail-reason-wrap').style.display = 'none';
+  buildBillingGrid('certBillingGrid','certBillingTotal','c',[],[],[]);
+  
+  const m = document.getElementById('modal-cert');
+  if(m) m.classList.add('open');
+};
+
+window.editCert = function(id) {
+  const r = state.cert.find(x => x.id === id); if(!r) return;
+  certEditId = id;
+  certIsContract = (r.recordType === 'contract');
+  const tEl = document.getElementById('certModalTitle');
+  if(tEl) tEl.textContent = certIsContract ? '제품환경인증팀 계약 수정' : '제품환경인증팀 상담 수정';
+  
+  if(document.getElementById('certContractFields')) document.getElementById('certContractFields').style.display = certIsContract ? 'contents' : 'none';
+  if(document.getElementById('certConsultSection')) document.getElementById('certConsultSection').style.display = certIsContract ? 'none' : 'contents';
+  
+  if(document.getElementById('c-client')) document.getElementById('c-client').value = r.client || '';
+  const ct = r.certtype || '';
+  const isEtc = !['','KS','JIS','KC','환경마크','탄소업무'].includes(ct);
+  if(document.getElementById('c-certtype')) document.getElementById('c-certtype').value = isEtc ? '기타' : ct;
+  if(document.getElementById('c-certtype-etc')) document.getElementById('c-certtype-etc').value = isEtc ? ct : '';
+  toggleCertTypeEtc();
+  
+  if(document.getElementById('c-manager')) document.getElementById('c-manager').value = r.manager || '';
+  if(document.getElementById('c-contractdate')) document.getElementById('c-contractdate').value = r.contractdate || '';
+  if(document.getElementById('c-stage')) document.getElementById('c-stage').value = r.stage || '';
+  if(document.getElementById('c-issuedate')) document.getElementById('c-issuedate').value = r.issuedate || '';
+  if(document.getElementById('c-amount')) document.getElementById('c-amount').value = r.amount || '';
+  if(document.getElementById('c-amount-currency')) document.getElementById('c-amount-currency').value = r.amountCurrency || 'KRW';
+  
+  if(document.getElementById('c-expense')) document.getElementById('c-expense').value = r.expense || '';
+  
+  if(document.getElementById('c-exp-audit')) document.getElementById('c-exp-audit').value = '';
+  if(document.getElementById('c-exp-test')) document.getElementById('c-exp-test').value = '';
+  if(document.getElementById('c-exp-trip')) document.getElementById('c-exp-trip').value = '';
+  if(document.getElementById('c-dynamic-expense-wrap')) document.getElementById('c-dynamic-expense-wrap').innerHTML = ''; 
+  
+  if(document.getElementById('c-renewcycle')) document.getElementById('c-renewcycle').value = r.renewcycle || '';
+  if(document.getElementById('c-expiredate')) document.getElementById('c-expiredate').value = r.expiredate || '';
+  if(document.getElementById('c-contracted')) document.getElementById('c-contracted').value = r.contracted || '';
+  if(document.getElementById('c-date')) document.getElementById('c-date').value = r.date || '';
+  if(document.getElementById('c-fail-reason')) document.getElementById('c-fail-reason').value = r.failReason || '';
+  if(document.getElementById('c-fail-reason-wrap')) document.getElementById('c-fail-reason-wrap').style.display = (r.contracted==='계약불가'||r.contracted==='계약보류') ? 'block' : 'none';
+  if(document.getElementById('c-quote-date')) document.getElementById('c-quote-date').value = r.quoteDate || '';
+  if(document.getElementById('c-quote-amount')) document.getElementById('c-quote-amount').value = r.quoteAmount || '';
+  if(document.getElementById('c-quote-currency')) document.getElementById('c-quote-currency').value = r.quoteCurrency || 'KRW';
+  if(document.getElementById('c-quote-file')) document.getElementById('c-quote-file').value = r.quoteFile || '';
+  if(document.getElementById('c-contact-name')) document.getElementById('c-contact-name').value = r.contactName || '';
+  if(document.getElementById('c-contact-phone')) document.getElementById('c-contact-phone').value = r.contactPhone || '';
+  if(document.getElementById('c-contact-email')) document.getElementById('c-contact-email').value = r.contactEmail || '';
+  if(document.getElementById('c-etc-memo')) document.getElementById('c-etc-memo').value = r.etcMemo || '';
+  if(document.getElementById('c-note')) document.getElementById('c-note').value = r.note || '';
+  
+  buildBillingGrid('certBillingGrid','certBillingTotal','c', r.billing||[], r.billingDates||[], r.billingCurrencies||[]);
+  
+  const m = document.getElementById('modal-cert');
+  if(m) m.classList.add('open');
+};
+
+window.saveCert = async function() {
+  const clientEl = document.getElementById('c-client');
+  if(!clientEl || !clientEl.value) { alert('업체명을 입력하세요.'); return; }
+  
+  let bAmt=[], bDate=[], bCur=[];
+  for(let i=0; i<5; i++){
+    const ba = document.getElementById(`c-b${i}`);
+    const bd = document.getElementById(`c-bd${i}`);
+    const bc = document.getElementById(`c-bc${i}`);
+    bAmt.push(Number(ba ? ba.value : 0));
+    bDate.push(bd ? bd.value : '');
+    bCur.push(bc ? bc.value : 'KRW');
+  }
+  
+  let cType = '';
+  const ctEl = document.getElementById('c-certtype');
+  if(ctEl) {
+      cType = ctEl.value;
+      if(cType === '기타') {
+          const cte = document.getElementById('c-certtype-etc');
+          if(cte) cType = cte.value;
+      }
+  }
+  
+  const record = {
+    id: certEditId || uid(),
+    year: certEditId ? (state.cert.find(x=>x.id===certEditId)?.year || currentYear) : currentYear,
+    recordType: certIsContract ? 'contract' : 'consult',
+    client: clientEl.value,
+    certtype: cType,
+    manager: document.getElementById('c-manager') ? document.getElementById('c-manager').value : '',
+    contractdate: document.getElementById('c-contractdate') ? document.getElementById('c-contractdate').value : '',
+    date: document.getElementById('c-date') ? document.getElementById('c-date').value : '',
+    stage: document.getElementById('c-stage') ? document.getElementById('c-stage').value : '',
+    issuedate: document.getElementById('c-issuedate') ? document.getElementById('c-issuedate').value : '',
+    contracted: document.getElementById('c-contracted') ? document.getElementById('c-contracted').value : '',
+    amount: Number(document.getElementById('c-amount') ? document.getElementById('c-amount').value : 0),
+    amountCurrency: document.getElementById('c-amount-currency') ? document.getElementById('c-amount-currency').value : 'KRW',
+    expense: Number(document.getElementById('c-expense') ? document.getElementById('c-expense').value : 0),
+    expenseCurrency: 'KRW',
+    renewcycle: document.getElementById('c-renewcycle') ? document.getElementById('c-renewcycle').value : '',
+    expiredate: document.getElementById('c-expiredate') ? document.getElementById('c-expiredate').value : '',
+    failReason: document.getElementById('c-fail-reason') ? document.getElementById('c-fail-reason').value : '',
+    quoteDate: document.getElementById('c-quote-date') ? document.getElementById('c-quote-date').value : '',
+    quoteAmount: Number(document.getElementById('c-quote-amount') ? document.getElementById('c-quote-amount').value : 0),
+    quoteCurrency: document.getElementById('c-quote-currency') ? document.getElementById('c-quote-currency').value : 'KRW',
+    quoteFile: document.getElementById('c-quote-file') ? document.getElementById('c-quote-file').value : '',
+    contactName: document.getElementById('c-contact-name') ? document.getElementById('c-contact-name').value : '',
+    contactPhone: document.getElementById('c-contact-phone') ? document.getElementById('c-contact-phone').value : '',
+    contactEmail: document.getElementById('c-contact-email') ? document.getElementById('c-contact-email').value : '',
+    etcMemo: document.getElementById('c-etc-memo') ? document.getElementById('c-etc-memo').value : '',
+    note: document.getElementById('c-note') ? document.getElementById('c-note').value : '',
+    billing: bAmt, billingDates: bDate, billingCurrencies: bCur
+  };
+  
+  if(!certEditId) state.cert.push(record);
+  else { const idx = state.cert.findIndex(x=>x.id===certEditId); if(idx>-1) state.cert[idx] = Object.assign(state.cert[idx], record); }
+  
+  await saveCertRecord(record);
+  closeModal('cert'); showToast('저장되었습니다.');
+  if(certIsContract) renderCertContract(); else renderCertConsult();
+  renderDashboard();
+};
+
+window.deleteCert = async function(id) {
+  if(!confirm('정말 삭제하시겠습니까?')) return;
+  state.cert = state.cert.filter(x => x.id !== id);
+  try { await sb.from('cert_records').delete().eq('id', id); } catch(e) {}
+  showToast('삭제되었습니다.');
+  renderCertContract(); renderCertConsult(); renderDashboard();
+};
+
+window.toggleCertTypeEtc = function() {
+  const el = document.getElementById('c-certtype-etc-wrap');
+  const ct = document.getElementById('c-certtype');
+  if(el && ct) el.style.display = ct.value === '기타' ? 'block' : 'none';
+};
+
+// 3. 계약 전환 기능
+window.convertToContract = async function(team, id) {
+  if(!confirm('해당 상담 건을 계약으로 전환하시겠습니까?')) return;
+  const r = state[team].find(x => x.id === id);
+  if(!r) return;
+  r.recordType = 'contract';
+  if(team === 'med') {
+    r.status = '진행중'; r.startdate = TODAY; r.consultStatus = '계약완료';
+    await saveMedRecord(r);
+    renderMedConsult();
+  } else {
+    r.contracted = '계약완료'; r.contractdate = TODAY; r.stage = '신청서 작성';
+    await saveCertRecord(r);
+    renderCertConsult();
+  }
+  showToast('계약으로 성공적으로 전환되었습니다. 계약업체 탭에서 세부사항을 입력하세요.');
+  renderDashboard();
+};
+
+// 4. 업무 지시서 기능 (작성 및 저장)
+window.openTaskModal = function(type) {
+  editingTaskId = null;
+  if(document.getElementById('taskModalTitle')) document.getElementById('taskModalTitle').textContent = type === 'order' ? '📋 업무지시 작성' : '🤝 협조요청 작성';
+  if(document.getElementById('task-type-hidden')) document.getElementById('task-type-hidden').value = type;
+  if(document.getElementById('task-team')) document.getElementById('task-team').value = '공통';
+  updateTaskToOptions('공통');
+  if(document.getElementById('task-to')) document.getElementById('task-to').value = '';
+  if(document.getElementById('task-priority')) document.getElementById('task-priority').value = '일반';
+  if(document.getElementById('task-est-hours')) document.getElementById('task-est-hours').value = '';
+  if(document.getElementById('task-from')) document.getElementById('task-from').value = currentUser;
+  if(document.getElementById('task-date')) document.getElementById('task-date').value = TODAY;
+  if(document.getElementById('task-due')) document.getElementById('task-due').value = '';
+  if(document.getElementById('task-content')) document.getElementById('task-content').value = '';
+  
+  // 연관 프로젝트 불러오기
+  const projSel = document.getElementById('task-project');
+  if(projSel) {
+      projSel.innerHTML = '<option value="">관련 업체 선택 (없음)</option>';
+      [...state.med, ...state.cert].filter(x=>x.recordType==='contract' && x.status!=='완료' && x.stage!=='완료').forEach(x => {
+        const opt = document.createElement('option');
+        opt.value = x.client; opt.textContent = `${state.med.includes(x)?'[의료]':'[인증]'} ${x.client}`;
+        projSel.appendChild(opt);
+      });
+  }
+  
+  const m = document.getElementById('modal-task');
+  if(m) m.classList.add('open');
+};
+
+window.saveTask = async function() {
+  const content = document.getElementById('task-content') ? document.getElementById('task-content').value : '';
+  const to = document.getElementById('task-to') ? document.getElementById('task-to').value : '';
+  if(!content || !to) { alert('수신자와 업무 내용을 모두 입력하세요.'); return; }
+  
+  const record = {
+    id: editingTaskId || uid(),
+    type: document.getElementById('task-type-hidden') ? document.getElementById('task-type-hidden').value : 'order',
+    team: document.getElementById('task-team') ? document.getElementById('task-team').value : '공통',
+    to: to,
+    linkedProject: document.getElementById('task-project') ? document.getElementById('task-project').value : '',
+    priority: document.getElementById('task-priority') ? document.getElementById('task-priority').value : '일반',
+    estHours: document.getElementById('task-est-hours') ? document.getElementById('task-est-hours').value : '',
+    from: document.getElementById('task-from') ? document.getElementById('task-from').value : '',
+    date: document.getElementById('task-date') ? document.getElementById('task-date').value : '',
+    due: document.getElementById('task-due') ? document.getElementById('task-due').value : '',
+    content: content,
+    completedDate: null, actHours: null, completeNote: '', confirmedDate: null
+  };
+  
+  if(!state.tasks) state.tasks = [];
+  if(!editingTaskId) state.tasks.push(record);
+  else { const idx = state.tasks.findIndex(x=>x.id===editingTaskId); if(idx>-1) state.tasks[idx] = Object.assign(state.tasks[idx], record); }
+  
+  await saveState();
+  closeModal('task'); showToast('업무가 등록되었습니다.');
+  renderTasks(); renderDashboard();
+};
+
+// 5. 엑셀 다운로드
+window.downloadCSV = function(tableId, filename) {
+  const table = document.getElementById(tableId);
+  if(!table) return;
+  let csv = [];
+  for (let i = 0; i < table.rows.length; i++) {
+      let row = [], cols = table.rows[i].querySelectorAll('td, th');
+      for (let j = 0; j < cols.length; j++) {
+          let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/"/g, '""');
+          row.push('"' + data + '"');
+      }
+      csv.push(row.join(','));
+  }
+  const csvFile = new Blob(['\uFEFF' + csv.join('\n')], {type: 'text/csv;charset=utf-8;'});
+  const downloadLink = document.createElement('a');
+  downloadLink.download = `${filename}_${TODAY}.csv`;
+  downloadLink.href = window.URL.createObjectURL(csvFile);
+  downloadLink.style.display = 'none';
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+};
 
 </script>
+</body>
+</html>
