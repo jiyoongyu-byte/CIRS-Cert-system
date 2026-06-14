@@ -2,7 +2,7 @@
 
 import { setCurrentUser, setCurrentYear, setCurrentView, getCurrentYear,
          loadFromSupabase, saveState, getState, ensureRevYear } from './core/store.js';
-import { savePw, initSb } from './core/api.js';
+import { savePw, initSb, loadPw, resetPw } from './core/api.js';
 import { tt } from './core/utils.js';
 
 const DEFAULT_PW   = 'cirs2026!';
