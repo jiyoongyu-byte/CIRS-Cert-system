@@ -232,10 +232,84 @@ input[type=date]{color-scheme:dark}
 </div>
 
 <div class="view" id="view-orgchart">
-  <div class="section-head"><span class="section-title" id="orgTitleMain">전사 조직도 및 성과 관리</span></div>
-  <div class="card" style="min-height:500px; display:flex; flex-direction:column;"><div class="card-body" id="orgChartContainer" style="flex:1; overflow:auto;"></div></div>
-</div>
+  <div class="section-head"><span class="section-title">전사 조직도</span></div>
+  <div class="card">
+    <div class="card-body" style="overflow-x:auto; padding:32px 16px;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:0; font-family:var(--sans);">
 
+        <!-- 대표이사 -->
+        <div style="display:flex; flex-direction:column; align-items:center;">
+          <div style="background:var(--med);color:#fff;font-weight:900;font-size:14px;padding:12px 28px;border-radius:10px;box-shadow:0 4px 12px rgba(91,110,245,0.4);">대표이사</div>
+          <div style="width:2px;height:32px;background:var(--border2);"></div>
+        </div>
+
+        <!-- 이사 -->
+        <div style="display:flex; flex-direction:column; align-items:center;">
+          <div style="background:var(--surface);border:2px solid var(--med);color:var(--text1);font-weight:700;font-size:13px;padding:10px 24px;border-radius:10px;text-align:center;">
+            <div style="font-size:10px;color:var(--med);font-weight:800;margin-bottom:2px;">제품인증부문</div>
+            이 사
+          </div>
+          <div style="width:2px;height:32px;background:var(--border2);"></div>
+        </div>
+
+        <!-- 두 팀 연결선 -->
+        <div style="display:flex; align-items:flex-start; gap:0; position:relative; width:100%; max-width:700px; justify-content:center;">
+          <!-- 가로 연결선 -->
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:60%;height:2px;background:var(--border2);"></div>
+
+          <!-- 제품환경인증팀 -->
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; padding:0 12px;">
+            <div style="width:2px;height:32px;background:var(--border2);"></div>
+            <div style="background:var(--cert);color:#fff;font-weight:800;font-size:13px;padding:10px 20px;border-radius:10px;margin-bottom:0;box-shadow:0 4px 12px rgba(25,168,118,0.3);white-space:nowrap;">제품환경인증팀</div>
+            <div style="width:2px;height:24px;background:var(--border2);"></div>
+            <!-- 팀원 -->
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;max-width:200px;">
+              <div style="background:var(--card);border:1px solid var(--cert);border-left:4px solid var(--cert);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--cert);font-weight:800;">팀 장</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">엄태호</div>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--cert);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--cert-mid);font-weight:800;">책 임</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">Lyu Cuicui</div>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--cert);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--cert-mid);font-weight:800;">선 임</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">박성재</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 의료기기팀 -->
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; padding:0 12px;">
+            <div style="width:2px;height:32px;background:var(--border2);"></div>
+            <div style="background:var(--med);color:#fff;font-weight:800;font-size:13px;padding:10px 20px;border-radius:10px;margin-bottom:0;box-shadow:0 4px 12px rgba(91,110,245,0.3);white-space:nowrap;">의료기기팀</div>
+            <div style="width:2px;height:24px;background:var(--border2);"></div>
+            <!-- 팀원 -->
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;max-width:200px;">
+              <div style="background:var(--card);border:1px solid var(--med);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--med);font-weight:800;">수 석</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">유재용</div>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--med-mid);font-weight:800;">책 임</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">윤미령</div>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--med-mid);font-weight:800;">선 임</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">차상호</div>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--med-mid);font-weight:800;">선 임</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">Zhao Lijie</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
 <div class="view" id="view-revenue">
   <div style="display:flex;gap:10px;margin-bottom:20px;" id="revTeamSelector">
     <button class="team-tab" id="rev-tab-med" onclick="switchRevTeam('med',this)"><span data-ko="의료기기팀" data-zh="医疗器械组">의료기기팀</span></button><button class="team-tab" id="rev-tab-cert" onclick="switchRevTeam('cert',this)"><span data-ko="제품환경인증팀" data-zh="环境认证组">제품환경인증팀</span></button><button class="team-tab" id="rev-tab-total" onclick="switchRevTeam('total',this)"><span data-ko="전체 합산" data-zh="整体汇总">전체 합산</span></button>
