@@ -3,10 +3,14 @@
 // 1. 코어(Core) 모듈 불러오기
 import { getState, getCurrentYear, getCurrentUser } from '../core/store.js';
 import { fmt, tt, sanitize } from '../core/utils.js';
-
+// ID 브릿지 — HTML 테이블 ID와 연결
+const getBody = id => {
+    const t = document.getElementById(id);
+    return t?.tagName === 'TABLE' ? (t.querySelector('tbody') || t) : t;
+};
 // 2. 의료기기팀 계약 리스트 렌더링
 export function renderMedContract() {
-    const tbody = document.getElementById('medContractBody');
+    const tbody = getBody('medContractTable');
     if (!tbody) return; // [사전 차단 로직] 화면에 표가 없으면 백화현상 방지를 위해 즉시 종료
 
     const state = getState();
@@ -38,7 +42,7 @@ export function renderMedContract() {
 
 // 3. 의료기기팀 상담 리스트 렌더링
 export function renderMedConsult() {
-    const tbody = document.getElementById('medConsultBody');
+    const tbody = getBody('medConsultTable');
     if (!tbody) return;
 
     const state = getState();
@@ -65,7 +69,7 @@ export function renderMedConsult() {
 
 // 4. 제품환경인증팀 계약 리스트 렌더링
 export function renderCertContract() {
-    const tbody = document.getElementById('certContractBody');
+    const tbody = getBody('certContractTable');
     if (!tbody) return;
 
     const state = getState();
@@ -95,7 +99,7 @@ export function renderCertContract() {
 
 // 5. 제품환경인증팀 상담 리스트 렌더링
 export function renderCertConsult() {
-    const tbody = document.getElementById('certConsultBody');
+    const tbody = getBody('certConsultTable');
     if (!tbody) return;
 
     const state = getState();
