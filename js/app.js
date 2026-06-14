@@ -52,6 +52,7 @@ export async function doLogin() {
     }
     if (err) err.textContent = '';
     setCurrentUser(user);
+localStorage.setItem('cirs_user', user);
 
     document.getElementById('loginScreen').style.display  = 'none';
     document.getElementById('appShell').style.display     = 'flex';
@@ -87,6 +88,7 @@ export async function doLogin() {
 
 export function doLogout() {
     setCurrentUser('');
+    localStorage.removeItem('cirs_user');
     document.getElementById('appShell').style.display  = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('loginPw').value = '';
@@ -225,5 +227,46 @@ window.SUPER_ADMIN      = SUPER_ADMIN;
 window.REP_USER         = REP_USER;
 window.QUAL_MASTER      = QUAL_MASTER;
 
+// 새로고침 시 자동 로그인
+document.addEventListener('DOMContentLoaded', () => {
+    const savedUser = localStorage.getItem('cirs_user');
+    if (savedUser) {
+        const loginUser = document.getElementById('loginUser');
+        if (loginUser) {
+            loginUser.innerHTML = `<option value="${savedUser}">${savedUser}</option>`;
+            loginUser.value = savedUser;
+        }
+        const loginPw = document.getElementById('loginPw');
+        if (loginPw) loginPw.value = 'auto';
+        // 저장된 비번으로 자동 로그인
+        setTimeout(async () => {
+            initSb();
+            const state = getState();
+            await loadPw(state, savedUser);
+            setCurrentUser(savedUser);
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appShell').style.display = 'flex';
+            const sb = document.getElementById('sidebarUser');
+            if (sb) sb.textContent = savedUser + ' 님 환영합니다';
+            const ySel = document.getElementById('yearSelect');
+            if (ySel && !ySel.options.length) {
+                const y = new Date().getFullYear();
+                for (let i = y + 2; i >= 2020; i--) {
+                    const o = document.createElement('option');
+                    o.value = i; o.textContent = i + '년';
+                    if (i === y) o.selected = true;
+                    ySel.appendChild(o);
+                }
+            }
+            const savedRmb = localStorage.getItem('cirs_rmb_rate');
+            const savedUsd = localStorage.getItem('cirs_usd_rate');
+            if (savedRmb) { const e = document.getElementById('rmbRateInput'); if (e) e.value = savedRmb; }
+            if (savedUsd) { const e = document.getElementById('usdRateInput'); if (e) e.value = savedUsd; }
+            await loadFromSupabase();
+            window._store?.syncQualData?.(QUAL_MASTER);
+            nav('dashboard');
+        }, 500);
+    }
+});
 // 로그인 이벤트 바인딩은 index.html 인라인 스크립트에서 처리
 // 연도 셀렉트 초기화는 doLogin() 내부에서 처리
