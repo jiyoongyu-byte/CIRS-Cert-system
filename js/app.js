@@ -182,7 +182,7 @@ export function nav(viewName, element = null) {
 
     // topbar 타이틀
     const titles = {
-        dashboard:'전체 현황', revenue:'분기/연간 계획',
+        dashboard:'전체 현황', revenue:'수입계획 및 실적',
         medContract:'의료기기팀 · 계약업체', medConsult:'의료기기팀 · 상담',
         certContract:'제품환경인증팀 · 계약업체', certConsult:'제품환경인증팀 · 상담',
         kpi:'KPI 현황', tasks:'업무지시서',
