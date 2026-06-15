@@ -542,5 +542,32 @@ input[type=date]{color-scheme:dark}
       if (loginPw)   loginPw.addEventListener('keydown', function(e){ if(e.key==='Enter') loginClick(); });
     });
   </script>
+    <script>
+function calcTotalExpense(team) {
+    const p = team === 'med' ? 'm' : 'c';
+    const audit = Number(document.getElementById(p+'-exp-audit')?.value || 0);
+    const test  = Number(document.getElementById(p+'-exp-test')?.value  || 0);
+    const trip  = Number(document.getElementById(p+'-exp-trip')?.value  || 0);
+    const wrap  = document.getElementById(p+'-dynamic-expense-wrap');
+    let dynamic = 0;
+    if (wrap) wrap.querySelectorAll('input[type=number]').forEach(function(el){ dynamic += Number(el.value||0); });
+    const total = audit + test + trip + dynamic;
+    const el = document.getElementById(p+'-expense');
+    if (el) el.value = total.toLocaleString();
+}
+
+function addDynamicExpense(team) {
+    const p = team === 'med' ? 'm' : 'c';
+    const wrap = document.getElementById(p+'-dynamic-expense-wrap');
+    if (!wrap) return;
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;';
+    div.innerHTML =
+        '<input class="form-input" type="text" placeholder="항목명" style="flex:1;">' +
+        '<input class="form-input" type="number" placeholder="금액" style="width:140px;" oninput="calcTotalExpense(\''+team+'\')">' +
+        '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();calcTotalExpense(\''+team+'\')">✕</button>';
+    wrap.appendChild(div);
+}
+</script>
 </body>
 </html>
