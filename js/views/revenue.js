@@ -1,16 +1,14 @@
 // js/views/revenue.js — 수입계획 및 실적 뷰
 
 import { getState, getCurrentYear, getRevTeam, setRevTeam, ensureRevYear } from '../core/store.js';
-import { toKRW, fmtM, fmtMil, getBilledActual, tt } from '../core/utils.js';
+import { toKRW, fmt, fmtMil, getBilledActual } from '../core/utils.js';
 
 let chartRevMixed = null;
 let chartTopServices = null;
 
 export function switchRevTeam(team, el) {
     setRevTeam(team);
-    document.querySelectorAll('#revTeamSelector .team-tab').forEach(b => {
-        b.className = 'team-tab';
-    });
+    document.querySelectorAll('#revTeamSelector .team-tab').forEach(b => { b.className = 'team-tab'; });
     if (el) el.className = 'team-tab ' + (team === 'med' ? 'active-med' : team === 'cert' ? 'active-cert' : 'active-med');
     renderRevenue();
 }
@@ -50,22 +48,21 @@ export function renderRevenue() {
     // 분기 목표 카드
     const qWrap = document.getElementById('revQuarterlyWrap');
     if (qWrap) {
-        qWrap.innerHTML = `<div class="stat-grid" style="margin-bottom:20px">
-            ${['q1','q2','q3','q4'].map((q,i) => {
+        qWrap.innerHTML = '<div class="stat-grid" style="margin-bottom:20px">' +
+            ['q1','q2','q3','q4'].map((q, i) => {
                 const tgt = Number(target[q]||0);
                 const act = Math.round(actual[q]||0);
-                const p   = tgt ? Math.min(Math.round(act/tgt*100),100) : 0;
-                return `<div class="stat-card">
-                    <div class="stat-label" style="font-size:13px;font-weight:700;">${i+1}분기 목표</div>
-<div class="stat-value" style="font-size:16px;font-weight:800;">${fmtM(tgt)}</div>
-<div style="font-size:14px;font-weight:700;color:var(--success);margin-top:4px">실적 ${fmtM(act)} (${p}%)</div>
-<div class="stat-bar"><div class="stat-fill fill-${team==='cert'?'cert':'med'}" style="width:${p}%"></div></div>
-<input class="m-input" type="number" value="${tgt}" placeholder="목표 입력"
-    onchange="updateTarget('${team}','${q}',this.value)" style="margin-top:8px">
-                        onchange="updateTarget('${team}','${q}',this.value)" style="margin-top:8px">
-                </div>`;
-            }).join('')}
-        </div>`;
+                const p   = tgt ? Math.min(Math.round(act/tgt*100), 100) : 0;
+                const color = team === 'cert' ? 'cert' : 'med';
+                return '<div class="stat-card">' +
+                    '<div class="stat-label">' + (i+1) + '분기 목표</div>' +
+                    '<div style="font-size:16px;font-weight:800;font-family:var(--mono);margin:6px 0;">₩' + fmt(tgt) + '원</div>' +
+                    '<div style="font-size:13px;font-weight:700;color:var(--success);margin-bottom:6px;">실적 ₩' + fmt(act) + '원 (' + p + '%)</div>' +
+                    '<div class="stat-bar"><div class="stat-fill fill-' + color + '" style="width:' + p + '%"></div></div>' +
+                    '<input class="m-input" type="number" value="' + tgt + '" placeholder="목표 입력" onchange="updateTarget(\'' + team + '\',\'' + q + '\',this.value)" style="margin-top:8px">' +
+                    '</div>';
+            }).join('') +
+        '</div>';
     }
 
     // 월별 카드
@@ -75,18 +72,18 @@ export function renderRevenue() {
         const rows = team === 'med' ? medRows : team === 'cert' ? certRows : [...medRows, ...certRows];
         const monthly = Array(12).fill(0);
         rows.forEach(r => {
-            (r.billing||[]).forEach((amt,i) => {
+            (r.billing||[]).forEach((amt, i) => {
                 const d = (r.billingDates||[])[i];
                 if (!d || new Date(d).getFullYear() !== y) return;
                 const m = new Date(d).getMonth();
                 monthly[m] += toKRW(Number(amt||0), (r.billingCurrencies||[])[i]||'KRW');
             });
         });
-        mCards.innerHTML = monthly.map((v,i) =>
-            `<div class="m-card">
-<div class="m-label" style="font-size:13px;font-weight:700;">${MONTHS[i]}</div>
-<div class="m-actual" style="font-size:16px;font-weight:800;">${fmtMil(Math.round(v))}</div>
-            </div>`
+        mCards.innerHTML = monthly.map((v, i) =>
+            '<div class="m-card">' +
+                '<div class="m-label">' + MONTHS[i] + '</div>' +
+                '<div class="m-actual">₩' + fmt(Math.round(v)) + '</div>' +
+            '</div>'
         ).join('');
     }
 
@@ -103,23 +100,23 @@ export function renderRevenue() {
               ];
 
         if (!rows.length) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text3)">데이터가 없습니다.</td></tr>`;
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text3)">데이터가 없습니다.</td></tr>';
         } else {
-            tbody.innerHTML = rows.map((r,i) => {
-                const paid = (r.billing||[]).reduce((s,v,bi) => s + toKRW(Number(v||0),(r.billingCurrencies||[])[bi]||'KRW'), 0);
-                const total = toKRW(Number(r.amount||0), r.amountCurrency||'KRW');
+            tbody.innerHTML = rows.map((r, i) => {
+                const paid   = (r.billing||[]).reduce((s,v,bi) => s + toKRW(Number(v||0),(r.billingCurrencies||[])[bi]||'KRW'), 0);
+                const total  = toKRW(Number(r.amount||0), r.amountCurrency||'KRW');
                 const remain = total - paid;
-                return `<tr>
-                    <td>${i+1}</td>
-                    <td><span class="badge ${r._team==='의료기기팀'?'badge-med':'badge-cert'}">${r._team}</span></td>
-                    <td>${r.client||''}</td>
-                    <td>${r._item}</td>
-                    <td>${r.startdate||r.contractdate||''}</td>
-                    <td>${fmtM(r.amount||0)} ${r.amountCurrency||'KRW'}</td>
-                    <td style="color:var(--success);font-weight:700">${fmtM(Math.round(paid))}</td>
-                    <td style="color:${remain>0?'var(--warn)':'var(--text3)'}">${fmtM(Math.round(remain))}</td>
-                    <td>${r.manager||''}</td>
-                </tr>`;
+                return '<tr>' +
+                    '<td>' + (i+1) + '</td>' +
+                    '<td><span class="badge ' + (r._team==='의료기기팀'?'badge-med':'badge-cert') + '">' + r._team + '</span></td>' +
+                    '<td>' + (r.client||'') + '</td>' +
+                    '<td>' + (r._item||'') + '</td>' +
+                    '<td>' + (r.startdate||r.contractdate||'') + '</td>' +
+                    '<td>₩' + fmt(r.amount||0) + ' ' + (r.amountCurrency||'KRW') + '</td>' +
+                    '<td style="color:var(--success);font-weight:700">₩' + fmt(Math.round(paid)) + '</td>' +
+                    '<td style="color:' + (remain>0?'var(--warn)':'var(--text3)') + '">₩' + fmt(Math.round(remain)) + '</td>' +
+                    '<td>' + (r.manager||'') + '</td>' +
+                '</tr>';
             }).join('');
         }
     }
@@ -130,19 +127,17 @@ export function renderRevenue() {
 function renderRevenueCharts(actual, target, team, medRows, certRows, y) {
     if (typeof Chart === 'undefined') return;
 
-    // 월별 바 차트
     const MONTHS = ['1','2','3','4','5','6','7','8','9','10','11','12'];
     const rows = team === 'med' ? medRows : team === 'cert' ? certRows : [...medRows,...certRows];
     const monthly = Array(12).fill(0);
     rows.forEach(r => {
-        (r.billing||[]).forEach((amt,i) => {
+        (r.billing||[]).forEach((amt, i) => {
             const d = (r.billingDates||[])[i];
             if (!d || new Date(d).getFullYear() !== y) return;
-            const m = new Date(d).getMonth();
-            monthly[m] += toKRW(Number(amt||0),(r.billingCurrencies||[])[i]||'KRW');
+            monthly[new Date(d).getMonth()] += toKRW(Number(amt||0),(r.billingCurrencies||[])[i]||'KRW');
         });
     });
-    const cumulative = monthly.reduce((acc,v,i) => { acc.push((acc[i-1]||0)+v); return acc; }, []);
+    const cumulative = monthly.reduce((acc, v, i) => { acc.push((acc[i-1]||0)+v); return acc; }, []);
 
     const ctx1 = document.getElementById('chartRevMixed');
     if (ctx1) {
@@ -168,15 +163,13 @@ function renderRevenueCharts(actual, target, team, medRows, certRows, y) {
         });
     }
 
-    // 서비스별 파이 차트
     const ctx2 = document.getElementById('chartTopServices');
     if (ctx2) {
         if (chartTopServices) chartTopServices.destroy();
         const svcMap = {};
         rows.filter(r => r.year === y).forEach(r => {
             const key = r.certtype || r.biztype || r.product || '기타';
-            const amt = toKRW(Number(r.amount||0), r.amountCurrency||'KRW');
-            svcMap[key] = (svcMap[key]||0) + amt;
+            svcMap[key] = (svcMap[key]||0) + toKRW(Number(r.amount||0), r.amountCurrency||'KRW');
         });
         const sorted = Object.entries(svcMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
         chartTopServices = new Chart(ctx2, {
@@ -195,5 +188,5 @@ function renderRevenueCharts(actual, target, team, medRows, certRows, y) {
     }
 }
 
-window.renderRevenue   = renderRevenue;
-window.switchRevTeam   = switchRevTeam;
+window.renderRevenue = renderRevenue;
+window.switchRevTeam = switchRevTeam;
