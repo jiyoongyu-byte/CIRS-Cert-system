@@ -59,7 +59,7 @@ export function renderRevenue() {
                     '<div style="font-size:16px;font-weight:800;font-family:var(--mono);margin:6px 0;">₩' + fmt(tgt) + '원</div>' +
                     '<div style="font-size:13px;font-weight:700;color:var(--success);margin-bottom:6px;">실적 ₩' + fmt(act) + '원 (' + p + '%)</div>' +
                     '<div class="stat-bar"><div class="stat-fill fill-' + color + '" style="width:' + p + '%"></div></div>' +
-                    '<input class="m-input" type="number" value="' + tgt + '" placeholder="목표 입력" onchange="updateTarget(\'' + team + '\',\'' + q + '\',this.value)" style="margin-top:8px">' +
+                    '<input class="m-input" type="number" value="' + tgt + '" placeholder="목표 입력" onchange="updateTarget(this)" data-team="' + team + '" data-q="' + q + '" style="margin-top:8px">' +
                     '</div>';
             }).join('') +
         '</div>';
