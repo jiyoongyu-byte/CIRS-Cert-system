@@ -370,7 +370,10 @@ export function calcTotalExpense(team) {
 
     const total = audit + test + trip + dynamic;
     const totalEl = document.getElementById(`${p}-expense`);
-    if (totalEl) totalEl.value = total.toLocaleString();
+    if (totalEl) {
+    totalEl.type = 'text';
+    totalEl.value = total.toLocaleString();
+}
 }
 
 export function addDynamicExpense(team) {
