@@ -352,3 +352,41 @@ window.removeQualItem   = removeQualItem;
 window.saveQualData     = saveQualData;
 window.updateQualRemark = updateQualRemark;
 window.updateTarget     = updateTarget;
+// ── 지출 비용 계산 ────────────────────────────────────────────────
+export function calcTotalExpense(team) {
+    const p = team === 'med' ? 'm' : 'c';
+    const audit = Number(document.getElementById(`${p}-exp-audit`)?.value || 0);
+    const test  = Number(document.getElementById(`${p}-exp-test`)?.value  || 0);
+    const trip  = Number(document.getElementById(`${p}-exp-trip`)?.value  || 0);
+
+    // 동적으로 추가된 기타 비용 합산
+    const dynamicWrap = document.getElementById(`${p}-dynamic-expense-wrap`);
+    let dynamic = 0;
+    if (dynamicWrap) {
+        dynamicWrap.querySelectorAll('input[type=number]').forEach(el => {
+            dynamic += Number(el.value || 0);
+        });
+    }
+
+    const total = audit + test + trip + dynamic;
+    const totalEl = document.getElementById(`${p}-expense`);
+    if (totalEl) totalEl.value = total.toLocaleString();
+}
+
+export function addDynamicExpense(team) {
+    const p = team === 'med' ? 'm' : 'c';
+    const wrap = document.getElementById(`${p}-dynamic-expense-wrap`);
+    if (!wrap) return;
+    const idx = wrap.children.length;
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;';
+    div.innerHTML = `
+        <input class="form-input" type="text" placeholder="항목명" style="flex:1;">
+        <input class="form-input" type="number" placeholder="금액" style="width:140px;"
+            oninput="calcTotalExpense('${team}')">
+        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();calcTotalExpense('${team}')">✕</button>
+    `;
+    wrap.appendChild(div);
+}
+window.calcTotalExpense = calcTotalExpense;
+window.addDynamicExpense = addDynamicExpense;
