@@ -56,9 +56,12 @@ export function renderRevenue() {
                 const act = Math.round(actual[q]||0);
                 const p   = tgt ? Math.min(Math.round(act/tgt*100),100) : 0;
                 return `<div class="stat-card">
-                    <div class="stat-label">${i+1}분기 목표</div>
-                    <div class="stat-value">${fmtM(tgt)}</div>
-                    <div style="font-size:12px;color:var(--success);margin-top:4px">실적 ${fmtM(act)} (${p}%)</div>
+                    <div class="stat-label" style="font-size:13px;font-weight:700;">${i+1}분기 목표</div>
+<div class="stat-value" style="font-size:16px;font-weight:800;">${fmtM(tgt)}</div>
+<div style="font-size:14px;font-weight:700;color:var(--success);margin-top:4px">실적 ${fmtM(act)} (${p}%)</div>
+<div class="stat-bar"><div class="stat-fill fill-${team==='cert'?'cert':'med'}" style="width:${p}%"></div></div>
+<input class="m-input" type="number" value="${tgt}" placeholder="목표 입력"
+    onchange="updateTarget('${team}','${q}',this.value)" style="margin-top:8px">
                     <div class="stat-bar"><div class="stat-fill fill-${team==='cert'?'cert':'med'}" style="width:${p}%"></div></div>
                     <input class="m-input" type="number" value="${tgt}" placeholder="목표 입력"
                         onchange="updateTarget('${team}','${q}',this.value)" style="margin-top:8px">
@@ -83,8 +86,8 @@ export function renderRevenue() {
         });
         mCards.innerHTML = monthly.map((v,i) =>
             `<div class="m-card">
-                <div class="m-label">${MONTHS[i]}</div>
-                <div class="m-actual">${fmtMil(Math.round(v))}</div>
+<div class="m-label" style="font-size:13px;font-weight:700;">${MONTHS[i]}</div>
+<div class="m-actual" style="font-size:16px;font-weight:800;">${fmtMil(Math.round(v))}</div>
             </div>`
         ).join('');
     }
