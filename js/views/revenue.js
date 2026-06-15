@@ -60,8 +60,6 @@ export function renderRevenue() {
 <div class="stat-value" style="font-size:16px;font-weight:800;">${fmtM(tgt)}</div>
 <div style="font-size:14px;font-weight:700;color:var(--success);margin-top:4px">실적 ${fmtM(act)} (${p}%)</div>
 <div class="stat-bar"><div class="stat-fill fill-${team==='cert'?'cert':'med'}" style="width:${p}%"></div></div>
-<input class="m-input" type="number" value="${tgt}" placeholder="목표 입력"
-    onchange="updateTarget('${team}','${q}',this.value)" style="margin-top:8px">
                     <div class="stat-bar"><div class="stat-fill fill-${team==='cert'?'cert':'med'}" style="width:${p}%"></div></div>
                     <input class="m-input" type="number" value="${tgt}" placeholder="목표 입력"
                         onchange="updateTarget('${team}','${q}',this.value)" style="margin-top:8px">
