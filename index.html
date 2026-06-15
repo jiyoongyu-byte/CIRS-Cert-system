@@ -569,5 +569,13 @@ function addDynamicExpense(team) {
     wrap.appendChild(div);
 }
 </script>
+<script>
+function updateTargetFromInput(el) {
+    var team = el.getAttribute('data-team');
+    var q    = el.getAttribute('data-q');
+    var val  = el.value;
+    if (window.updateTarget) window.updateTarget(team, q, val);
+}
+</script>
 </body>
 </html>
