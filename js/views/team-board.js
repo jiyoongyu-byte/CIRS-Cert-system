@@ -148,6 +148,9 @@ export function renderCertContract() {
                     <td>${sanitize(r.issuedate||'')}</td>
                     <td>${amt} ${r.amountCurrency||'KRW'}</td>
                     <td>${paid}</td>
+                    <td style="color:${Number(r.amount||0)-Number((r.billing||[]).reduce((a,b)=>a+Number(b||0),0))>0?'var(--warn)':'var(--text3)'}">
+                        ${fmt(Math.max(0, Number(r.amount||0)-Number((r.billing||[]).reduce((a,b)=>a+Number(b||0),0))))}
+                    </td>
                     <td>${sanitize(r.stage||'')}</td>
                     <td>
                         <button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>
