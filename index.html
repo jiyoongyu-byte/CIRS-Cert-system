@@ -186,9 +186,11 @@ input[type=date]{color-scheme:dark}
     <div class="nav-label" id="nav-label-med" data-ko="의료기기팀" data-zh="医疗器械组">의료기기팀</div>
     <div class="nav-item" id="nav-item-medC" onclick="nav('medContract',this)"><span class="dot dot-med"></span><span data-ko="계약업체" data-zh="签约企业">계약업체</span></div>
     <div class="nav-item" id="nav-item-medCons" onclick="nav('medConsult',this)"><span class="dot dot-med"></span><span data-ko="상담" data-zh="咨询">상담</span></div>
+    <div class="nav-item" id="nav-item-medDone" onclick="nav('medDone',this)"><span class="dot dot-med"></span><span data-ko="완료대장" data-zh="完成台账">완료대장</span></div>
     <div class="nav-label" id="nav-label-cert" data-ko="제품환경인증팀" data-zh="环境认证组">제품환경인증팀</div>
     <div class="nav-item" id="nav-item-certC" onclick="nav('certContract',this)"><span class="dot dot-cert"></span><span data-ko="계약업체" data-zh="签约企业">계약업체</span></div>
     <div class="nav-item" id="nav-item-certCons" onclick="nav('certConsult',this)"><span class="dot dot-cert"></span><span data-ko="상담" data-zh="咨询">상담</span></div>
+    <div class="nav-item" id="nav-item-certDone" onclick="nav('certDone',this)"><span class="dot dot-cert"></span><span data-ko="완료대장" data-zh="完成台账">완료대장</span></div>
     <div class="nav-label" data-ko="평가" data-zh="绩效评估">평가</div>
     <div class="nav-item" onclick="nav('kpi',this)"><span class="dot dot-all"></span><span data-ko="KPI 현황" data-zh="KPI现状">KPI 현황</span></div>
     <div class="nav-label" id="nav-label-tasks" data-ko="업무" data-zh="工作">업무</div>
@@ -328,7 +330,7 @@ input[type=date]{color-scheme:dark}
 <div class="view" id="view-medContract">
   <div class="section-head"><span class="section-title" id="mcTitle">의료기기팀 · 계약업체</span><button class="btn btn-med" onclick="openMedModal('contract')"><span data-ko="+ 계약업체 추가" data-zh="+ 添加签约企业">+ 계약업체 추가</span></button></div>
   <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medContractTable">
-    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('medC','client')">업체명</th><th data-ko="제품명" data-zh="产品名称">제품명</th><th data-ko="업무유형" data-zh="业务类型">업무유형</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('medC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('medC','date')">계약일</th><th data-ko="완료목표" data-zh="目标日期" onclick="handleSort('medC','duedate')">완료목표</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('medC','amount')">계약금액</th><th data-ko="수입실적(현재까지)" data-zh="收入业绩(迄今)">수입실적(현재까지)</th><th data-ko="잔금" data-zh="余款">잔금</th><th data-ko="진행단계" data-zh="进行阶段">진행단계</th><th data-ko="상태" data-zh="状态">상태</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('medC','client')">업체명</th><th data-ko="제품명" data-zh="产品名称">제품명</th><th data-ko="업무유형" data-zh="业务类型">업무유형</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('medC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('medC','date')">계약일</th><th data-ko="완료목표" data-zh="目标日期" onclick="handleSort('medC','duedate')">완료목표</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('medC','amount')">계약금액</th><th data-ko="수입실적(현재까지)" data-zh="收入业绩(迄今)">수입실적(현재까지)</th><th data-ko="진행단계" data-zh="进行阶段">진행단계</th><th data-ko="상태" data-zh="状态">상태</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
   </table></div></div></div>
 </div>
 
@@ -346,11 +348,11 @@ input[type=date]{color-scheme:dark}
 <div class="view" id="view-certContract">
   <div class="section-head"><span class="section-title" id="ccTitle">제품환경인증팀 · 계약업체</span><button class="btn btn-cert" onclick="openCertModal('contract')"><span data-ko="+ 계약업체 추가" data-zh="+ 添加签约企业">+ 계약업체 추가</span></button></div>
   <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certContractTable">
-    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('certC','client')">업체명</th><th data-ko="인증종류" data-zh="认证种类" onclick="handleSort('certC','certtype')">인증종류</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('certC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('certC','date')">계약일</th><th data-ko="발급일" data-zh="签发日期" onclick="handleSort('certC','issuedate')">발급일</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('certC','amount')">계약금액</th><th data-ko="수입실적(현재까지)" data-zh="收入业绩(迄今)">수입실적(현재까지)</th><th data-ko="잔금" data-zh="余款">잔금</th><th data-ko="진행단계" data-zh="进行阶段" onclick="handleSort('certC','stage')">진행단계</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('certC','client')">업체명</th><th data-ko="인증종류" data-zh="认证种类" onclick="handleSort('certC','certtype')">인증종류</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('certC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('certC','date')">계약일</th><th data-ko="발급일" data-zh="签发日期" onclick="handleSort('certC','issuedate')">발급일</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('certC','amount')">계약금액</th><th data-ko="수입실적(현재까지)" data-zh="收入业绩(迄今)">수입실적(현재까지)</th><th data-ko="진행단계" data-zh="进行阶段" onclick="handleSort('certC','stage')">진행단계</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
   </table></div></div></div>
   <div class="section-head"><span class="section-title" style="color:var(--success)" id="ccDoneTitle">✅ 완료된 계약</span></div>
   <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certContractDoneTable">
-    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称">업체명</th><th data-ko="인증종류" data-zh="认证种类">인증종류</th><th data-ko="담당자" data-zh="负责人">담당자</th><th data-ko="계약일" data-zh="合同日期">계약일</th><th data-ko="발급일" data-zh="签发日期">발급일</th><th data-ko="계약금액" data-zh="合同金额">계약금액</th><th data-ko="수입실적(현재까지)" data-zh="收入业绩(迄今)">수입실적(현재까지)</th><th data-ko="잔금" data-zh="余款">잔금</th><th data-ko="진행단계" data-zh="进行阶段">진행단계</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称">업체명</th><th data-ko="인증종류" data-zh="认证种类">인증종류</th><th data-ko="담당자" data-zh="负责人">담당자</th><th data-ko="계약일" data-zh="合同日期">계약일</th><th data-ko="발급일" data-zh="签发日期">발급일</th><th data-ko="계약금액" data-zh="合同金额">계약금액</th><th data-ko="수입실적(현재까지)" data-zh="收入业绩(迄今)">수입실적(현재까지)</th><th data-ko="진행단계" data-zh="进行阶段">진행단계</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
   </table></div></div></div>
 </div>
 
@@ -375,6 +377,42 @@ input[type=date]{color-scheme:dark}
   <div id="kpi-sect-qual"><div class="section-head"><span class="section-title" id="kqTitle">구성원 자격 및 법정교육 현황</span><button class="btn btn-primary" onclick="openQualModal()"><span data-ko="🔒 관리자 수정" data-zh="🔒 管理员修改">🔒 관리자 수정</span></button></div><div id="qualCards"></div></div>
   <div id="kpi-sect-edu" style="display:none"><div style="display:flex;gap:10px;margin-bottom:16px;"><select class="form-select" id="eduMemberSel" onchange="renderKpiEdu()"><option value="" data-ko="전체 구성원" data-zh="全体成员">전체 구성원</option><option>지윤규</option><option>유재용</option><option>윤미령</option><option>차상호</option><option>Zhao Lijie</option><option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option></select><select class="form-select" id="eduTypeSel" onchange="renderKpiEdu()"><option value="" data-ko="전체 유형" data-zh="全部类型">전체 유형</option><option value="역량강화" data-ko="역량강화" data-zh="能力强化">역량강화</option><option value="직무교육" data-ko="직무교육" data-zh="职务教育">직무교육</option><option value="보수교육" data-ko="보수교육" data-zh="进修教育">보수교육</option></select><button class="btn btn-cert" onclick="openEduAddModal()" style="margin-left:auto"><span data-ko="+ 교육 추가" data-zh="+ 添加教育">+ 교육 추가</span></button></div><div id="eduList"></div></div>
   <div id="kpi-sect-profit" style="display:none"><div class="section-head"><span class="section-title" id="kpTitle">개인별 업무 수익 기여도</span></div><div id="kpi-profit-content"></div></div>
+</div>
+
+<div class="view" id="view-medDone">
+  <div class="section-head"><span class="section-title">의료기기팀 · 완료대장</span></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medDoneTable">
+    <thead><tr>
+      <th>순번</th>
+      <th>업체명</th>
+      <th>업무유형</th>
+      <th>제품명</th>
+      <th>담당자</th>
+      <th>계약일</th>
+      <th>완료일</th>
+      <th>계약금액</th>
+      <th>관리</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table></div></div></div>
+</div>
+
+<div class="view" id="view-certDone">
+  <div class="section-head"><span class="section-title">제품환경인증팀 · 완료대장</span></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certDoneTable">
+    <thead><tr>
+      <th>순번</th>
+      <th>업체명</th>
+      <th>인증종류</th>
+      <th>인증품목</th>
+      <th>담당자</th>
+      <th>계약일</th>
+      <th>완료일</th>
+      <th>계약금액</th>
+      <th>관리</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table></div></div></div>
 </div>
 
 <div class="view" id="view-tasks">
@@ -541,40 +579,6 @@ input[type=date]{color-scheme:dark}
       if (loginBtn)  loginBtn.addEventListener('click', loginClick);
       if (loginPw)   loginPw.addEventListener('keydown', function(e){ if(e.key==='Enter') loginClick(); });
     });
-    </script>
-<script>
-function calcTotalExpense(team) {
-    const p = team === 'med' ? 'm' : 'c';
-    const audit = Number(document.getElementById(p+'-exp-audit')?.value || 0);
-    const test  = Number(document.getElementById(p+'-exp-test')?.value  || 0);
-    const trip  = Number(document.getElementById(p+'-exp-trip')?.value  || 0);
-    const wrap  = document.getElementById(p+'-dynamic-expense-wrap');
-    let dynamic = 0;
-    if (wrap) wrap.querySelectorAll('input[type=number]').forEach(function(el){
-        dynamic += Number(el.value || 0);
-    });
-    const total = audit + test + trip + dynamic;
-    const el = document.getElementById(p+'-expense');
-    if (el) { el.type = 'text'; el.value = total.toLocaleString(); }
-}
-function addDynamicExpense(team) {
-    const p = team === 'med' ? 'm' : 'c';
-    const wrap = document.getElementById(p+'-dynamic-expense-wrap');
-    if (!wrap) return;
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;';
-    div.innerHTML =
-        '<input class="form-input" type="text" placeholder="항목명" style="flex:1;">' +
-        '<input class="form-input" type="number" placeholder="금액" style="width:140px;" oninput="calcTotalExpense(\''+team+'\')">' +
-        '<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();calcTotalExpense(\''+team+'\')">✕</button>';
-    wrap.appendChild(div);
-}
-function updateTargetFromInput(el) {
-    var team = el.getAttribute('data-team');
-    var q    = el.getAttribute('data-q');
-    var val  = el.value;
-    if (window.updateTarget) window.updateTarget(team, q, val);
-}
-</script>
+  </script>
 </body>
 </html>
