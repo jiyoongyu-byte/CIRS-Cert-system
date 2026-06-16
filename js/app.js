@@ -85,6 +85,11 @@ localStorage.setItem('cirs_user', user);
     window._store?.syncQualData?.(QUAL_MASTER);
 
     nav('dashboard');
+
+    // 지윤규 로그인 시 브리핑 자동 표시
+    if (user === '지윤규') {
+        setTimeout(() => window.showBriefing?.(), 800);
+    }
 }
 
 export function doLogout() {
