@@ -8,6 +8,19 @@ const getBody = id => {
     return t?.tagName === 'TABLE' ? (t.querySelector('tbody') || t) : t;
 };
 
+// ── 완료 자동판정 헬퍼 ────────────────────────────────────────────
+function isCompleted(r) {
+    const amt  = Number(r.amount || 0);
+    const paid = (r.billing || []).reduce((a, b) => a + Number(b || 0), 0);
+    return amt > 0 && paid >= amt;
+}
+
+function getCompleteDate(r) {
+    const dates = (r.billingDates || []).filter(d => d);
+    if (!dates.length) return '-';
+    return dates.sort().reverse()[0];
+}
+
 // 의료기기팀 계약
 export function renderMedContract() {
     const tbody = getBody('medContractTable');
@@ -115,6 +128,7 @@ export function renderCertContract() {
                 <td>${i+1}</td>
                 <td class="client-name">${sanitize(r.client)}</td>
                 <td>${sanitize(r.certtype||'')}</td>
+                <td>${sanitize(r.product||'')}</td>
                 <td>${sanitize(r.manager||'')}</td>
                 <td>${sanitize(r.contractdate||'')}</td>
                 <td>${sanitize(r.issuedate||'')}</td>
@@ -210,19 +224,6 @@ window.renderMedContract  = renderMedContract;
 window.renderMedConsult   = renderMedConsult;
 window.renderCertContract = renderCertContract;
 window.renderCertConsult  = renderCertConsult;
-
-// ── 완료 자동판정 헬퍼 ────────────────────────────────────────────
-function isCompleted(r) {
-    const amt  = Number(r.amount || 0);
-    const paid = (r.billing || []).reduce((a, b) => a + Number(b || 0), 0);
-    return amt > 0 && paid >= amt;
-}
-
-function getCompleteDate(r) {
-    const dates = (r.billingDates || []).filter(d => d);
-    if (!dates.length) return '-';
-    return dates.sort().reverse()[0];
-}
 
 // ── 의료기기팀 완료대장 ───────────────────────────────────────────
 export function renderMedDone() {
