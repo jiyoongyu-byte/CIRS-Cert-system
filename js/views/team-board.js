@@ -14,7 +14,7 @@ export function renderMedContract() {
     if (!tbody) return;
     const state = getState();
     const year = getCurrentYear();
-    const data = (state.med || []).filter(x => x.year === year && x.recordType === 'contract');
+    const data = (state.med || []).filter(x => x.year === year && x.recordType === 'contract' && !isCompleted(x));
     if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
         return;
@@ -102,8 +102,8 @@ export function renderCertContract() {
     if (!tbody) return;
     const state = getState();
     const year = getCurrentYear();
-    const data = (state.cert || []).filter(x => x.year === year && x.recordType === 'contract');
-    const done = (state.cert || []).filter(x => x.year === year && x.recordType === 'contract' && x.contracted === '완료');
+    const data = (state.cert || []).filter(x => x.year === year && x.recordType === 'contract' && !isCompleted(x));
+    const done = (state.cert || []).filter(x => x.year === year && x.recordType === 'contract' && isCompleted(x));
 
     if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
@@ -148,9 +148,6 @@ export function renderCertContract() {
                     <td>${sanitize(r.issuedate||'')}</td>
                     <td>${amt} ${r.amountCurrency||'KRW'}</td>
                     <td>${paid}</td>
-                    <td style="color:${Number(r.amount||0)-Number((r.billing||[]).reduce((a,b)=>a+Number(b||0),0))>0?'var(--warn)':'var(--text3)'}">
-                        ${fmt(Math.max(0, Number(r.amount||0)-Number((r.billing||[]).reduce((a,b)=>a+Number(b||0),0))))}
-                    </td>
                     <td>${sanitize(r.stage||'')}</td>
                     <td>
                         <button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>
@@ -213,3 +210,72 @@ window.renderMedContract  = renderMedContract;
 window.renderMedConsult   = renderMedConsult;
 window.renderCertContract = renderCertContract;
 window.renderCertConsult  = renderCertConsult;
+
+// ── 완료 자동판정 헬퍼 ────────────────────────────────────────────
+function isCompleted(r) {
+    const amt  = Number(r.amount || 0);
+    const paid = (r.billing || []).reduce((a, b) => a + Number(b || 0), 0);
+    return amt > 0 && paid >= amt;
+}
+
+function getCompleteDate(r) {
+    // 마지막 수금일을 완료일로 사용
+    const dates = (r.billingDates || []).filter(d => d);
+    if (!dates.length) return '-';
+    return dates.sort().reverse()[0];
+}
+
+// ── 의료기기팀 완료대장 ───────────────────────────────────────────
+export function renderMedDone() {
+    const tbody = getBody('medDoneTable');
+    if (!tbody) return;
+    const state = getState();
+    const data  = (state.med || []).filter(r => r.recordType === 'contract' && isCompleted(r));
+
+    if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text3)">완료된 계약이 없습니다.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = data.map((r, i) => `<tr>
+        <td>${i+1}</td>
+        <td class="client-name">${sanitize(r.client||'')}</td>
+        <td>${sanitize(r.biztype||'')}</td>
+        <td>${sanitize(r.product||'')}</td>
+        <td>${sanitize(r.manager||'')}</td>
+        <td>${sanitize(r.startdate||'')}</td>
+        <td>${sanitize(getCompleteDate(r))}</td>
+        <td>${fmt(r.amount||0)} ${r.amountCurrency||'KRW'}</td>
+        <td>
+            <button class="btn btn-sm" onclick="editMed('${r.id}')">${tt('수정','修改')}</button>
+        </td>
+    </tr>`).join('');
+}
+
+// ── 제품환경인증팀 완료대장 ──────────────────────────────────────
+export function renderCertDone() {
+    const tbody = getBody('certDoneTable');
+    if (!tbody) return;
+    const state = getState();
+    const data  = (state.cert || []).filter(r => r.recordType === 'contract' && isCompleted(r));
+
+    if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text3)">완료된 계약이 없습니다.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = data.map((r, i) => `<tr>
+        <td>${i+1}</td>
+        <td class="client-name">${sanitize(r.client||'')}</td>
+        <td>${sanitize(r.certtype||'')}</td>
+        <td>${sanitize(r.certtype||'')}</td>
+        <td>${sanitize(r.manager||'')}</td>
+        <td>${sanitize(r.contractdate||'')}</td>
+        <td>${sanitize(getCompleteDate(r))}</td>
+        <td>${fmt(r.amount||0)} ${r.amountCurrency||'KRW'}</td>
+        <td>
+            <button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>
+        </td>
+    </tr>`).join('');
+}
+
+window.renderMedDone  = renderMedDone;
+window.renderCertDone = renderCertDone;
