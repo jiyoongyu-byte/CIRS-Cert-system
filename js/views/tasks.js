@@ -113,7 +113,7 @@ export function renderTasks() {
 
 function getUserTeam(user) {
     if (user === '지윤규') return '관리자';
-    if (user === (window.REP_USER || '대표이사')) return '관리자'; // 대표이사도 전체 조회 가능
+    if (user === (window.REP_USER || '대표이사')) return '대표이사'; // 본인 작성만
     if (['유재용','윤미령','차상호','Zhao Lijie'].includes(user)) return '의료기기팀';
     if (['엄태호','Lyu Cuicui','박성재'].includes(user)) return '제품환경인증팀';
     return '관리자';
