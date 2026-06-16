@@ -1,275 +1,570 @@
-// js/app.js — 로그인, 네비게이션, 설정 (기존 구조 유지)
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIRS 제품 인허가 관리 시스템</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+<style>
+:root{--bg:#1A1C23;--surface:#22252E;--card:#2A2D38;--border:#383B48;--border2:#454858;--text1:#F8F9FA;--text2:#BAC0CB;--text3:#868C9E;--med:#5B6EF5;--med-light:#1E2240;--med-mid:#8A97F0;--cert:#19A876;--cert-light:#0E2820;--cert-mid:#4DB896;--accent:#E8652A;--warn:#F5A623;--danger:#F05252;--success:#1FAD6B;--mono:'DM Mono',monospace;--sans:'Noto Sans KR',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text1);font-size:13px;line-height:1.5;overflow-x:hidden;}
+#loginScreen{position:fixed;inset:0;background:#13151B;display:flex;align-items:center;justify-content:center;z-index:999}
+.login-box{background:#fff;border-radius:16px;padding:48px;width:400px;box-shadow:0 32px 64px rgba(0,0,0,.6)}
+.login-logo-wrap{text-align:center;margin-bottom:32px}
+.login-label{font-size:13px;font-weight:600;color:#555;margin-bottom:6px;display:block;text-align:left;}
+.login-input{width:100%;border:1.5px solid #DDD;border-radius:8px;padding:12px 14px;font-size:14px;font-family:var(--sans);background:#F8F8F8;color:#1A1916;outline:none;margin-bottom:14px;transition:all 0.2s;}
+.login-input:focus{border-color:var(--med);background:#fff}
+.login-btn{width:100%;background:#1A1916;color:#fff;border:none;border-radius:8px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;}
+.login-btn:hover{background:var(--med)}
+.login-err{color:var(--danger);font-size:12px;margin-top:10px;text-align:center;min-height:18px;font-weight:500}
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:#fff;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid #E8E8E8;overflow-y:auto}
+.sidebar-logo{padding:20px 24px;border-bottom:1px solid #E8E8E8;text-align:center}
+.sidebar-logo .sys{font-size:12px;color:#888;margin-top:10px;font-weight:600}
+.sidebar-nav{padding:12px 0;flex:1}
+.nav-label{font-size:10px;letter-spacing:.1em;font-weight:700;color:#A0A0A0;padding:12px 24px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 24px;cursor:pointer;color:#555;font-size:13px;font-weight:500;border-left:4px solid transparent;transition:all .15s}
+.nav-item:hover{background:#F8F9FA;color:#1A1916}
+.nav-item.active{background:#EEF0FD;color:var(--med);border-left-color:var(--med);font-weight:700}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-med{background:var(--med)}.dot-cert{background:var(--cert)}.dot-all{background:#BBB}
+.sidebar-bottom{padding:16px 24px;border-top:1px solid #E8E8E8;display:flex;flex-direction:column;gap:10px}
+.sidebar-bottom label{font-size:10px;color:#888;font-weight:600;display:block;margin-bottom:4px}
+.sidebar-bottom select,.yr-sel{background:#F8F9FA;border:1px solid #DDD;color:#333;border-radius:8px;padding:8px 10px;font-size:13px;font-weight:600;width:100%;cursor:pointer;outline:none}
+.btn-settings{width:100%;background:#F8F9FA;border:1px solid #DDD;color:#555;border-radius:8px;padding:9px;font-size:12px;font-weight:600;cursor:pointer;}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;position:relative}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:16px;z-index:100}
+.topbar-title{font-size:16px;font-weight:700;flex-shrink:0;color:var(--text1)}
+.topbar-center{flex:1;display:flex;justify-content:center;position:relative}
+.global-search{width:100%;max-width:400px;background:var(--bg);border:1px solid var(--border2);border-radius:20px;padding:8px 16px;color:var(--text1);font-size:13px;outline:none;}
+.search-results{display:none;position:absolute;top:50px;width:100%;max-width:400px;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.5);max-height:400px;overflow-y:auto;z-index:110}
+.search-results.active{display:block}
+.search-item{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;flex-direction:column;gap:4px;transition:background 0.2s}
+.search-item:hover{background:var(--surface)}
+.search-item-title{font-size:14px;font-weight:700;color:var(--text1)}
+.search-item-sub{font-size:12px;color:var(--text3)}
+.topbar-actions{display:flex;gap:10px;align-items:center}
+.content{padding:24px 28px;flex:1;}
+.view{display:none}.view.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.section-title{font-size:18px;font-weight:700;color:var(--text1);}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-bottom:20px;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.card-title{font-size:14px;font-weight:700;color:var(--text1)}
+.card-body{padding:16px 20px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px}
+.stat-label{font-size:12px;color:var(--text3);margin-bottom:6px;font-weight:600}
+.stat-value{font-size:20px;font-weight:700;font-family:var(--mono);color:var(--text1); display:flex; align-items:baseline; flex-wrap:wrap;}
+.stat-bar{height:4px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden}
+.stat-fill{height:100%;border-radius:2px;transition:width 1s ease}
+.fill-med{background:var(--med)}.fill-cert{background:var(--cert)}.fill-accent{background:var(--accent)}.fill-danger{background:var(--danger)}.fill-success{background:var(--success)}
+.summary-box{display:flex;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:20px;flex-wrap:wrap;}
+.summary-item{flex:1;min-width:180px;border-right:1px dashed var(--border);padding-right:16px;}
+.summary-item:last-child{border-right:none;padding-right:0;}
+.summary-item .title{font-size:11px;color:var(--text3);font-weight:700;margin-bottom:4px;text-transform:uppercase}
+.summary-item .val{font-size:16px;font-weight:800;font-family:var(--mono);color:var(--text1)}
+.summary-item .sub-val{font-size:12px;color:var(--success);margin-top:2px;font-weight:600}
+.workspace-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+.ws-list{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;padding-right:4px}
+.ws-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+.ws-title{font-size:13px;font-weight:600;color:var(--text1);margin-bottom:4px}
+.ws-meta{font-size:11px;color:var(--text3);line-height:1.5;}
+.kpi-widget{background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px; text-align:center;}
+.kpi-widget .kw-title{font-size:11px; color:var(--text3); font-weight:700; margin-bottom:6px;}
+.kpi-widget .kw-val{font-size:18px; font-weight:800; color:var(--text1); font-family:var(--mono);}
 
-import { setCurrentUser, setCurrentYear, setCurrentView, getCurrentYear,
-         loadFromSupabase, saveState, getState, ensureRevYear } from './core/store.js';
-import { savePw, initSb, loadPw, resetPw } from './core/api.js';
-import { tt } from './core/utils.js';
+/* 💡 조직도 트리 (수직-가로형) */
+.org-tree { display: flex; justify-content: center; padding: 20px 0; overflow-x: auto; }
+.org-tree ul { padding-top: 20px; position: relative; transition: all 0.5s; display: flex; justify-content: center; padding-left:0; margin:0; }
+.org-tree li { float: left; text-align: center; list-style-type: none; position: relative; padding: 20px 10px 0 10px; transition: all 0.5s; }
+.org-tree li::before, .org-tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid var(--border2); width: 50%; height: 20px; }
+.org-tree li::after { right: auto; left: 50%; border-left: 2px solid var(--border2); }
+.org-tree li:only-child::after, .org-tree li:only-child::before { display: none; }
+.org-tree li:only-child { padding-top: 0; }
+.org-tree li:first-child::before, .org-tree li:last-child::after { border: 0 none; }
+.org-tree li:last-child::before { border-right: 2px solid var(--border2); border-radius: 0 6px 0 0; }
+.org-tree li:first-child::after { border-radius: 6px 0 0 0; }
+.org-tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid var(--border2); width: 0; height: 20px; }
+.org-node { border: 1px solid var(--border); padding: 12px 20px; color: var(--text1); font-family: var(--sans); font-size: 13px; display: inline-block; border-radius: 8px; background: var(--card); position:relative; z-index:1; min-width: 140px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+.org-node.exec { border-color: var(--med); border-width: 2px; background: var(--surface); }
+.org-node.team { background: var(--surface); font-weight: 700; border-color: var(--border2); font-size: 14px; }
 
-const DEFAULT_PW   = 'cirs2026!';
-const SUPER_ADMIN  = '지윤규';
-const ADMIN_USERS  = ['지윤규','엄태호','유재용'];
-const REP_USER     = '대표이사';  // 업무지시 작성 가능, 본인 지시만 확인
-const TEAM_USERS   = {
-    '제품환경인증팀':['엄태호','Lyu Cuicui','박성재'],
-    '의료기기팀':    ['유재용','윤미령','차상호','Zhao Lijie'],
-    '제품인증부문이사': ['지윤규'],
-'대표이사': ['대표이사'],
-};
-const QUAL_MASTER = {
-    '지윤규': [
-        {name:'내부감사원',date:'2022-03-02',edu:null,org:'CIRS Group Korea',remark:'전사 공통'},
-        {name:'화장품 책임판매관리자 / 화장품 제조판매업 등록필증',date:'2019-10-23',edu:{cycle:'매년',note:'보수교육 필수'},org:'식품의약품안전처',remark:'제품환경인증팀 업무'},
-    ],
-    '엄태호': [
-        {name:'내부감사원',date:'2023-04-30',edu:null,org:'CIRS Group Korea',remark:'전사 공통'},
-        {name:'의료기기품질책임자 / 의료기기 수입업 허가증',date:'2023-04-17',edu:{cycle:'매년',note:'보수교육 1회/년'},org:'식품의약품안전처',remark:'의료기기팀 업무'},
-    ],
-    '차상호': [
-        {name:'수입업신고증 (의약외품 제조·수입 관리자)',date:'2023-09-05',edu:null,org:'식품의약품안전처',remark:'의료기기팀 업무'},
-    ],
-};
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--bg);color:var(--text3);font-weight:700;padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);font-size:12px;white-space:nowrap;cursor:pointer;}
+td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text1);}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.03)}
+.empty-row td{color:var(--text3);text-align:center;padding:32px;}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;}
+.badge-med{background:var(--med-light);color:var(--med-mid)}
+.badge-cert{background:var(--cert-light);color:var(--cert-mid)}
+.badge-green{background:var(--success-light);color:var(--success)}
+.badge-amber{background:var(--warn-light);color:var(--warn)}
+.badge-red{background:var(--danger-light);color:var(--danger)}
+.badge-gray{background:var(--surface);color:var(--text2);border:1px solid var(--border)}
+.margin-badge{background:rgba(255,255,255,.05);color:var(--text1);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:10px;font-family:var(--mono)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.team-tab{padding:8px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--card);cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);transition:all .15s}
+.team-tab.active-med{background:var(--med);color:#fff;border-color:var(--med)}
+.team-tab.active-cert{background:var(--cert);color:#fff;border-color:var(--cert)}
+.m-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
+.m-card{border:1px solid var(--border);border-radius:12px;padding:12px 16px;background:var(--card)}
+.m-label{font-size:11px;color:var(--med);font-weight:800;letter-spacing:.05em;margin-bottom:8px;text-transform:uppercase}
+.m-actual{font-size:18px;font-weight:700;font-family:var(--mono);margin:4px 0;color:var(--text1)}
+.m-input{width:100%;border:1px solid var(--border2);border-radius:6px;padding:6px;font-size:13px;font-family:var(--mono);background:var(--bg);color:var(--text1);outline:none;margin-top:4px;}
+.chart-wrap{position:relative;height:280px;width:100%}
+.billing-mini{font-size:11px;color:var(--text2);line-height:1.6}
+.billing-remain{font-size:11px;font-weight:700;margin-top:4px}
+.billing-remain.ok{color:var(--success)}.billing-remain.partial{color:var(--warn)}.billing-remain.none{color:var(--text3)}
+.billing-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;width:100%}
+.billing-item{display:flex;flex-direction:column;gap:4px}
+.billing-item label{font-size:11px;color:var(--text3);font-weight:700}
+.billing-item input, .billing-item select{border:1px solid var(--border);border-radius:6px;padding:6px;font-size:11px;background:var(--bg);color:var(--text2);width:100%;outline:none;}
+.billing-total-row{grid-column:1/-1;background:var(--surface);border-radius:8px;padding:12px 16px;display:flex;gap:20px;font-size:13px;flex-wrap:wrap;align-items:center}
+.btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--card);color:var(--text1);font-size:13px;cursor:pointer;font-weight:600;}
+.btn-med{background:var(--med);color:#fff;border-color:var(--med)}
+.btn-cert{background:var(--cert);color:#fff;border-color:var(--cert)}
+.btn-primary{background:var(--text1);color:var(--bg);border-color:var(--text1)}
+.btn-danger{background:var(--danger-light);color:var(--danger);border-color:var(--danger)}
+.btn-success{background:var(--success);color:#fff;border-color:var(--success)}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:6px;}
+.delay-input{border:1px solid var(--border);background:var(--bg);color:var(--text1);font-size:11px;padding:6px 10px;border-radius:6px;width:100%;margin-top:6px;outline:none;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;overflow-y:auto;backdrop-filter:blur(3px)}
+.modal-overlay.open{display:block}
+.modal-wrapper{min-height:100%;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px}
+.modal{background:var(--card);border-radius:16px;width:100%;max-width:680px;border:1px solid var(--border);box-shadow:0 32px 64px rgba(0,0,0,.5);animation:fadeIn .3s}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text3);line-height:1;padding:0;}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:rgba(0,0,0,.1);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%}
+.form-group{display:flex;flex-direction:column;gap:6px;min-width:0}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:12px;font-weight:600;color:var(--text2)}
+.form-input,.form-select,.form-textarea{border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;background:var(--bg);color:var(--text1);outline:none;width:100%;}
+input[type=date]{color-scheme:dark}
+.section-divider{grid-column:1/-1;border-top:1px solid var(--border);margin:8px 0}
+.section-sub{grid-column:1/-1;font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.05em;text-transform:uppercase}
+.text-mono{font-family:var(--mono)}
+.logo-img { max-width: 180px; height: auto; display: block; margin: 0 auto; }
+</style>
+</head>
 
-// ── 로그인 (팀 선택 → 사용자 선택 → 비번) ────────────────────────
-export async function doLogin() {
-    const user = document.getElementById('loginUser')?.value;
-    const pw   = document.getElementById('loginPw')?.value;
-    const err  = document.getElementById('loginErr');
+<body>
+<div id="loginScreen">
+<div class="login-box">
+  <div class="login-logo-wrap"><div style="font-size: 34px; font-weight: 900; color: var(--med); letter-spacing: -1px;">CIRS <span style="color: #222;">Korea</span></div><div style="font-size:14px;color:#666;font-weight:600;margin-top:12px" data-ko="제품 인허가 관리 시스템" data-zh="产品许可管理系统">제품 인허가 관리 시스템</div></div>
+  <label class="login-label" data-ko="소속 부서 (1단계)" data-zh="所属部门 (第一步)">소속 부서 (1단계)</label>
+  <select class="login-input" id="loginTeam">
+    <option value="" data-ko="소속 팀 선택" data-zh="选择团队">소속 팀 선택</option><option value="의료기기팀" data-ko="의료기기팀" data-zh="医疗器械组">의료기기팀</option><option value="제품환경인증팀" data-ko="제품환경인증팀" data-zh="环境认证组">제품환경인증팀</option><option value="제품인증부문이사" data-ko="제품인증부문이사" data-zh="产品认证部门理事">제품인증부문이사</option><option value="대표이사" data-ko="대표이사" data-zh="代表理事">대표이사</option>
+  </select>
+  <label class="login-label" id="loginUserLabel" style="display:none; margin-top:6px;" data-ko="사용자 이름 (2단계)" data-zh="用户名 (第二步)">사용자 이름 (2단계)</label>
+  <select class="login-input" id="loginUser" style="display:none;"><option value="">이름 선택</option></select>
+  <label class="login-label" style="margin-top:6px;" data-ko="비밀번호" data-zh="密码">비밀번호</label>
+  <input class="login-input" type="password" id="loginPw" data-ko="비밀번호 입력 (초기: cirs2026!)" data-zh="输入密码 (初始: cirs2026!)" placeholder="비밀번호 입력" >
+  <button class="login-btn" id="loginBtn"><span data-ko="안전하게 로그인" data-zh="安全登录">안전하게 로그인</span></button>
+  <div class="login-err" id="loginErr"></div>
+</div>
+</div>
 
-    if (!user) {
-        if (err) err.textContent = '이름을 선택해주세요.';
-        return;
-    }
+<div class="app" id="appShell" style="display:none">
+<div class="sidebar">
+  <div class="sidebar-logo"><div style="font-size: 22px; font-weight: 900; color: var(--med); letter-spacing: -0.5px;">CIRS <span style="color: #222;">Korea</span></div><div class="sys" id="sidebarUser"></div></div>
+  <div class="sidebar-nav">
+    <div class="nav-label" data-ko="대시보드" data-zh="仪表板">대시보드</div>
+    <div class="nav-item active" onclick="nav('dashboard',this)"><span class="dot dot-all"></span><span data-ko="전체 현황" data-zh="总体概况">전체 현황</span></div>
+    <div class="nav-item" onclick="nav('orgchart',this)"><span class="dot dot-all"></span><span data-ko="조직도" data-zh="组织架构图">조직도</span></div>
+    <div class="nav-label" data-ko="수입 계획" data-zh="收入计划">수입 계획</div>
+    <div class="nav-item" onclick="nav('revenue',this)"><span class="dot dot-all"></span><span data-ko="수입계획 및 실적" data-zh="收入计划及业绩">수입계획 및 실적</span></div>
+    <div class="nav-label" id="nav-label-med" data-ko="의료기기팀" data-zh="医疗器械组">의료기기팀</div>
+    <div class="nav-item" id="nav-item-medC" onclick="nav('medContract',this)"><span class="dot dot-med"></span><span data-ko="계약업체" data-zh="签约企业">계약업체</span></div>
+    <div class="nav-item" id="nav-item-medCons" onclick="nav('medConsult',this)"><span class="dot dot-med"></span><span data-ko="상담" data-zh="咨询">상담</span></div>
+    <div class="nav-item" id="nav-item-medDone" onclick="nav('medDone',this)"><span class="dot dot-med"></span><span data-ko="완료대장" data-zh="完成台账">완료대장</span></div>
+    <div class="nav-label" id="nav-label-cert" data-ko="제품환경인증팀" data-zh="环境认证组">제품환경인증팀</div>
+    <div class="nav-item" id="nav-item-certC" onclick="nav('certContract',this)"><span class="dot dot-cert"></span><span data-ko="계약업체" data-zh="签约企业">계약업체</span></div>
+    <div class="nav-item" id="nav-item-certCons" onclick="nav('certConsult',this)"><span class="dot dot-cert"></span><span data-ko="상담" data-zh="咨询">상담</span></div>
+    <div class="nav-item" id="nav-item-certDone" onclick="nav('certDone',this)"><span class="dot dot-cert"></span><span data-ko="완료대장" data-zh="完成台账">완료대장</span></div>
+    <div class="nav-label" data-ko="평가" data-zh="绩效评估">평가</div>
+    <div class="nav-item" onclick="nav('kpi',this)"><span class="dot dot-all"></span><span data-ko="KPI 현황" data-zh="KPI现状">KPI 현황</span></div>
+    <div class="nav-label" id="nav-label-tasks" data-ko="업무" data-zh="工作">업무</div>
+    <div class="nav-item" id="nav-item-tasks" onclick="nav('tasks',this)"><span class="dot dot-all"></span><span data-ko="업무지시서" data-zh="工作指示单">업무지시서</span></div>
+  </div>
+  <div class="sidebar-bottom">
+    <div><label data-ko="기준 연도" data-zh="基准年份">기준 연도</label><select class="yr-sel" id="yearSelect" onchange="changeYear()"></select></div>
+    <button class="btn-settings" onclick="openSettings()"><span data-ko="⚙ 설정 / 비밀번호 변경" data-zh="⚙ 设置 / 修改密码">⚙ 설정 / 비밀번호 변경</span></button>
+    <button class="btn-settings" onclick="doLogout()"><span data-ko="로그아웃" data-zh="退出登录">로그아웃</span></button>
+  </div>
+</div>
 
-    // Supabase에서 저장된 비밀번호 먼저 로드 후 검증
-    initSb();
-    const state = getState();
-    try {
-        await loadPw(state, user);  // 개인별 비번 로드
-    } catch (_) {}
+<div class="main">
+<div class="topbar">
+  <div class="topbar-title" id="topbarTitle">전체 현황</div>
+  <div class="topbar-center"><input type="text" class="global-search" id="globalSearch" placeholder="🔍 업체명, 인증, 제품명 통합 검색..." data-ko="🔍 업체명, 인증 통합 검색..." data-zh="🔍 搜索企业名称、认证..." onkeyup="doSearch(event)"><div class="search-results" id="searchResults"></div></div>
+  <div class="topbar-actions">
+    <button class="btn" id="langSwitchBtn" onclick="toggleLang()" style="border-color:var(--med); color:var(--med); font-weight:700;">🌐 中文</button>
+    <div id="rateWarning" style="display:none;background:var(--danger-light);color:var(--danger);font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--danger);"></div>
+    <div id="rateInputBox" style="display:none;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 12px">
+      <span style="font-size:11px;color:#F5A623;font-weight:700">1 RMB</span><input type="number" id="rmbRateInput" style="width:60px;border:none;background:transparent;color:var(--text1);outline:none;font-weight:600" oninput="onExchangeRateChange()"><span style="font-size:11px;color:var(--text3)" data-ko="원" data-zh="韩元">원</span>
+      <span style="font-size:11px;color:#4FC3F7;font-weight:700">1 USD</span><input type="number" id="usdRateInput" style="width:60px;border:none;background:transparent;color:var(--text1);outline:none;font-weight:600" oninput="onExchangeRateChange()"><span style="font-size:11px;color:var(--text3)" data-ko="원" data-zh="韩元">원</span>
+    </div>
+    <button class="btn" onclick="exportData()" data-ko="백업" data-zh="备份">백업</button>
+  </div>
+</div>
 
-    if (pw !== (state.pw || DEFAULT_PW)) {
-        if (err) err.textContent = '비밀번호가 일치하지 않습니다.';
-        return;
-    }
-    if (err) err.textContent = '';
-    setCurrentUser(user);
-localStorage.setItem('cirs_user', user);
+<div class="content" id="mainContent">
+<div class="view active" id="view-dashboard">
+  <div id="dashCurrencyWrap"></div><div id="dashAlerts"></div><div class="stat-grid" id="dashStats"></div>
+  <div id="dashWorkArea">
+    <div class="workspace-grid" id="workspaceGrid">
+      <div class="card"><div class="card-header"><span class="card-title" id="dTitle1">수/발신 업무</span></div><div class="card-body"><div class="ws-list" id="myTasksList"></div></div></div>
+      <div class="card"><div class="card-header"><span class="card-title" id="dTitle2">진행중 계약 모니터링</span></div><div class="card-body"><div class="ws-list" id="myProjectsList"></div></div></div>
+      <div class="card"><div class="card-header"><span class="card-title" id="dTitle3">현재 상담 진행 현황</span></div><div class="card-body"><div class="ws-list" id="speedStarList"></div></div></div>
+    </div>
+    <div class="card" id="dashBottleneckBox" style="display:none; border:1px solid var(--danger); border-left:4px solid var(--danger);"><div class="card-header"><span class="card-title" id="dTitle4">프로젝트 병목 구간 분석</span></div><div class="card-body"><div class="ws-list" id="bottleneckList"></div></div></div>
+    <div class="card" id="dashAlertsBox" style="border:1px solid var(--border2); border-left:4px solid var(--warn);"><div class="card-header"><span class="card-title" id="dTitle5">다가오는 수금 및 인증 만료</span></div><div class="card-body"><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; max-height:220px; overflow-y:auto;" id="billingAlertList"></div></div></div>
+  </div>
+  <div class="card"><div class="card-header"><span class="card-title" id="dTitle6">통합 월별 수입 달성률 및 누적 추이</span><span id="dashYear" style="margin-left:8px"></span></div><div class="card-body"><div class="chart-wrap" style="height:320px"><canvas id="chartDashMixed"></canvas></div></div></div>
+</div>
 
-    document.getElementById('loginScreen').style.display  = 'none';
-    document.getElementById('appShell').style.display     = 'flex';
-    const sb = document.getElementById('sidebarUser');
-    if (sb) sb.textContent = user + ' 님 환영합니다';
+<div class="view" id="view-orgchart">
+  <div class="section-head"><span class="section-title">전사 조직도</span></div>
+  <div class="card">
+    <div class="card-body" style="overflow-x:auto; padding:32px 16px;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:0; font-family:var(--sans);">
 
-    // 연도 셀렉트 초기화
-    const ySel = document.getElementById('yearSelect');
-    if (ySel && !ySel.options.length) {
-        const y = new Date().getFullYear();
-        for (let i = y + 2; i >= 2020; i--) {
-            const o = document.createElement('option');
-            o.value = i; o.textContent = i + '년';
-            if (i === y) o.selected = true;
-            ySel.appendChild(o);
-        }
-    }
+        <!-- 대표이사 -->
+        <div style="display:flex; flex-direction:column; align-items:center;">
+          <div style="background:var(--med);color:#fff;font-weight:900;font-size:14px;padding:12px 28px;border-radius:10px;box-shadow:0 4px 12px rgba(91,110,245,0.4);">대표이사</div>
+          <div style="width:2px;height:32px;background:var(--border2);"></div>
+        </div>
 
-    // 환율 복원
-    const savedRmb = localStorage.getItem('cirs_rmb_rate');
-    const savedUsd = localStorage.getItem('cirs_usd_rate');
-    if (savedRmb) { const e = document.getElementById('rmbRateInput'); if (e) e.value = savedRmb; }
-    if (savedUsd) { const e = document.getElementById('usdRateInput'); if (e) e.value = savedUsd; }
+        <!-- 이사 -->
+        <div style="display:flex; flex-direction:column; align-items:center;">
+          <div style="background:var(--surface);border:2px solid var(--med);color:var(--text1);font-weight:700;font-size:13px;padding:10px 24px;border-radius:10px;text-align:center;">
+            <div style="font-size:10px;color:var(--med);font-weight:800;margin-bottom:2px;">제품인증부문</div>
+            이 사
+          </div>
+          <div style="width:2px;height:32px;background:var(--border2);"></div>
+        </div>
 
-    const ok = await loadFromSupabase();
-    if (!ok) console.warn('Supabase 연결 실패 — 로컬 모드로 진행');
+        <!-- 두 팀 연결선 -->
+        <div style="display:flex; align-items:flex-start; gap:0; position:relative; width:100%; max-width:700px; justify-content:center;">
+          <!-- 가로 연결선 -->
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:60%;height:2px;background:var(--border2);"></div>
 
-    // qualData 동기화
-    window._store?.syncQualData?.(QUAL_MASTER);
+          <!-- 제품환경인증팀 -->
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; padding:0 12px;">
+            <div style="width:2px;height:32px;background:var(--border2);"></div>
+            <div style="background:var(--cert);color:#fff;font-weight:800;font-size:13px;padding:10px 20px;border-radius:10px;margin-bottom:0;box-shadow:0 4px 12px rgba(25,168,118,0.3);white-space:nowrap;">제품환경인증팀</div>
+            <div style="width:2px;height:24px;background:var(--border2);"></div>
+            <!-- 팀원 -->
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;max-width:200px;">
+              <div style="background:var(--card);border:1px solid var(--cert);border-left:4px solid var(--cert);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--cert);font-weight:800;">팀 장</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">엄태호</div>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--cert);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--cert-mid);font-weight:800;">책 임</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">Lyu Cuicui</div>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--cert);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--cert-mid);font-weight:800;">선 임</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">박성재</div>
+              </div>
+            </div>
+          </div>
 
-    nav('dashboard');
-}
+          <!-- 의료기기팀 -->
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center; padding:0 12px;">
+            <div style="width:2px;height:32px;background:var(--border2);"></div>
+            <div style="background:var(--med);color:#fff;font-weight:800;font-size:13px;padding:10px 20px;border-radius:10px;margin-bottom:0;box-shadow:0 4px 12px rgba(91,110,245,0.3);white-space:nowrap;">의료기기팀</div>
+            <div style="width:2px;height:24px;background:var(--border2);"></div>
+            <!-- 팀원 -->
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;max-width:200px;">
+              <div style="background:var(--card);border:1px solid var(--med);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--med);font-weight:800;">수 석</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">유재용</div>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--med-mid);font-weight:800;">책 임</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">윤미령</div>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--med-mid);font-weight:800;">선 임</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">차상호</div>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
+                <div style="font-size:10px;color:var(--med-mid);font-weight:800;">선 임</div>
+                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">Zhao Lijie</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-export function doLogout() {
-    setCurrentUser('');
-    localStorage.removeItem('cirs_user');
-    document.getElementById('appShell').style.display  = 'none';
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('loginPw').value = '';
-}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="view" id="view-revenue">
+  <div style="display:flex;gap:10px;margin-bottom:20px;" id="revTeamSelector">
+    <button class="team-tab" id="rev-tab-med" onclick="switchRevTeam('med',this)"><span data-ko="의료기기팀" data-zh="医疗器械组">의료기기팀</span></button><button class="team-tab" id="rev-tab-cert" onclick="switchRevTeam('cert',this)"><span data-ko="제품환경인증팀" data-zh="环境认证组">제품환경인증팀</span></button><button class="team-tab" id="rev-tab-total" onclick="switchRevTeam('total',this)"><span data-ko="전체 합산" data-zh="整体汇总">전체 합산</span></button>
+  </div>
+  <div id="revQuarterlyWrap"></div>
+  <div style="margin-bottom:12px;font-weight:700;" id="revSub1">월별 수입 목표 설정 및 달성 현황</div><div class="m-grid" id="mCards"></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-header"><span class="card-title" id="revBarTitle">월별 수입 실적 및 누적 추이</span></div><div class="card-body"><div class="chart-wrap"><canvas id="chartRevMixed"></canvas></div></div></div>
+    <div class="card"><div class="card-header"><span class="card-title" id="revPieTitle">인증 서비스별 수입 기여도</span></div><div class="card-body"><div class="chart-wrap"><canvas id="chartTopServices"></canvas></div></div></div>
+  </div>
+  <div class="card"><div class="card-header"><span class="card-title" id="revTableTitle">계약별 수입 결산 내역</span></div><div class="card-body" style="padding:0"><div class="table-wrap"><table id="revContractTable">
+    <thead><tr><th data-ko="순번" data-zh="序号">#</th><th data-ko="팀" data-zh="团队">팀</th><th data-ko="업체명" data-zh="企业名称">업체명</th><th data-ko="항목" data-zh="项目">항목</th><th data-ko="발생월" data-zh="发生月份">발생월</th><th data-ko="계약금액" data-zh="合同金额">계약금액</th><th data-ko="수입실적(현재까지)" data-zh="收入业绩(迄今)">수입실적(현재까지)</th><th data-ko="잔액" data-zh="余额">잔액</th><th data-ko="담당자" data-zh="负责人">담당자</th></tr></thead><tbody></tbody>
+  </table></div></div></div>
+</div>
 
-// ── 연도 변경 ────────────────────────────────────────────────────
-export function changeYear() {
-    const y = parseInt(document.getElementById('yearSelect')?.value);
-    setCurrentYear(y);
-    ensureRevYear(y);
-    renderView(getCurrentView?.() || 'dashboard');
-}
+<div class="view" id="view-medContract">
+  <div class="section-head"><span class="section-title" id="mcTitle">의료기기팀 · 계약업체</span><button class="btn btn-med" onclick="openMedModal('contract')"><span data-ko="+ 계약업체 추가" data-zh="+ 添加签约企业">+ 계약업체 추가</span></button></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medContractTable">
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('medC','client')">업체명</th><th data-ko="제품명" data-zh="产品名称">제품명</th><th data-ko="업무유형" data-zh="业务类型">업무유형</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('medC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('medC','date')">계약일</th><th data-ko="완료목표" data-zh="目标日期" onclick="handleSort('medC','duedate')">완료목표</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('medC','amount')">계약금액</th><th data-ko="수입실적(현재까지)" data-zh="收入业绩(迄今)">수입실적(현재까지)</th><th data-ko="진행단계" data-zh="进行阶段">진행단계</th><th data-ko="상태" data-zh="状态">상태</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+  </table></div></div></div>
+</div>
 
-// ── 환율 변경 ────────────────────────────────────────────────────
-export function onExchangeRateChange() {
-    const r = document.getElementById('rmbRateInput')?.value;
-    const u = document.getElementById('usdRateInput')?.value;
-    if (r) localStorage.setItem('cirs_rmb_rate', r);
-    if (u) localStorage.setItem('cirs_usd_rate', u);
-    // 환율 의존 뷰 갱신
-    const view = window._currentView || 'dashboard';
-    if (['dashboard','revenue'].includes(view)) renderView(view);
-}
+<div class="view" id="view-medConsult">
+  <div class="section-head"><span class="section-title" id="msTitle">의료기기팀 · 상담</span><button class="btn btn-med" onclick="openMedModal('consult')"><span data-ko="+ 상담 추가" data-zh="+ 添加咨询">+ 상담 추가</span></button></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medConsultTable">
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('medCons','client')">업체명</th><th data-ko="등급/분류" data-zh="等级/分类" onclick="handleSort('medCons','grade')">등급/분류</th><th data-ko="제품명" data-zh="产品名称">제품명</th><th data-ko="업무유형" data-zh="业务类型">업무유형</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('medCons','manager')">담당자</th><th data-ko="상담일" data-zh="咨询日期" onclick="handleSort('medCons','startdate')">상담일</th><th data-ko="진행상태" data-zh="进行状态">진행상태</th><th data-ko="견적발송일" data-zh="报价日期">견적발송일</th><th data-ko="특이사항" data-zh="特例事项">특이사항</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+  </table></div></div></div>
+  <div class="section-head"><span class="section-title" style="color:var(--warn)" id="msArchTitle">📂 재상담 대기</span></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medConsultArchiveTable">
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称">업체명</th><th data-ko="등급/분류" data-zh="等级/分类">등급/분류</th><th data-ko="제품명" data-zh="产品名称">제품명</th><th data-ko="업무유형" data-zh="业务类型">업무유형</th><th data-ko="담당자" data-zh="负责人">담당자</th><th data-ko="상담일" data-zh="咨询日期">상담일</th><th data-ko="진행상태" data-zh="进行状态">진행상태</th><th data-ko="견적발송일" data-zh="报价日期">견적발송일</th><th data-ko="보류사유" data-zh="保留原因">보류사유</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+  </table></div></div></div>
+</div>
 
-// ── 비밀번호 변경 ─────────────────────────────────────────────────
-export async function changePw() {
-    const cur  = document.getElementById('pw-current')?.value;
-    const nw   = document.getElementById('pw-new')?.value;
-    const conf = document.getElementById('pw-confirm')?.value;
-    const msg  = document.getElementById('pw-msg');
-    const state = getState();
-    const currentUser = getCurrentUser();
+<div class="view" id="view-certContract">
+  <div class="section-head"><span class="section-title" id="ccTitle">제품환경인증팀 · 계약업체</span><button class="btn btn-cert" onclick="openCertModal('contract')"><span data-ko="+ 계약업체 추가" data-zh="+ 添加签约企业">+ 계약업체 추가</span></button></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certContractTable">
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('certC','client')">업체명</th><th data-ko="인증종류" data-zh="认证种类" onclick="handleSort('certC','certtype')">인증종류</th><th data-ko="품목명" data-zh="品目名称">품목명</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('certC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('certC','date')">계약일</th><th data-ko="발급일" data-zh="签发日期" onclick="handleSort('certC','issuedate')">발급일</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('certC','amount')">계약금액</th><th data-ko="수입실적(현재까지)" data-zh="收入业绩(迄今)">수입실적(현재까지)</th><th data-ko="잔금" data-zh="余款">잔금</th><th data-ko="진행단계" data-zh="进行阶段" onclick="handleSort('certC','stage')">진행단계</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+  </table></div></div></div>
+  <div class="section-head"><span class="section-title" style="color:var(--success)" id="ccDoneTitle">✅ 완료된 계약</span></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certContractDoneTable">
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称">업체명</th><th data-ko="인증종류" data-zh="认证种类">인증종류</th><th data-ko="담당자" data-zh="负责人">담당자</th><th data-ko="계약일" data-zh="合同日期">계약일</th><th data-ko="발급일" data-zh="签发日期">발급일</th><th data-ko="계약금액" data-zh="合同金额">계약금액</th><th data-ko="수입실적(현재까지)" data-zh="收入业绩(迄今)">수입실적(현재까지)</th><th data-ko="진행단계" data-zh="进行阶段">진행단계</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+  </table></div></div></div>
+</div>
 
-    if (cur !== state.pw) { if (msg) msg.textContent = '현재 비밀번호가 틀립니다.'; return; }
-    if (!nw || nw.length < 6) { if (msg) msg.textContent = '6자 이상 입력하세요.'; return; }
-    if (nw !== conf) { if (msg) msg.textContent = '새 비밀번호가 일치하지 않습니다.'; return; }
+<div class="view" id="view-certConsult">
+  <div class="section-head"><span class="section-title" id="csTitle">제품환경인증팀 · 상담</span><button class="btn btn-cert" onclick="openCertModal('consult')"><span data-ko="+ 상담 추가" data-zh="+ 添加咨询">+ 상담 추가</span></button></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certConsultTable">
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('certCons','client')">업체명</th><th data-ko="인증종류" data-zh="认证种类">인증종류</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('certCons','manager')">담당자</th><th data-ko="상담일" data-zh="咨询日期" onclick="handleSort('certCons','date')">상담일</th><th data-ko="진행상태" data-zh="进行状态">진행상태</th><th data-ko="견적발송일" data-zh="报价日期">견적발송일</th><th data-ko="상담내용/비고" data-zh="咨询内容/备注">상담내용/비고</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+  </table></div></div></div>
+  <div class="section-head"><span class="section-title" style="color:var(--warn)" id="csArchTitle">📂 재상담 대기</span></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certConsultArchiveTable">
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('certConsArch','client')">업체명</th><th data-ko="인증종류" data-zh="认证种类">인증종류</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('certConsArch','manager')">담당자</th><th data-ko="상담일" data-zh="咨询日期" onclick="handleSort('certConsArch','date')">상담일</th><th data-ko="진행상태" data-zh="进行状态">진행상태</th><th data-ko="견적발송일" data-zh="报价日期">견적발송일</th><th data-ko="보류사유" data-zh="保留原因">보류사유</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+  </table></div></div></div>
+</div>
 
-    state.pw = nw;
-    await savePw(nw, currentUser);  // 개인별 저장
-    if (msg) { msg.style.color = 'var(--success)'; msg.textContent = '✅ 변경되었습니다.'; }
-    setTimeout(() => window.closeModal?.('settings'), 1200);
-}
+<div class="view" id="view-kpi">
+  <div style="display:flex;gap:12px;margin-bottom:24px;">
+    <button class="team-tab active-cert" onclick="switchKpiTab('qual',this)"><span data-ko="🏅 자격·법정교육" data-zh="🏅 资格·法定教育">🏅 자격·법정교육</span></button>
+    <button class="team-tab" onclick="switchKpiTab('edu',this)"><span data-ko="📚 교육 이력" data-zh="📚 教育履历">📚 교육 이력</span></button>
+    <button class="team-tab" id="kpi-tab-profit" onclick="switchKpiTab('profit',this)" style="display:none;"><span data-ko="💰 개인별 수익률" data-zh="💰 个人利润率">💰 개인별 수익률</span></button>
+    <span style="margin-left:auto;font-weight:700;" id="kpiYear"></span>
+  </div>
+  <div id="kpi-sect-qual"><div class="section-head"><span class="section-title" id="kqTitle">구성원 자격 및 법정교육 현황</span><button class="btn btn-primary" onclick="openQualModal()"><span data-ko="🔒 관리자 수정" data-zh="🔒 管理员修改">🔒 관리자 수정</span></button></div><div id="qualCards"></div></div>
+  <div id="kpi-sect-edu" style="display:none"><div style="display:flex;gap:10px;margin-bottom:16px;"><select class="form-select" id="eduMemberSel" onchange="renderKpiEdu()"><option value="" data-ko="전체 구성원" data-zh="全体成员">전체 구성원</option><option>지윤규</option><option>유재용</option><option>윤미령</option><option>차상호</option><option>Zhao Lijie</option><option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option></select><select class="form-select" id="eduTypeSel" onchange="renderKpiEdu()"><option value="" data-ko="전체 유형" data-zh="全部类型">전체 유형</option><option value="역량강화" data-ko="역량강화" data-zh="能力强化">역량강화</option><option value="직무교육" data-ko="직무교육" data-zh="职务教育">직무교육</option><option value="보수교육" data-ko="보수교육" data-zh="进修教育">보수교육</option></select><button class="btn btn-cert" onclick="openEduAddModal()" style="margin-left:auto"><span data-ko="+ 교육 추가" data-zh="+ 添加教育">+ 교육 추가</span></button></div><div id="eduList"></div></div>
+  <div id="kpi-sect-profit" style="display:none"><div class="section-head"><span class="section-title" id="kpTitle">개인별 업무 수익 기여도</span></div><div id="kpi-profit-content"></div></div>
+</div>
 
-// SUPER_ADMIN 전용: 타인 비번 초기화
-export async function resetUserPw(targetUser) {
-    if (getCurrentUser() !== SUPER_ADMIN) {
-        alert('권한이 없습니다.');
-        return;
-    }
-    if (!confirm(`${targetUser}의 비밀번호를 초기화(cirs2026!)하시겠습니까?`)) return;
-    await resetPw(targetUser);
-    alert(`✅ ${targetUser} 비밀번호가 초기화되었습니다.`);
-}
+<div class="view" id="view-medDone">
+  <div class="section-head"><span class="section-title">의료기기팀 · 완료대장</span></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medDoneTable">
+    <thead><tr>
+      <th>순번</th><th>업체명</th><th>업무유형</th><th>제품명</th>
+      <th>담당자</th><th>계약일</th><th>완료일</th><th>계약금액</th><th>관리</th>
+    </tr></thead><tbody></tbody>
+  </table></div></div></div>
+</div>
 
-// ── 데이터 내보내기 ───────────────────────────────────────────────
-export function exportData() {
-    const state = getState();
-    const blob = new Blob(
-        [JSON.stringify({ exportDate: new Date().toISOString(), ...state }, null, 2)],
-        { type: 'application/json' }
-    );
-    const url = URL.createObjectURL(blob);
-    const a   = document.createElement('a');
-    a.href = url; a.download = 'cirs_backup.json'; a.click();
-}
+<div class="view" id="view-certDone">
+  <div class="section-head"><span class="section-title">제품환경인증팀 · 완료대장</span></div>
+  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certDoneTable">
+    <thead><tr>
+      <th>순번</th><th>업체명</th><th>인증종류</th><th>품목명</th>
+      <th>담당자</th><th>계약일</th><th>완료일</th><th>계약금액</th><th>관리</th>
+    </tr></thead><tbody></tbody>
+  </table></div></div></div>
+</div>
 
-// ── 언어 전환 ─────────────────────────────────────────────────────
-export function toggleLang() {
-    const html = document.documentElement;
-    const isKo = html.lang !== 'zh';
-    html.lang = isKo ? 'zh' : 'ko';
-    document.querySelectorAll('[data-ko]').forEach(el => {
-        el.textContent = isKo ? el.dataset.zh : el.dataset.ko;
-    });
-}
+<div class="view" id="view-tasks">
+  <div class="section-head"><span class="section-title" id="tkTitle">업무지시서 및 협조요청</span><div><button class="btn btn-cert" onclick="openTaskModal('order')" id="taskOrderBtn"><span data-ko="📋 업무지시 작성" data-zh="📋 编写工作指示">📋 업무지시 작성</span></button> <button class="btn btn-med" onclick="openTaskModal('collab')"><span data-ko="🤝 협조요청 작성" data-zh="🤝 编写协助请求">🤝 협조요청 작성</span></button></div></div>
+  <div style="display:flex;gap:10px;margin-bottom:20px;"><select class="form-select" id="taskSortSel" onchange="renderTasks()"><option value="date" data-ko="최신순" data-zh="最新排序">최신순</option><option value="name" data-ko="이름순" data-zh="姓名排序">이름순</option></select><select class="form-select" id="taskTypeFilter" onchange="renderTasks()"><option value="" data-ko="전체 유형" data-zh="全部类型">전체 유형</option><option value="order" data-ko="📋 업무지시" data-zh="📋 工作指示">📋 업무지시</option><option value="collab" data-ko="🤝 협조요청" data-zh="🤝 协助请求">🤝 협조요청</option></select><select class="form-select" id="taskPrioFilter" onchange="renderTasks()"><option value="" data-ko="전체 우선순위" data-zh="全部优先级">전체 우선순위</option><option value="긴급" data-ko="🔴 긴급" data-zh="🔴 紧急">🔴 긴급</option><option value="일반" data-ko="🟡 일반" data-zh="🟡 普通">🟡 일반</option><option value="낮음" data-ko="🟢 낮음" data-zh="🟢 较低">🟢 낮음</option></select><select class="form-select" id="taskStatusFilter" onchange="renderTasks()"><option value="" data-ko="전체 상태" data-zh="全部状态">전체 상태</option><option value="진행중" data-ko="진행중" data-zh="进行中">진행중</option><option value="완료" data-ko="완료" data-zh="已完成">완료</option></select></div>
+  <div id="taskList"></div>
+</div>
+</div></div></div>
 
-// ── 네비게이션 ────────────────────────────────────────────────────
-export function nav(viewName, element = null) {
-    window._currentView = viewName;
-    setCurrentView?.(viewName);
+<div class="modal-overlay" id="modal-briefing"><div class="modal-wrapper"><div class="modal"><div class="modal-header"><span class="modal-title"><span data-ko="🔔 부문장 일일 요약 브리핑" data-zh="🔔 部门长每日简报">🔔 부문장 일일 요약 브리핑</span></span></div><div class="modal-body"><div style="font-weight:700;margin-bottom:16px;"><span data-ko="이사님, 지난 접속 이후 갱신된 실무 데이터 내역입니다." data-zh="理事，这是您上次登录后更新的业务数据明细。">이사님, 지난 접속 이후 갱신된 실무 데이터 내역입니다.</span></div><div id="briefingList"></div></div><div class="modal-footer"><button class="btn btn-med" onclick="closeBriefing()"><span data-ko="확인 완료 및 닫기" data-zh="确认完毕并关闭">확인 완료 및 닫기</span></button></div></div></div></div>
+<div class="modal-overlay" id="modal-person-kpi"><div class="modal-wrapper"><div class="modal"><div class="modal-header"><span class="modal-title" id="pkTitle"></span><button class="modal-close" onclick="closeModal('person-kpi')">×</button></div><div class="modal-body" id="pkBody"></div><div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('person-kpi')"><span data-ko="닫기" data-zh="关闭">닫기</span></button></div></div></div></div>
 
-    document.querySelectorAll('.view').forEach(el => {
-        el.classList.remove('active');
-        el.style.display = 'none';
-    });
-    const target = document.getElementById(`view-${viewName}`);
-    if (target) { target.style.display = 'block'; target.classList.add('active'); }
+<div class="modal-overlay" id="modal-med"><div class="modal-wrapper"><div class="modal"><div class="modal-header"><span class="modal-title" id="medModalTitle"></span><button class="modal-close" onclick="closeModal('med')">×</button></div><div class="modal-body"><div class="form-grid">
+  <div class="form-group"><label class="form-label" data-ko="업체명 *" data-zh="企业名称 *">업체명 *</label><input class="form-input" id="m-client" data-ko="업체명" data-zh="企业名称" placeholder="업체명"></div>
+  <div class="form-group"><label class="form-label" data-ko="제품명 / 모델" data-zh="产品名称 / 型号">제품명 / 모델</label><input class="form-input" id="m-product"></div>
+  <div class="form-group"><label class="form-label" data-ko="등급 / 분류" data-zh="等级 / 分类">등급 / 분류</label><select class="form-select" id="m-grade"><option value="" data-ko="선택" data-zh="选择">선택</option><optgroup label="한국"><option value="한국 1등급">한국 1등급</option><option value="한국 2등급">한국 2등급</option><option value="한국 3등급">한국 3등급</option><option value="한국 4등급">한국 4등급</option></optgroup><optgroup label="중국"><option value="중국 1등급">중국 1등급</option><option value="중국 2등급">중국 2등급</option><option value="중국 3등급">중국 3등급</option></optgroup><optgroup label="GMP"><option>KGMP</option><option>CGMP</option></optgroup></select></div>
+  <div class="form-group"><label class="form-label" data-ko="업무 유형" data-zh="业务类型">업무 유형</label><select class="form-select" id="m-biztype" onchange="updateMedStageOptions()"><option value="" data-ko="선택" data-zh="选择">선택</option><option value="인허가" data-ko="제품 인허가" data-zh="产品许可">제품 인허가</option><option value="QMS" data-ko="QMS 구축" data-zh="QMS构建">QMS 구축</option></select></div>
+  <div class="contract-only-med form-group full"><label class="form-label" data-ko="진행 단계 (복수 선택)" data-zh="进行阶段 (可多选)">진행 단계 (복수 선택)</label><div id="m-stage-wrap" style="padding:10px;border:1px solid var(--border2);border-radius:8px;background:var(--surface);"><span data-ko="업무 유형을 먼저 선택하세요" data-zh="请先选择业务类型">업무 유형을 먼저 선택하세요</span></div></div>
+  <div class="form-group"><label class="form-label" data-ko="담당자" data-zh="负责人">담당자</label><select class="form-select" id="m-manager"><option value="">선택</option><option>유재용</option><option>윤미령</option><option>차상호</option><option>Zhao Lijie</option><option>지윤규</option></select></div>
+  <div class="form-group"><label class="form-label" data-ko="상담일" data-zh="咨询日期">상담일</label><input class="form-input" type="date" id="m-startdate"></div>
+  <div class="contract-only-med form-group"><label class="form-label" data-ko="완료 목표일" data-zh="目标完成日">완료 목표일</label><input class="form-input" type="date" id="m-duedate"></div>
+  <div class="form-group" style="display:none;"><select class="form-select" id="m-status"><option value="진행중">진행중</option><option value="완료">완료</option><option value="보류">보류</option><option value="취소">취소</option></select></div>
+  <div class="contract-only-med form-group"><label class="form-label" data-ko="현재 메인 단계" data-zh="当前主要阶段">현재 메인 단계</label><select class="form-select" id="m-progress"><option value="" data-ko="선택" data-zh="选择">선택</option><option value="신청서 작성" data-ko="신청서 작성" data-zh="编写申请书">신청서 작성</option><option value="컨설팅" data-ko="컨설팅" data-zh="咨询">컨설팅</option><option value="심사 보완" data-ko="심사 보완" data-zh="审查补充">심사 보완</option><option value="완료" data-ko="완료" data-zh="完成">완료</option></select></div>
+  <div class="contract-only-med form-group full"><hr class="section-divider"><div class="section-sub" data-ko="계약 및 이익금" data-zh="合同及利润">계약 및 이익금</div><label class="form-label" data-ko="계약 금액 *" data-zh="合同金额 *">계약 금액 *</label><div style="display:flex;gap:8px"><select id="m-amount-currency" class="form-select" style="width:100px;" onchange="calcBilling('m','medBillingTotal')"><option>KRW</option><option>RMB</option><option>USD</option></select><input class="form-input text-mono" type="number" id="m-amount" oninput="calcBilling('m','medBillingTotal')"></div></div>
+  <div class="contract-only-med form-group full"><hr class="section-divider"><div class="section-sub" data-ko="지출 비용 상세" data-zh="支出费用明细">지출 비용 상세</div><div style="background:var(--surface); padding:16px; border-radius:8px;"><div class="form-grid" style="margin-bottom:12px;"><div class="form-group"><label class="form-label" data-ko="공장심사비" data-zh="工厂审查费">공장심사비</label><input class="form-input" type="number" id="m-exp-audit" oninput="calcTotalExpense('med')"></div><div class="form-group"><label class="form-label" data-ko="제품시험비" data-zh="产品测试费">제품시험비</label><input class="form-input" type="number" id="m-exp-test" oninput="calcTotalExpense('med')"></div><div class="form-group"><label class="form-label" data-ko="출장비" data-zh="差旅费">출장비</label><input class="form-input" type="number" id="m-exp-trip" oninput="calcTotalExpense('med')"></div></div><div id="m-dynamic-expense-wrap"></div><button class="btn btn-sm" onclick="addDynamicExpense('med')"><span data-ko="+ 기타 비용 추가" data-zh="+ 添加其他费用">+ 기타 비용 추가</span></button><div style="display:flex; justify-content:space-between; margin-top:12px;"><span data-ko="총 지출 합계 (KRW)" data-zh="总支出合计 (KRW)">총 지출 합계 (KRW)</span><input class="form-input" type="number" id="m-expense" readonly style="width:150px;color:var(--danger)"></div></div></div>
+  <div class="contract-only-med form-group full" id="medBillingSection"><div class="billing-total-row" id="medBillingTotal"></div><div class="section-sub" data-ko="수입 내역 분할 입력" data-zh="收入明细分期输入">수입 내역 분할 입력</div><div class="billing-grid" id="medBillingGrid"></div><div class="section-sub" data-ko="GMP 갱신" data-zh="GMP更新">GMP 갱신</div><div style="display:flex;gap:16px"><div class="form-group"><label class="form-label" data-ko="갱신 주기" data-zh="更新周期">갱신 주기</label><select class="form-select" id="m-renewcycle"><option value="" data-ko="해당없음" data-zh="无">해당없음</option><option>1년</option><option>2년</option><option>3년</option><option>5년</option></select></div><div class="form-group"><label class="form-label" data-ko="인증 만료일" data-zh="认证到期日">인증 만료일</label><input class="form-input" type="date" id="m-expiredate"></div></div></div>
+  <div class="form-group full" id="medQuoteSection"><hr class="section-divider"><div class="section-sub" data-ko="상담 진행" data-zh="咨询进度">상담 진행</div><div style="display:flex;gap:16px;"><div class="form-group"><label class="form-label" data-ko="진행 상태" data-zh="进行状态">진행 상태</label><select class="form-select" id="m-consult-status" onchange="document.getElementById('m-fail-reason-wrap').style.display=(this.value==='계약불가'||this.value==='계약보류')?'block':'none'"><option value="" data-ko="선택" data-zh="选择">선택</option><option value="상담중" data-ko="상담중" data-zh="咨询中">상담중</option><option value="계약완료" data-ko="계약완료" data-zh="已签约">계약완료</option><option value="계약불가" data-ko="계약불가" data-zh="无法签约">계약불가</option><option value="계약보류" data-ko="계약보류" data-zh="保留签约">계약보류</option></select></div><div class="form-group" id="m-fail-reason-wrap" style="display:none"><label class="form-label" data-ko="실패/보류 사유 *" data-zh="失败/保留原因 *">실패/보류 사유 *</label><select class="form-select" id="m-fail-reason"><option value="" data-ko="선택" data-zh="选择">선택</option><option value="가격 경쟁력" data-ko="가격 경쟁력 부족" data-zh="价格竞争力不足">가격 경쟁력 부족</option><option value="납기일 불만족" data-ko="납기일 불만족" data-zh="对交期不满意">납기일 불만족</option><option value="경쟁사 선택" data-ko="타 경쟁사 선택" data-zh="选择其他竞争对手">타 경쟁사 선택</option><option value="고객사 변심/보류" data-ko="고객사 프로젝트 취소/보류" data-zh="客户取消/保留项目">고객사 프로젝트 취소/보류</option><option value="기타" data-ko="기타 사유" data-zh="其他原因">기타 사유</option></select></div><div class="form-group"><label class="form-label" data-ko="보류 및 계약 불가 사유" data-zh="保留及无法签约原因">보류 및 계약 불가 사유</label><input class="form-input" id="m-consult-etc"></div></div><div class="section-sub" data-ko="견적서 발송" data-zh="发送报价单">견적서 발송</div><div style="display:flex;gap:16px"><div class="form-group"><label class="form-label" data-ko="발송일" data-zh="发送日期">발송일</label><input class="form-input" type="date" id="m-quote-date"></div><div class="form-group"><label class="form-label" data-ko="견적 금액" data-zh="报价金额">견적 금액</label><div style="display:flex;gap:8px"><select id="m-quote-currency" class="form-select"><option>KRW</option><option>RMB</option><option>USD</option></select><input class="form-input" type="number" id="m-quote-amount"></div></div><div class="form-group"><label class="form-label" data-ko="파일명 / 번호" data-zh="文件名 / 编号">파일명 / 번호</label><input class="form-input" id="m-quote-file"></div></div></div>
+  <div class="form-group full"><hr class="section-divider"><div class="section-sub" data-ko="업체 담당자 연락처" data-zh="企业联系人方式">업체 담당자 연락처</div></div>
+  <div class="form-group"><label class="form-label" data-ko="담당자명" data-zh="联系人姓名">담당자명</label><input class="form-input" id="m-contact-name"></div><div class="form-group"><label class="form-label" data-ko="핸드폰" data-zh="手机号">핸드폰</label><input class="form-input" id="m-contact-phone"></div><div class="form-group full"><label class="form-label" data-ko="이메일" data-zh="电子邮箱">이메일</label><input class="form-input" id="m-contact-email"></div><div class="form-group full"><label class="form-label" data-ko="이슈 / 비고" data-zh="问题 / 备注">이슈 / 비고</label><textarea class="form-textarea" id="m-note"></textarea></div>
+</div></div><div class="modal-footer"><button class="btn" onclick="closeModal('med')"><span data-ko="닫기/취소" data-zh="关闭/取消">닫기/취소</span></button><button class="btn btn-med" id="medSaveBtn" onclick="saveMed()"><span data-ko="저장" data-zh="保存">저장</span></button></div></div></div></div>
 
-    if (element) {
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        element.classList.add('active');
-    }
+<div class="modal-overlay" id="modal-cert"><div class="modal-wrapper"><div class="modal"><div class="modal-header"><span class="modal-title" id="certModalTitle"></span><button class="modal-close" onclick="closeModal('cert')">×</button></div><div class="modal-body"><div class="form-grid">
+  <div class="form-group"><label class="form-label" data-ko="업체명 *" data-zh="企业名称 *">업체명 *</label><input class="form-input" id="c-client"></div>
+  <div class="form-group"><label class="form-label" data-ko="인증 종류" data-zh="认证种类">인증 종류</label><select class="form-select" id="c-certtype" onchange="toggleCertTypeEtc()"><option value="" data-ko="선택" data-zh="选择">선택</option><option>KS</option><option>JIS</option><option>KC</option><option value="환경마크" data-ko="환경마크" data-zh="环保标志">환경마크</option><option value="탄소업무" data-ko="탄소업무" data-zh="碳业务">탄소업무</option><option value="기타" data-ko="기타" data-zh="其他">기타</option></select></div>
+  <div class="form-group" id="c-certtype-etc-wrap" style="display:none"><label class="form-label" data-ko="기타 인증 직접 입력" data-zh="直接输入其他认证">기타 인증 직접 입력</label><input class="form-input" id="c-certtype-etc"></div>
+  <div class="form-group"><label class="form-label" data-ko="표준번호" data-zh="标准编号">표준번호</label><input class="form-input" id="c-std-no" placeholder="예) KS M 3805"></div>
+  <div class="form-group"><label class="form-label" data-ko="품목명" data-zh="品目名称">품목명</label><input class="form-input" id="c-product" placeholder="예) 폴리염화비닐 지수판"></div>
+  <div class="form-group"><label class="form-label" data-ko="담당자" data-zh="负责人">담당자</label><select class="form-select" id="c-manager"><option value="" data-ko="선택" data-zh="选择">선택</option><option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option><option>지윤규</option></select></div>
+  <div id="certContractFields" style="display:contents">
+    <div class="form-group full"><hr class="section-divider"><div class="section-sub" data-ko="계약 및 이익금" data-zh="合同及利润">계약 및 이익금</div><label class="form-label" data-ko="계약 금액 *" data-zh="合同金额 *">계약 금액 *</label><div style="display:flex;gap:8px"><select id="c-amount-currency" class="form-select" style="width:100px;" onchange="calcBilling('c','certBillingTotal')"><option>KRW</option><option>RMB</option><option>USD</option></select><input class="form-input text-mono" type="number" id="c-amount" oninput="calcBilling('c','certBillingTotal')"></div></div>
+    <div class="form-group full" id="c-expense-section"><hr class="section-divider"><div class="section-sub" data-ko="지출 비용 상세" data-zh="支出费用明细">지출 비용 상세</div><div style="background:var(--surface); padding:16px; border-radius:8px;"><div class="form-grid" style="margin-bottom:12px;"><div class="form-group"><label class="form-label" data-ko="공장심사비" data-zh="工厂审查费">공장심사비</label><input class="form-input" type="number" id="c-exp-audit" oninput="calcTotalExpense('cert')"></div><div class="form-group"><label class="form-label" data-ko="제품시험비" data-zh="产品测试费">제품시험비</label><input class="form-input" type="number" id="c-exp-test" oninput="calcTotalExpense('cert')"></div><div class="form-group"><label class="form-label" data-ko="출장비" data-zh="差旅费">출장비</label><input class="form-input" type="number" id="c-exp-trip" oninput="calcTotalExpense('cert')"></div></div><div id="c-dynamic-expense-wrap"></div><button class="btn btn-sm" onclick="addDynamicExpense('cert')"><span data-ko="+ 기타 비용 추가" data-zh="+ 添加其他费用">+ 기타 비용 추가</span></button><div style="display:flex; justify-content:space-between; margin-top:12px;"><span data-ko="총 지출 합계 (KRW)" data-zh="总支出合计 (KRW)">총 지출 합계 (KRW)</span><input class="form-input" type="number" id="c-expense" readonly style="width:150px;color:var(--danger)"></div></div></div>
+    <div class="form-group"><label class="form-label" data-ko="계약일" data-zh="合同日期">계약일</label><input class="form-input" type="date" id="c-contractdate"></div>
+    <div class="form-group"><label class="form-label" data-ko="진행 단계" data-zh="进行阶段">진행 단계</label><select class="form-select" id="c-stage"><option value="" data-ko="선택" data-zh="选择">선택</option><option value="신청서 작성" data-ko="신청서 작성" data-zh="编写申请书">신청서 작성</option><option value="컨설팅" data-ko="컨설팅" data-zh="咨询">컨설팅</option><option value="심사 보완" data-ko="심사 보완" data-zh="审查补充">심사 보완</option><option value="완료" data-ko="완료" data-zh="完成">완료</option></select></div>
+    <div class="form-group"><label class="form-label" data-ko="인증서 발급일" data-zh="签发日期">인증서 발급일</label><input class="form-input" type="date" id="c-issuedate"></div>
+    <div class="form-group full" id="certBillingSection"><div class="billing-total-row" id="certBillingTotal"></div><div class="section-sub" data-ko="수입 내역 분할 입력" data-zh="收入明细分期输入">수입 내역 분할 입력</div><div class="billing-grid" id="certBillingGrid"></div><div class="section-sub" data-ko="갱신 정보" data-zh="更新信息">갱신 정보</div><div style="display:flex;gap:16px"><div class="form-group"><label class="form-label" data-ko="갱신 주기" data-zh="更新周期">갱신 주기</label><select class="form-select" id="c-renewcycle"><option value="" data-ko="해당없음" data-zh="无">해당없음</option><option>1년</option><option>2년</option><option>3년</option><option>5년</option></select></div><div class="form-group"><label class="form-label" data-ko="인증 만료일" data-zh="认证到期日">인증 만료일</label><input class="form-input" type="date" id="c-expiredate"></div></div></div>
+  </div>
+  <div id="certConsultSection" style="display:contents">
+    <div class="form-group"><label class="form-label" data-ko="진행 상태" data-zh="进行状态">진행 상태</label><select class="form-select" id="c-contracted" onchange="document.getElementById('c-fail-reason-wrap').style.display=(this.value==='계약불가'||this.value==='계약보류')?'block':'none'"><option value="협의중" data-ko="협의중" data-zh="协商中">협의중</option><option value="계약완료" data-ko="계약완료" data-zh="已签约">계약완료</option><option value="계약불가" data-ko="계약불가" data-zh="无法签约">계약불가</option><option value="계약보류" data-ko="계약보류" data-zh="保留签约">계약보류</option></select></div>
+    <div class="form-group"><label class="form-label" data-ko="상담 일자" data-zh="咨询日期">상담 일자</label><input class="form-input" type="date" id="c-date"></div>
+    <div class="form-group full" id="c-fail-reason-wrap" style="display:none"><label class="form-label" style="color:var(--danger)" data-ko="실패/보류 사유 *" data-zh="失败/保留原因 *">실패/보류 사유 *</label><select class="form-select" id="c-fail-reason"><option value="" data-ko="선택" data-zh="选择">선택</option><option value="가격 경쟁력" data-ko="가격 경쟁력 부족" data-zh="价格竞争力不足">가격 경쟁력 부족</option><option value="납기일 불만족" data-ko="납기일 불만족" data-zh="对交期不满意">납기일 불만족</option><option value="경쟁사 선택" data-ko="타 경쟁사 선택" data-zh="选择其他竞争对手">타 경쟁사 선택</option><option value="고객사 변심/보류" data-ko="고객사 프로젝트 취소/보류" data-zh="客户取消/保留项目">고객사 프로젝트 취소/보류</option><option value="기타" data-ko="기타 사유" data-zh="其他原因">기타 사유</option></select></div>
+    <div class="form-group full"><hr class="section-divider"><div class="section-sub" data-ko="견적서 발송" data-zh="发送报价单">견적서 발송</div><div style="display:flex;gap:16px;"><div class="form-group"><label class="form-label" data-ko="발송일" data-zh="发送日期">발송일</label><input class="form-input" type="date" id="c-quote-date"></div><div class="form-group"><label class="form-label" data-ko="견적 금액" data-zh="报价金额">견적 금액</label><div style="display:flex;gap:8px"><select id="c-quote-currency" class="form-select"><option>KRW</option><option>RMB</option><option>USD</option></select><input class="form-input text-mono" type="number" id="c-quote-amount"></div></div><div class="form-group"><label class="form-label" data-ko="파일명 / 번호" data-zh="文件名 / 编号">파일명 / 번호</label><input class="form-input" id="c-quote-file"></div></div></div>
+  </div>
+  <div class="form-group full"><hr class="section-divider"><div class="section-sub" data-ko="업체 담당자 연락처" data-zh="企业联系人方式">업체 담당자 연락처</div></div>
+  <div class="form-group"><label class="form-label" data-ko="담당자명" data-zh="联系人姓名">담당자명</label><input class="form-input" id="c-contact-name"></div><div class="form-group"><label class="form-label" data-ko="핸드폰" data-zh="手机号">핸드폰</label><input class="form-input" id="c-contact-phone"></div><div class="form-group full"><label class="form-label" data-ko="이메일" data-zh="电子邮箱">이메일</label><input class="form-input" id="c-contact-email"></div><div class="form-group full"><label class="form-label" data-ko="기타 특이사항" data-zh="其他特例事项">기타 특이사항</label><input class="form-input" id="c-etc-memo"></div><div class="form-group full"><label class="form-label" data-ko="상담 내용 / 비고" data-zh="咨询内容 / 备注">상담 내용 / 비고</label><textarea class="form-textarea" id="c-note"></textarea></div>
+</div></div><div class="modal-footer"><button class="btn" onclick="closeModal('cert')"><span data-ko="닫기/취소" data-zh="关闭/取消">닫기/취소</span></button><button class="btn btn-cert" id="certSaveBtn" onclick="saveCert()"><span data-ko="저장" data-zh="保存">저장</span></button></div></div></div></div>
 
-    // topbar 타이틀
-    const titles = {
-        dashboard:'전체 현황', revenue:'수입계획 및 실적',
-        medContract:'의료기기팀 · 계약업체', medConsult:'의료기기팀 · 상담', medDone:'의료기기팀 · 완료대장',
-        certContract:'제품환경인증팀 · 계약업체', certConsult:'제품환경인증팀 · 상담', certDone:'제품환경인증팀 · 완료대장',
-        kpi:'KPI 현황', tasks:'업무지시서',
+<div class="modal-overlay" id="modal-task"><div class="modal-wrapper"><div class="modal" style="max-width:560px"><div class="modal-header"><span class="modal-title" id="taskModalTitle">업무 작성</span><button class="modal-close" onclick="closeModal('task')">×</button></div><div class="modal-body"><div class="form-grid">
+  <input type="hidden" id="task-type-hidden" value="order">
+  <div class="form-group"><label class="form-label" data-ko="소속 팀 (수신)" data-zh="所属团队 (接收)">소속 팀 (수신)</label><select class="form-select" id="task-team" onchange="updateTaskToOptions(this.value)"><option value="의료기기팀" data-ko="의료기기팀" data-zh="医疗器械组">의료기기팀</option><option value="제품환경인증팀" data-ko="제품환경인증팀" data-zh="环境认证组">제품환경인증팀</option><option value="공통" data-ko="공통" data-zh="共同">공통</option></select></div>
+  <div class="form-group"><label class="form-label" data-ko="담당자 (수신)" data-zh="负责人 (接收)">담당자 (수신)</label><select class="form-select" id="task-to"><option value="">선택</option></select></div>
+  <div class="form-group full"><label class="form-label" style="color:var(--med)" data-ko="연관 프로젝트 (선택)" data-zh="关联项目 (选填)">연관 프로젝트 (선택)</label><select class="form-select" id="task-project"><option value="">관련 업체 선택 (없음)</option></select></div>
+  <div class="form-group"><label class="form-label" data-ko="우선순위" data-zh="优先级">우선순위</label><select class="form-select" id="task-priority"><option value="긴급" data-ko="🔴 긴급" data-zh="🔴 紧急">🔴 긴급</option><option value="일반" data-ko="🟡 일반" data-zh="🟡 普通" selected>🟡 일반</option><option value="낮음" data-ko="🟢 낮음" data-zh="🟢 较低">🟢 낮음</option></select></div>
+  <div class="form-group"><label class="form-label" data-ko="예상 소요 시간(h)" data-zh="预计所需时间(h)">예상 소요 시간(h)</label><input class="form-input text-mono" type="number" id="task-est-hours"></div>
+  <div class="form-group"><label class="form-label" data-ko="지시자 (발신)" data-zh="指示人 (发送)">지시자 (발신)</label><input class="form-input" id="task-from" readonly style="color:var(--text3);background:var(--surface)"></div>
+  <div class="form-group"><label class="form-label" data-ko="지시/요청일" data-zh="指示/请求日">지시/요청일</label><input class="form-input" type="date" id="task-date"></div>
+  <div class="form-group full"><label class="form-label" data-ko="완료 기한" data-zh="完成期限">완료 기한</label><input class="form-input" type="date" id="task-due"></div>
+  <div class="form-group full"><label class="form-label" data-ko="업무 내용 *" data-zh="工作内容 *">업무 내용 *</label><textarea class="form-textarea" id="task-content" style="min-height:120px"></textarea></div>
+</div></div><div class="modal-footer"><button class="btn" onclick="closeModal('task')"><span data-ko="취소" data-zh="取消">취소</span></button><button class="btn btn-cert" onclick="saveTask()"><span data-ko="등록" data-zh="登记">등록</span></button></div></div></div></div>
+
+<div class="modal-overlay" id="modal-task-complete"><div class="modal-wrapper"><div class="modal" style="max-width:480px"><div class="modal-header"><span class="modal-title" data-ko="업무 완료 보고" data-zh="工作完成报告">업무 완료 보고</span><button class="modal-close" onclick="closeModal('task-complete')">×</button></div><div class="modal-body"><div class="form-grid">
+  <div class="form-group"><label class="form-label" data-ko="완료일" data-zh="完成日">완료일</label><input class="form-input" type="date" id="task-complete-date"></div>
+  <div class="form-group"><label class="form-label" data-ko="실제 소요 시간(h)" data-zh="实际所需时间(h)">실제 소요 시간(h)</label><input class="form-input text-mono" type="number" id="task-act-hours"></div>
+  <div class="form-group full"><label class="form-label" data-ko="완료 내용" data-zh="完成内容">완료 내용</label><textarea class="form-textarea" id="task-complete-note" style="min-height:100px"></textarea></div>
+</div></div><div class="modal-footer"><button class="btn" onclick="closeModal('task-complete')"><span data-ko="취소" data-zh="取消">취소</span></button><button class="btn btn-success" onclick="confirmTaskComplete()"><span data-ko="✅ 완료 처리" data-zh="✅ 处理完成">✅ 완료 처리</span></button></div></div></div></div>
+
+<div class="modal-overlay" id="modal-settings"><div class="modal-wrapper"><div class="modal" style="max-width:400px"><div class="modal-header"><span class="modal-title" data-ko="⚙ 설정" data-zh="⚙ 设置">⚙ 설정</span><button class="modal-close" onclick="closeModal('settings')">×</button></div><div class="modal-body">
+  <div class="form-group"><label class="form-label" data-ko="현재 비밀번호" data-zh="当前密码">현재 비밀번호</label><input class="form-input" type="password" id="pw-current"></div>
+  <div class="form-group"><label class="form-label" data-ko="새 비밀번호" data-zh="新密码">새 비밀번호</label><input class="form-input" type="password" id="pw-new"></div>
+  <div class="form-group"><label class="form-label" data-ko="새 비밀번호 확인" data-zh="确认新密码">새 비밀번호 확인</label><input class="form-input" type="password" id="pw-confirm"></div>
+  <div id="pw-msg" style="font-size:12px;color:var(--danger);margin-top:10px;font-weight:600"></div>
+</div><div class="modal-footer"><button class="btn" onclick="closeModal('settings')"><span data-ko="취소" data-zh="取消">취소</span></button><button class="btn btn-primary" onclick="changePw()"><span data-ko="변경" data-zh="修改">변경</span></button></div></div></div></div>
+
+<div class="modal-overlay" id="modal-edu-add"><div class="modal-wrapper"><div class="modal" style="max-width:540px"><div class="modal-header"><span class="modal-title" id="eduModalTitle">교육 이력 추가</span><button class="modal-close" onclick="closeModal('edu-add')">×</button></div><div class="modal-body"><div class="form-grid">
+  <div class="form-group"><label class="form-label" data-ko="구성원" data-zh="成员">구성원</label><select class="form-select" id="edu-member"><option value="" data-ko="선택" data-zh="选择">선택</option><option>지윤규</option><option>유재용</option><option>윤미령</option><option>차상호</option><option>Zhao Lijie</option><option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option></select></div>
+  <div class="form-group"><label class="form-label" data-ko="교육 유형" data-zh="教育类型">교육 유형</label><select class="form-select" id="edu-type"><option value="" data-ko="선택" data-zh="选择">선택</option><option value="역량강화" data-ko="역량강화" data-zh="能力强化">역량강화</option><option value="직무교육" data-ko="직무교육" data-zh="职务教育">직무교육</option><option value="보수교육" data-ko="보수교육 (법정)" data-zh="进修教育 (法定)">보수교육 (법정)</option></select></div>
+  <div class="form-group full"><label class="form-label" style="color:var(--med)" data-ko="진행 상태" data-zh="进行状态">진행 상태</label><select class="form-select" id="edu-status" style="border-color:var(--med)"><option value="수료 완료" data-ko="✅ 수료 완료" data-zh="✅ 结业完成">✅ 수료 완료</option><option value="신청 완료(대기중)" data-ko="⏳ 신청 완료 (대기중 / 예정)" data-zh="⏳ 申请完成 (待办 / 预定)">⏳ 신청 완료 (대기중 / 예정)</option></select></div>
+  <div class="form-group"><label class="form-label" data-ko="교육일 (시작)" data-zh="教育日 (开始)">교육일 (시작)</label><input class="form-input" type="date" id="edu-date-start"></div><div class="form-group"><label class="form-label" data-ko="교육일 (종료)" data-zh="教育日 (结束)">교육일 (종료)</label><input class="form-input" type="date" id="edu-date-end"></div>
+  <div class="form-group full"><label class="form-label" data-ko="교육 기관" data-zh="教育机构">교육 기관</label><input class="form-input" id="edu-org"></div>
+  <div class="form-group full"><label class="form-label" data-ko="교육 내용" data-zh="教育内容">교육 내용</label><textarea class="form-textarea" id="edu-content"></textarea></div>
+  <div class="form-group"><label class="form-label" data-ko="수료증 유무" data-zh="是否有结业证">수료증 유무</label><select class="form-select" id="edu-cert"><option value="있음" data-ko="있음" data-zh="有">있음</option><option value="없음" data-ko="없음" data-zh="无">없음</option><option value="발급예정" data-ko="발급예정" data-zh="预计发放">발급예정</option></select></div>
+  <div class="form-group"><label class="form-label" data-ko="자격증 취득" data-zh="取得资格证">자격증 취득</label><select class="form-select" id="edu-license" onchange="document.getElementById('edu-license-name-wrap').style.display=this.value!=='해당없음'?'':'none'"><option value="해당없음" data-ko="해당없음" data-zh="不适用">해당없음</option><option value="취득완료" data-ko="취득완료" data-zh="取得完成">취득완료</option><option value="취득예정" data-ko="취득예정" data-zh="预计取得">취득예정</option><option value="응시예정" data-ko="응시예정" data-zh="预计考试">응시예정</option></select></div>
+  <div class="form-group" id="edu-license-name-wrap" style="display:none"><label class="form-label" data-ko="자격증명" data-zh="资格证名">자격증명</label><input class="form-input" id="edu-license-name"></div>
+  <div class="form-group"><label class="form-label" data-ko="업무 직접 연계성" data-zh="业务直接相关性">업무 직접 연계성</label><select class="form-select" id="edu-direct"><option value="높음" data-ko="높음" data-zh="高">높음</option><option value="보통" data-ko="보통" data-zh="普通">보통</option><option value="낮음" data-ko="낮음" data-zh="低">낮음</option></select></div>
+  <div class="form-group"><label class="form-label" data-ko="업무 간접 연계성" data-zh="业务间接相关性">업무 간접 연계성</label><select class="form-select" id="edu-indirect"><option value="높음" data-ko="높음" data-zh="高">높음</option><option value="보통" data-ko="보통" data-zh="普通">보통</option><option value="낮음" data-ko="낮음" data-zh="低">낮음</option></select></div>
+  <div class="form-group full"><label class="form-label" data-ko="비고" data-zh="备注">비고</label><input class="form-input" id="edu-note"></div>
+</div></div><div class="modal-footer"><button class="btn" onclick="closeModal('edu-add')"><span data-ko="취소" data-zh="取消">취소</span></button><button class="btn btn-cert" id="eduSaveBtn" onclick="saveEduRecord()"><span data-ko="저장" data-zh="保存">저장</span></button></div></div></div></div>
+
+<div class="modal-overlay" id="modal-qual"><div class="modal-wrapper"><div class="modal" style="max-width:500px"><div class="modal-header"><span class="modal-title" data-ko="🔒 자격·법정교육 관리 (관리자)" data-zh="🔒 资格·法定教育管理 (管理员)">🔒 자격·법정교육 관리 (관리자)</span><button class="modal-close" onclick="closeModal('qual')">×</button></div><div class="modal-body">
+  <div class="form-group"><label class="form-label" data-ko="관리자 비밀번호" data-zh="管理员密码">관리자 비밀번호</label><div style="display:flex;gap:10px"><input class="form-input" type="password" id="qual-admin-pw"><button class="btn btn-primary" onclick="verifyQualAdmin()"><span data-ko="확인" data-zh="确认">확인</span></button></div><div id="qual-pw-msg" style="font-size:12px;color:var(--danger);margin-top:6px;font-weight:600"></div></div>
+  <div id="qual-edit-area" style="display:none"><hr style="border:none;border-top:1px solid var(--border);margin:16px 0"><div class="form-group"><label class="form-label" data-ko="구성원 선택" data-zh="选择成员">구성원 선택</label><select class="form-select" id="qual-member-sel" onchange="loadQualMember()"><option value="" data-ko="선택" data-zh="选择">선택</option><option>지윤규</option><option>엄태호</option><option>차상호</option><option>윤미령</option><option>유재용</option><option>Zhao Lijie</option><option>Lyu Cuicui</option><option>박성재</option></select></div><div id="qual-member-list" style="margin:12px 0"></div><button class="btn btn-primary" onclick="addQualItem()" style="width:100%;margin-bottom:10px"><span data-ko="+ 자격 항목 추가" data-zh="+ 添加资格项目">+ 자격 항목 추가</span></button><button class="btn btn-cert" onclick="saveQualData()" style="width:100%"><span data-ko="💾 전체 저장" data-zh="💾 全部保存">💾 전체 저장</span></button></div>
+</div><div class="modal-footer"><button class="btn" onclick="closeModal('qual')"><span data-ko="닫기" data-zh="关闭">닫기</span></button></div></div></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 로딩 순서: utils/api/store → modal → app → form-actions → views -->
+    <script type="module">
+      // utils를 window에 노출 (다른 모듈에서 window._utils로 접근)
+      import { toKRW, fmtM, fmt, pct, uid, sanitize, getBilledActual,
+               isRowVisibleInYear, downloadCSV, getRates } from './js/core/utils.js';
+      window._utils = { toKRW, fmtM, fmt, pct, uid, sanitize,
+                        getBilledActual, isRowVisibleInYear, downloadCSV, getRates };
+    </script>
+    <script type="module" src="./js/core/api.js"></script>
+    <script type="module" src="./js/core/store.js"></script>
+    <script type="module" src="./js/components/modal.js"></script>
+    <script type="module" src="./js/app.js"></script>
+    <script type="module" src="./js/components/form-actions.js"></script>
+    <script type="module" src="./js/views/dashboard.js"></script>
+    <script type="module" src="./js/views/team-board.js"></script>
+    <script type="module" src="./js/views/tasks.js"></script>
+    <script type="module" src="./js/views/kpi.js"></script>
+<script type="module" src="./js/views/revenue.js"></script>
+
+  <!-- 로그인 전용 인라인 스크립트 (ES Module 로딩 전 즉시 실행) -->
+  <script>
+    // 팀별 사용자 목록 (app.js와 동일하게 유지)
+    var LOGIN_TEAM_USERS = {
+      '의료기기팀':     ['유재용','윤미령','차상호','Zhao Lijie','지윤규'],
+      '제품환경인증팀': ['엄태호','Lyu Cuicui','박성재','지윤규'],
+      '제품인증부문이사': ['지윤규'],
+'대표이사':        ['대표이사'],
     };
-    const tb = document.getElementById('topbarTitle');
-    if (tb) tb.textContent = titles[viewName] || viewName;
 
-    // 환율 입력란
-    const rateBox = document.getElementById('rateInputBox');
-    if (rateBox) rateBox.style.display = ['dashboard','revenue'].includes(viewName) ? 'flex' : 'none';
-
-    renderView(viewName);
-}
-
-export function renderView(v) {
-    if (v === 'dashboard'    && window.renderDashboard)    window.renderDashboard();
-    if (v === 'revenue'      && window.renderRevenue)      window.renderRevenue();
-    if (v === 'medContract'  && window.renderMedContract)  window.renderMedContract();
-    if (v === 'medConsult'   && window.renderMedConsult)   window.renderMedConsult();
-    if (v === 'medDone'      && window.renderMedDone)      window.renderMedDone();
-    if (v === 'certContract' && window.renderCertContract) window.renderCertContract();
-    if (v === 'certConsult'  && window.renderCertConsult)  window.renderCertConsult();
-    if (v === 'certDone'     && window.renderCertDone)     window.renderCertDone();
-    if (v === 'kpi'          && window.renderKpi)          window.renderKpi();
-    if (v === 'tasks'        && window.renderTasks)        window.renderTasks();
-}
-
-// ── window 전역 등록 ─────────────────────────────────────────────
-window.doLogin          = doLogin;
-window._doLogin         = doLogin;  // 인라인 loginClick용
-window.doLogout         = doLogout;
-window.nav              = nav;
-window.changeYear       = changeYear;
-window.onExchangeRateChange = onExchangeRateChange;
-window.changePw         = changePw;
-window.exportData       = exportData;
-window.resetUserPw      = resetUserPw;
-window.toggleLang       = toggleLang;
-window.renderView       = renderView;
-window.ADMIN_USERS      = ADMIN_USERS;
-window.SUPER_ADMIN      = SUPER_ADMIN;
-window.REP_USER         = REP_USER;
-window.QUAL_MASTER      = QUAL_MASTER;
-
-// 새로고침 시 자동 로그인
-document.addEventListener('DOMContentLoaded', () => {
-    const savedUser = localStorage.getItem('cirs_user');
-    if (savedUser) {
-        const loginUser = document.getElementById('loginUser');
-        if (loginUser) {
-            loginUser.innerHTML = `<option value="${savedUser}">${savedUser}</option>`;
-            loginUser.value = savedUser;
-        }
-        const loginPw = document.getElementById('loginPw');
-        if (loginPw) loginPw.value = 'auto';
-        // 저장된 비번으로 자동 로그인
-        setTimeout(async () => {
-            initSb();
-            const state = getState();
-            await loadPw(state, savedUser);
-            setCurrentUser(savedUser);
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appShell').style.display = 'flex';
-            const sb = document.getElementById('sidebarUser');
-            if (sb) sb.textContent = savedUser + ' 님 환영합니다';
-            const ySel = document.getElementById('yearSelect');
-            if (ySel && !ySel.options.length) {
-                const y = new Date().getFullYear();
-                for (let i = y + 2; i >= 2020; i--) {
-                    const o = document.createElement('option');
-                    o.value = i; o.textContent = i + '년';
-                    if (i === y) o.selected = true;
-                    ySel.appendChild(o);
-                }
-            }
-            const savedRmb = localStorage.getItem('cirs_rmb_rate');
-            const savedUsd = localStorage.getItem('cirs_usd_rate');
-            if (savedRmb) { const e = document.getElementById('rmbRateInput'); if (e) e.value = savedRmb; }
-            if (savedUsd) { const e = document.getElementById('usdRateInput'); if (e) e.value = savedUsd; }
-            await loadFromSupabase();
-            window._store?.syncQualData?.(QUAL_MASTER);
-            nav('dashboard');
-        }, 500);
+    // 팀 선택 → 이름 목록 즉시 표시 (ES Module 불필요)
+    function updateLoginUsers() {
+      var team       = document.getElementById('loginTeam').value;
+      var userSelect = document.getElementById('loginUser');
+      var userLabel  = document.getElementById('loginUserLabel');
+      if (!team) {
+        userSelect.style.display = 'none';
+        userLabel.style.display  = 'none';
+        return;
+      }
+      var users = LOGIN_TEAM_USERS[team] || [];
+      userSelect.innerHTML = '<option value="">이름 선택</option>' +
+        users.map(function(u){ return '<option value="' + u + '">' + u + '</option>'; }).join('');
+      userSelect.style.display = 'block';
+      userLabel.style.display  = 'block';
     }
-});
-// 로그인 이벤트 바인딩은 index.html 인라인 스크립트에서 처리
-// 연도 셀렉트 초기화는 doLogin() 내부에서 처리
+
+    // 로그인 버튼 — ES Module 로드 후 실제 doLogin 실행
+    function loginClick() {
+      if (typeof window._doLogin === 'function') {
+        window._doLogin();
+      } else {
+        // 모듈 아직 로드 중이면 300ms 후 재시도
+        setTimeout(loginClick, 300);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var loginTeam = document.getElementById('loginTeam');
+      var loginBtn  = document.getElementById('loginBtn');
+      var loginPw   = document.getElementById('loginPw');
+      if (loginTeam) loginTeam.addEventListener('change', updateLoginUsers);
+      if (loginBtn)  loginBtn.addEventListener('click', loginClick);
+      if (loginPw)   loginPw.addEventListener('keydown', function(e){ if(e.key==='Enter') loginClick(); });
+    });
+  </script>
+</body>
+</html>
