@@ -51,6 +51,7 @@ export async function saveMed() {
         quoteDate:    document.getElementById('m-quote-date')?.value || '',
         quoteAmount:  Number(document.getElementById('m-quote-amount')?.value || 0),
         quoteFile:    sanitize(document.getElementById('m-quote-file')?.value || ''),
+        expense:      Number(String(document.getElementById('m-expense')?.value || '0').replace(/,/g,'')),
         q: quarter(startdate) || 1,
     };
 
@@ -122,6 +123,7 @@ export async function saveCert() {
         quoteDate:  document.getElementById('c-quote-date')?.value || '',
         quoteAmount: Number(document.getElementById('c-quote-amount')?.value || 0),
         quoteFile:  sanitize(document.getElementById('c-quote-file')?.value || ''),
+        expense:    Number(String(document.getElementById('c-expense')?.value || '0').replace(/,/g,'')),
         q: quarter(contractdate || consultdate) || 1,
     };
 
