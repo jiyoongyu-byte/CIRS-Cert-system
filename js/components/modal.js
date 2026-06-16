@@ -126,6 +126,9 @@ export function editMed(id) {
         const el = document.getElementById(id);
         if (el) el.value = val || '';
     });
+    // 지출비용 복원
+    const expEl = document.getElementById('m-expense');
+    if (expEl && r.expense) { expEl.type = 'text'; expEl.value = Number(r.expense).toLocaleString(); }
     updateMedStageOptions();
     (r.stages || []).forEach(st => {
         const cb = document.querySelector(`#m-stage-wrap input[value="${st}"]`);
@@ -182,6 +185,9 @@ export function editCert(id) {
         const el = document.getElementById(id);
         if (el) el.value = val || '';
     });
+    // 지출비용 복원
+    const expEl = document.getElementById('c-expense');
+    if (expEl && r.expense) { expEl.type = 'text'; expEl.value = Number(r.expense).toLocaleString(); }
     toggleCertTypeEtc();
     buildBillingGrid('certBillingGrid','certBillingTotal','c', r.billing, r.billingDates, r.billingCurrencies);
     const cf = document.getElementById('certContractFields');
