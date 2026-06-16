@@ -186,8 +186,8 @@ export function nav(viewName, element = null) {
     // topbar 타이틀
     const titles = {
         dashboard:'전체 현황', revenue:'수입계획 및 실적',
-        medContract:'의료기기팀 · 계약업체', medConsult:'의료기기팀 · 상담',
-        certContract:'제품환경인증팀 · 계약업체', certConsult:'제품환경인증팀 · 상담',
+        medContract:'의료기기팀 · 계약업체', medConsult:'의료기기팀 · 상담', medDone:'의료기기팀 · 완료대장',
+        certContract:'제품환경인증팀 · 계약업체', certConsult:'제품환경인증팀 · 상담', certDone:'제품환경인증팀 · 완료대장',
         kpi:'KPI 현황', tasks:'업무지시서',
     };
     const tb = document.getElementById('topbarTitle');
@@ -205,8 +205,10 @@ export function renderView(v) {
     if (v === 'revenue'      && window.renderRevenue)      window.renderRevenue();
     if (v === 'medContract'  && window.renderMedContract)  window.renderMedContract();
     if (v === 'medConsult'   && window.renderMedConsult)   window.renderMedConsult();
+    if (v === 'medDone'      && window.renderMedDone)      window.renderMedDone();
     if (v === 'certContract' && window.renderCertContract) window.renderCertContract();
     if (v === 'certConsult'  && window.renderCertConsult)  window.renderCertConsult();
+    if (v === 'certDone'     && window.renderCertDone)     window.renderCertDone();
     if (v === 'kpi'          && window.renderKpi)          window.renderKpi();
     if (v === 'tasks'        && window.renderTasks)        window.renderTasks();
 }
