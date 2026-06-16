@@ -186,11 +186,9 @@ input[type=date]{color-scheme:dark}
     <div class="nav-label" id="nav-label-med" data-ko="의료기기팀" data-zh="医疗器械组">의료기기팀</div>
     <div class="nav-item" id="nav-item-medC" onclick="nav('medContract',this)"><span class="dot dot-med"></span><span data-ko="계약업체" data-zh="签约企业">계약업체</span></div>
     <div class="nav-item" id="nav-item-medCons" onclick="nav('medConsult',this)"><span class="dot dot-med"></span><span data-ko="상담" data-zh="咨询">상담</span></div>
-    <div class="nav-item" id="nav-item-medDone" onclick="nav('medDone',this)"><span class="dot dot-med"></span><span data-ko="완료대장" data-zh="完成台账">완료대장</span></div>
     <div class="nav-label" id="nav-label-cert" data-ko="제품환경인증팀" data-zh="环境认证组">제품환경인증팀</div>
     <div class="nav-item" id="nav-item-certC" onclick="nav('certContract',this)"><span class="dot dot-cert"></span><span data-ko="계약업체" data-zh="签约企业">계약업체</span></div>
     <div class="nav-item" id="nav-item-certCons" onclick="nav('certConsult',this)"><span class="dot dot-cert"></span><span data-ko="상담" data-zh="咨询">상담</span></div>
-    <div class="nav-item" id="nav-item-certDone" onclick="nav('certDone',this)"><span class="dot dot-cert"></span><span data-ko="완료대장" data-zh="完成台账">완료대장</span></div>
     <div class="nav-label" data-ko="평가" data-zh="绩效评估">평가</div>
     <div class="nav-item" onclick="nav('kpi',this)"><span class="dot dot-all"></span><span data-ko="KPI 현황" data-zh="KPI现状">KPI 현황</span></div>
     <div class="nav-label" id="nav-label-tasks" data-ko="업무" data-zh="工作">업무</div>
@@ -379,42 +377,6 @@ input[type=date]{color-scheme:dark}
   <div id="kpi-sect-profit" style="display:none"><div class="section-head"><span class="section-title" id="kpTitle">개인별 업무 수익 기여도</span></div><div id="kpi-profit-content"></div></div>
 </div>
 
-<div class="view" id="view-medDone">
-  <div class="section-head"><span class="section-title">의료기기팀 · 완료대장</span></div>
-  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medDoneTable">
-    <thead><tr>
-      <th>순번</th>
-      <th>업체명</th>
-      <th>업무유형</th>
-      <th>제품명</th>
-      <th>담당자</th>
-      <th>계약일</th>
-      <th>완료일</th>
-      <th>계약금액</th>
-      <th>관리</th>
-    </tr></thead>
-    <tbody></tbody>
-  </table></div></div></div>
-</div>
-
-<div class="view" id="view-certDone">
-  <div class="section-head"><span class="section-title">제품환경인증팀 · 완료대장</span></div>
-  <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certDoneTable">
-    <thead><tr>
-      <th>순번</th>
-      <th>업체명</th>
-      <th>인증종류</th>
-      <th>인증품목</th>
-      <th>담당자</th>
-      <th>계약일</th>
-      <th>완료일</th>
-      <th>계약금액</th>
-      <th>관리</th>
-    </tr></thead>
-    <tbody></tbody>
-  </table></div></div></div>
-</div>
-
 <div class="view" id="view-tasks">
   <div class="section-head"><span class="section-title" id="tkTitle">업무지시서 및 협조요청</span><div><button class="btn btn-cert" onclick="openTaskModal('order')" id="taskOrderBtn"><span data-ko="📋 업무지시 작성" data-zh="📋 编写工作指示">📋 업무지시 작성</span></button> <button class="btn btn-med" onclick="openTaskModal('collab')"><span data-ko="🤝 협조요청 작성" data-zh="🤝 编写协助请求">🤝 협조요청 작성</span></button></div></div>
   <div style="display:flex;gap:10px;margin-bottom:20px;"><select class="form-select" id="taskSortSel" onchange="renderTasks()"><option value="date" data-ko="최신순" data-zh="最新排序">최신순</option><option value="name" data-ko="이름순" data-zh="姓名排序">이름순</option></select><select class="form-select" id="taskTypeFilter" onchange="renderTasks()"><option value="" data-ko="전체 유형" data-zh="全部类型">전체 유형</option><option value="order" data-ko="📋 업무지시" data-zh="📋 工作指示">📋 업무지시</option><option value="collab" data-ko="🤝 협조요청" data-zh="🤝 协助请求">🤝 협조요청</option></select><select class="form-select" id="taskPrioFilter" onchange="renderTasks()"><option value="" data-ko="전체 우선순위" data-zh="全部优先级">전체 우선순위</option><option value="긴급" data-ko="🔴 긴급" data-zh="🔴 紧急">🔴 긴급</option><option value="일반" data-ko="🟡 일반" data-zh="🟡 普通">🟡 일반</option><option value="낮음" data-ko="🟢 낮음" data-zh="🟢 较低">🟢 낮음</option></select><select class="form-select" id="taskStatusFilter" onchange="renderTasks()"><option value="" data-ko="전체 상태" data-zh="全部状态">전체 상태</option><option value="진행중" data-ko="진행중" data-zh="进行中">진행중</option><option value="완료" data-ko="완료" data-zh="已完成">완료</option></select></div>
@@ -448,6 +410,8 @@ input[type=date]{color-scheme:dark}
   <div class="form-group"><label class="form-label" data-ko="업체명 *" data-zh="企业名称 *">업체명 *</label><input class="form-input" id="c-client"></div>
   <div class="form-group"><label class="form-label" data-ko="인증 종류" data-zh="认证种类">인증 종류</label><select class="form-select" id="c-certtype" onchange="toggleCertTypeEtc()"><option value="" data-ko="선택" data-zh="选择">선택</option><option>KS</option><option>JIS</option><option>KC</option><option value="환경마크" data-ko="환경마크" data-zh="环保标志">환경마크</option><option value="탄소업무" data-ko="탄소업무" data-zh="碳业务">탄소업무</option><option value="기타" data-ko="기타" data-zh="其他">기타</option></select></div>
   <div class="form-group" id="c-certtype-etc-wrap" style="display:none"><label class="form-label" data-ko="기타 인증 직접 입력" data-zh="直接输入其他认证">기타 인증 직접 입력</label><input class="form-input" id="c-certtype-etc"></div>
+  <div class="form-group"><label class="form-label" data-ko="표준번호" data-zh="标准编号">표준번호</label><input class="form-input" id="c-std-no" placeholder="예) KS M 3805"></div>
+  <div class="form-group"><label class="form-label" data-ko="품목명" data-zh="品目名称">품목명</label><input class="form-input" id="c-product" placeholder="예) 폴리염화비닐 지수판"></div>
   <div class="form-group"><label class="form-label" data-ko="담당자" data-zh="负责人">담당자</label><select class="form-select" id="c-manager"><option value="" data-ko="선택" data-zh="选择">선택</option><option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option><option>지윤규</option></select></div>
   <div id="certContractFields" style="display:contents">
     <div class="form-group full"><hr class="section-divider"><div class="section-sub" data-ko="계약 및 이익금" data-zh="合同及利润">계약 및 이익금</div><label class="form-label" data-ko="계약 금액 *" data-zh="合同金额 *">계약 금액 *</label><div style="display:flex;gap:8px"><select id="c-amount-currency" class="form-select" style="width:100px;" onchange="calcBilling('c','certBillingTotal')"><option>KRW</option><option>RMB</option><option>USD</option></select><input class="form-input text-mono" type="number" id="c-amount" oninput="calcBilling('c','certBillingTotal')"></div></div>
