@@ -251,7 +251,10 @@ input[type=date]{color-scheme:dark}
         <div style="display:flex; flex-direction:column; align-items:center;">
           <div style="background:var(--surface);border:2px solid var(--med);color:var(--text1);font-weight:700;font-size:13px;padding:10px 24px;border-radius:10px;text-align:center;">
             <div style="font-size:10px;color:var(--med);font-weight:800;margin-bottom:2px;">제품인증부문</div>
-            이 사
+            <div style="display:flex;align-items:center;gap:10px;justify-content:center;">
+              이 사 (지윤규)
+              <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('지윤규')">내 성과</button>
+            </div>
           </div>
           <div style="width:2px;height:32px;background:var(--border2);"></div>
         </div>
@@ -270,15 +273,27 @@ input[type=date]{color-scheme:dark}
             <div style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;max-width:200px;">
               <div style="background:var(--card);border:1px solid var(--cert);border-left:4px solid var(--cert);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
                 <div style="font-size:10px;color:var(--cert);font-weight:800;">팀 장</div>
-                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">엄태호</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
+                  <div style="font-size:14px;font-weight:700;color:var(--text1);">엄태호</div>
+                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('엄태호')"
+                    id="orgBtn_엄태호">성과 뷰</button>
+                </div>
               </div>
               <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--cert);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
                 <div style="font-size:10px;color:var(--cert-mid);font-weight:800;">책 임</div>
-                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">Lyu Cuicui</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
+                  <div style="font-size:14px;font-weight:700;color:var(--text1);">Lyu Cuicui</div>
+                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('Lyu Cuicui')"
+                    id="orgBtn_Lyu_Cuicui">성과 뷰</button>
+                </div>
               </div>
               <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--cert);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
                 <div style="font-size:10px;color:var(--cert-mid);font-weight:800;">선 임</div>
-                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">박성재</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
+                  <div style="font-size:14px;font-weight:700;color:var(--text1);">박성재</div>
+                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('박성재')"
+                    id="orgBtn_박성재">성과 뷰</button>
+                </div>
               </div>
             </div>
           </div>
@@ -292,19 +307,35 @@ input[type=date]{color-scheme:dark}
             <div style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;max-width:200px;">
               <div style="background:var(--card);border:1px solid var(--med);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
                 <div style="font-size:10px;color:var(--med);font-weight:800;">수 석</div>
-                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">유재용</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
+                  <div style="font-size:14px;font-weight:700;color:var(--text1);">유재용</div>
+                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('유재용')"
+                    id="orgBtn_유재용">성과 뷰</button>
+                </div>
               </div>
               <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
                 <div style="font-size:10px;color:var(--med-mid);font-weight:800;">책 임</div>
-                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">윤미령</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
+                  <div style="font-size:14px;font-weight:700;color:var(--text1);">윤미령</div>
+                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('윤미령')"
+                    id="orgBtn_윤미령">성과 뷰</button>
+                </div>
               </div>
               <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
                 <div style="font-size:10px;color:var(--med-mid);font-weight:800;">선 임</div>
-                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">차상호</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
+                  <div style="font-size:14px;font-weight:700;color:var(--text1);">차상호</div>
+                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('차상호')"
+                    id="orgBtn_차상호">성과 뷰</button>
+                </div>
               </div>
               <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
                 <div style="font-size:10px;color:var(--med-mid);font-weight:800;">선 임</div>
-                <div style="font-size:14px;font-weight:700;color:var(--text1);margin-top:2px;">Zhao Lijie</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
+                  <div style="font-size:14px;font-weight:700;color:var(--text1);">Zhao Lijie</div>
+                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('Zhao Lijie')"
+                    id="orgBtn_Zhao_Lijie">성과 뷰</button>
+                </div>
               </div>
             </div>
           </div>
@@ -621,6 +652,108 @@ document.addEventListener('click', function(e) {
         document.getElementById('searchResults')?.classList.remove('active');
     }
 });
+
+// ── 성과 뷰 (조직도) ─────────────────────────────────────────────
+function openPersonKpi(name) {
+    var state = window._store?.getState?.() || {};
+    var cur   = window._store?.getCurrentUser?.() || '';
+    var y     = window._store?.getCurrentYear?.() || new Date().getFullYear();
+    var isAdmin = (cur === '지윤규');
+    var isSelf  = (cur === name);
+
+    // 1. 계약 데이터
+    var allRows = [...(state.med||[]),...(state.cert||[])].filter(function(r){
+        return r.recordType === 'contract' && r.manager === name;
+    });
+    var yearRows = allRows.filter(function(r){ return r.year === y; });
+
+    var totalAmt = yearRows.reduce(function(s,r){ return s + Number(r.amount||0); }, 0);
+    var totalPaid = yearRows.reduce(function(s,r){
+        return s + (r.billing||[]).reduce(function(a,b){ return a+Number(b||0); }, 0);
+    }, 0);
+    var expense = yearRows.reduce(function(s,r){ return s + Number(r.expense||0); }, 0);
+    var profit  = totalPaid - expense;
+    var margin  = totalAmt > 0 ? Math.round(profit/totalAmt*100) : 0;
+
+    // 2. 상담 데이터
+    var consultRows = [...(state.med||[]),...(state.cert||[])].filter(function(r){
+        return r.recordType === 'consult' && r.manager === name && r.year === y;
+    });
+    var activeConsults = consultRows.filter(function(r){
+        return r.consultStatus !== '계약불가' && r.contracted !== '계약불가';
+    });
+
+    // 3. 교육 이력
+    var eduRecords = (state.eduRecords||[]).filter(function(r){
+        return r.member === name && (r.dateStart||'').startsWith(String(y));
+    });
+
+    // 4. 모달 제목
+    var title = (isSelf ? '내 성과 리포트' : name + ' 성과 리포트') + ' (' + y + '년)';
+    var el = document.getElementById('pkTitle');
+    if (el) el.textContent = title;
+
+    // 5. 버튼 - 본인이면 '내 성과' 텍스트로
+    var btn = document.getElementById('orgBtn_' + name.replace(/ /g,'_'));
+    if (btn) btn.textContent = isSelf ? '내 성과' : '성과 뷰';
+
+    // 6. 모달 내용 구성
+    var amtStr  = isAdmin||isSelf ? '₩' + Number(totalAmt).toLocaleString()  : '***';
+    var paidStr = isAdmin||isSelf ? '₩' + Math.round(totalPaid).toLocaleString() : '***';
+    var profitStr = isAdmin ? '₩' + Math.round(profit).toLocaleString() : null;
+    var marginStr = isAdmin ? margin + '%' : null;
+
+    var html = '<div style="display:flex;flex-direction:column;gap:16px;">';
+
+    // 계약 통계
+    html += '<div style="background:var(--surface);border-radius:10px;padding:16px;">';
+    html += '<div style="font-weight:800;font-size:13px;color:var(--med);margin-bottom:12px;">📊 계약 현황 (' + y + '년)</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+    html += '<div><div style="font-size:11px;color:var(--text3)">총 계약금액</div><div style="font-size:18px;font-weight:900;">' + amtStr + '</div></div>';
+    html += '<div><div style="font-size:11px;color:var(--text3)">수입 실적</div><div style="font-size:18px;font-weight:900;color:var(--success);">' + paidStr + '</div></div>';
+    html += '<div><div style="font-size:11px;color:var(--text3)">계약 건수</div><div style="font-size:18px;font-weight:900;">' + yearRows.length + '건</div></div>';
+    html += '<div><div style="font-size:11px;color:var(--text3)">신규 상담건수</div><div style="font-size:18px;font-weight:900;">' + activeConsults.length + '건</div></div>';
+    if (isAdmin && profitStr) {
+        html += '<div><div style="font-size:11px;color:var(--text3)">순이익금</div><div style="font-size:18px;font-weight:900;color:var(--success);">' + profitStr + '</div></div>';
+        html += '<div><div style="font-size:11px;color:var(--text3)">평균 마진율</div><div style="font-size:18px;font-weight:900;color:' + (margin>=30?'var(--success)':margin>=15?'var(--warn)':'var(--danger)') + ';">' + marginStr + '</div></div>';
+    }
+    html += '</div></div>';
+
+    // 계약 목록
+    if (yearRows.length) {
+        html += '<div style="background:var(--surface);border-radius:10px;padding:16px;">';
+        html += '<div style="font-weight:800;font-size:13px;color:var(--med);margin-bottom:10px;">📋 계약 목록</div>';
+        html += yearRows.map(function(r) {
+            var paid = (r.billing||[]).reduce(function(a,b){return a+Number(b||0);},0);
+            return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;">' +
+                '<span>' + (r.client||'') + ' <span style="color:var(--text3)">(' + (r.certtype||r.biztype||'') + ')</span></span>' +
+                '<span style="color:var(--success)">' + (isAdmin||isSelf?'₩'+Math.round(paid).toLocaleString():'***') + '</span>' +
+            '</div>';
+        }).join('');
+        html += '</div>';
+    }
+
+    // 교육 이력
+    html += '<div style="background:var(--surface);border-radius:10px;padding:16px;">';
+    html += '<div style="font-weight:800;font-size:13px;color:var(--cert);margin-bottom:10px;">🎓 올해 교육 이력 (' + y + '년)</div>';
+    if (!eduRecords.length) {
+        html += '<div style="font-size:12px;color:var(--text3)">등록된 교육 이력이 없습니다.</div>';
+    } else {
+        html += eduRecords.map(function(r) {
+            return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;">' +
+                '<span>' + (r.content||'') + '</span>' +
+                '<span style="color:' + (r.cert==='있음'?'var(--success)':'var(--text3)') + '">' + (r.cert==='있음'?'✅ 수료':'대기') + '</span>' +
+            '</div>';
+        }).join('');
+    }
+    html += '</div>';
+
+    html += '</div>';
+
+    var body = document.getElementById('pkBody');
+    if (body) body.innerHTML = html;
+    document.getElementById('modal-person-kpi')?.classList.add('open');
+}
 
 // ── 정렬 기능 ─────────────────────────────────────────────────────
 var _sortState = {};
