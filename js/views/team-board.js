@@ -219,7 +219,6 @@ function isCompleted(r) {
 }
 
 function getCompleteDate(r) {
-    // 마지막 수금일을 완료일로 사용
     const dates = (r.billingDates || []).filter(d => d);
     if (!dates.length) return '-';
     return dates.sort().reverse()[0];
@@ -266,7 +265,7 @@ export function renderCertDone() {
         <td>${i+1}</td>
         <td class="client-name">${sanitize(r.client||'')}</td>
         <td>${sanitize(r.certtype||'')}</td>
-        <td>${sanitize(r.certtype||'')}</td>
+        <td>${sanitize(r.product||'')}</td>
         <td>${sanitize(r.manager||'')}</td>
         <td>${sanitize(r.contractdate||'')}</td>
         <td>${sanitize(getCompleteDate(r))}</td>
