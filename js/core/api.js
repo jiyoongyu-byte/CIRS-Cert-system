@@ -56,6 +56,7 @@ export async function saveCertRecord(record) {
             id: record.id, year: record.year,
             record_type: record.recordType, client: record.client,
             cert_type: record.certtype || '', manager: record.manager || '',
+            std_no: record.stdNo || '', product: record.product || '',
             contract_date: record.contractdate || null, date: record.date || null,
             stage: record.stage || '', issue_date: record.issuedate || null,
             contracted: record.contracted || '미계약',
@@ -173,6 +174,7 @@ export async function loadAllData(state) {
         state.cert = (cR.data || []).map(r => ({
             id: r.id, year: r.year, recordType: r.record_type || 'contract',
             client: r.client || '', certtype: r.cert_type || '',
+            stdNo: r.std_no || '', product: r.product || '',
             manager: r.manager || '', contractdate: r.contract_date || '',
             date: r.date || '', stage: r.stage || '',
             issuedate: r.issue_date || '', contracted: r.contracted || '미계약',
