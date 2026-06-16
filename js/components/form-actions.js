@@ -99,6 +99,8 @@ export async function saveCert() {
         recordType: isContract ? 'contract' : 'consult',
         client:     sanitize(clientEl.value),
         certtype, certtypeRaw,
+        stdNo:      document.getElementById('c-std-no')?.value || '',
+        product:    document.getElementById('c-product')?.value || '',
         manager:    document.getElementById('c-manager')?.value || '',
         contracted: isContract ? '계약완료' : (document.getElementById('c-contracted')?.value || '미계약'),
         amount:     isContract ? Number(document.getElementById('c-amount')?.value || 0) : 0,
