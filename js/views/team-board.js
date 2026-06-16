@@ -29,7 +29,7 @@ export function renderMedContract() {
     const year = getCurrentYear();
     const data = (state.med || []).filter(x => x.year === year && x.recordType === 'contract' && !isCompleted(x));
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
         return;
     }
     tbody.innerHTML = data.map((r, i) => {
@@ -195,7 +195,7 @@ export function renderCertConsult() {
             <td>${sanitize(r.note||'')}</td>
             <td>
                 <button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>
-                <button class="btn btn-sm btn-success" onclick="convertToContract('cert','${r.id}')">${tt('계약전환','转为합同')}</button>
+                <button class="btn btn-sm btn-success" onclick="convertToContract('cert','${r.id}')">${tt('계약전환','转为合同')}</button>
             </td>
         </tr>`).join('');
     }
