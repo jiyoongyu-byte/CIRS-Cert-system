@@ -178,8 +178,10 @@ export function editCert(id) {
         'c-amount': r.amount || '', 'c-amount-currency': r.amountCurrency || 'KRW',
         'c-contractdate': r.contractdate, 'c-stage': r.stage, 'c-issuedate': r.issuedate,
         'c-contracted': r.contracted, 'c-date': r.date, 'c-fail-reason': r.failReason,
-        'c-note': r.note, 'c-etc-memo': r.etcMemo, 'c-quote-amount': r.quoteAmount || '',
+        'c-note': r.note, 'c-quote-amount': r.quoteAmount || '',
         'c-renewcycle': r.renewcycle, 'c-expiredate': r.expiredate,
+        'c-certtype-etc': r.etcMemo || r.certtypeRaw || '', // 품목명
+        'c-consult-item': r.consultItem || '', // 상담 품목
     };
     Object.entries(fields).forEach(([id, val]) => {
         const el = document.getElementById(id);
@@ -187,9 +189,11 @@ export function editCert(id) {
     });
     toggleCertTypeEtc();
     buildBillingGrid('certBillingGrid','certBillingTotal','c', r.billing, r.billingDates, r.billingCurrencies);
-    const cf = document.getElementById('certContractFields');
+    // 계약 전용 필드 표시/숨김
+    document.querySelectorAll('.contract-only-cert').forEach(el => {
+        el.style.display = r.recordType === 'contract' ? '' : 'none';
+    });
     const cs = document.getElementById('certConsultSection');
-    if (cf) cf.style.display = r.recordType === 'contract' ? 'contents' : 'none';
     if (cs) cs.style.display = r.recordType === 'contract' ? 'none' : 'contents';
 }
 
