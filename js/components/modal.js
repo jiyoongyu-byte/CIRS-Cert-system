@@ -77,10 +77,13 @@ export function openMedModal(type) {
     const sw = document.getElementById('m-stage-wrap');
     if (sw) sw.innerHTML = '';
     buildBillingGrid('medBillingGrid','medBillingTotal','m',[],[],[]);
-    const mf = document.getElementById('medContractFields');
-    const ms = document.getElementById('medConsultSection');
-    if (mf) mf.style.display = isContract ? 'contents' : 'none';
-    if (ms) ms.style.display = isContract ? 'none' : 'contents';
+    // 계약 전용 필드 표시/숨김
+    document.querySelectorAll('.contract-only-med').forEach(el => {
+        el.style.display = isContract ? '' : 'none';
+    });
+    // 상담 전용 섹션 표시/숨김
+    const ms = document.getElementById('medQuoteSection');
+    if (ms) ms.style.display = isContract ? 'none' : '';
 }
 
 export function updateMedStageOptions() {
@@ -132,10 +135,13 @@ export function editMed(id) {
         if (cb) { cb.checked = true; cb.parentElement.style.background = 'var(--med-light)'; cb.parentElement.style.color = 'var(--med)'; }
     });
     buildBillingGrid('medBillingGrid','medBillingTotal','m', r.billing, r.billingDates, r.billingCurrencies);
-    const mf = document.getElementById('medContractFields');
-    const ms = document.getElementById('medConsultSection');
-    if (mf) mf.style.display = r.recordType === 'contract' ? 'contents' : 'none';
-    if (ms) ms.style.display = r.recordType === 'contract' ? 'none' : 'contents';
+    // 계약 전용 필드 표시/숨김
+    document.querySelectorAll('.contract-only-med').forEach(el => {
+        el.style.display = r.recordType === 'contract' ? '' : 'none';
+    });
+    // 상담 전용 섹션 표시/숨김
+    const ms = document.getElementById('medQuoteSection');
+    if (ms) ms.style.display = r.recordType === 'contract' ? 'none' : '';
 }
 
 // ── 인증팀 모달 ──────────────────────────────────────────────────
