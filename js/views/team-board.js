@@ -169,6 +169,8 @@ export function renderCertConsult() {
     if (!tbody) return;
     const state = getState();
     const year = getCurrentYear();
+    const currentUser = getCurrentUser();
+    const SUPER_ADMIN = window.SUPER_ADMIN || '지윤규';
     const data = (state.cert || []).filter(x => x.year === year && x.recordType === 'consult' && x.contracted !== '계약보류');
     const archive = (state.cert || []).filter(x => x.year === year && x.recordType === 'consult' && x.contracted === '계약보류');
 
@@ -179,14 +181,15 @@ export function renderCertConsult() {
             <td>${i+1}</td>
             <td class="client-name">${sanitize(r.client)}</td>
             <td>${sanitize(r.certtype||'')}</td>
+            <td>${sanitize(r.consultItem||'')}</td>
             <td>${sanitize(r.manager||'')}</td>
             <td>${sanitize(r.date||'')}</td>
             <td><span class="badge badge-cert">${sanitize(r.contracted||'')}</span></td>
-            <td>${sanitize(r.quoteDate||'')}</td>
             <td>${sanitize(r.note||'')}</td>
             <td>
                 <button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>
                 <button class="btn btn-sm btn-success" onclick="convertToContract('cert','${r.id}')">${tt('계약전환','转为합同')}</button>
+                ${currentUser === SUPER_ADMIN ? `<button class="btn btn-sm btn-danger" onclick="deleteCertConsult('${r.id}')">${tt('삭제','删除')}</button>` : ''}
             </td>
         </tr>`).join('');
     }
@@ -199,13 +202,14 @@ export function renderCertConsult() {
                 <td>${i+1}</td>
                 <td class="client-name">${sanitize(r.client)}</td>
                 <td>${sanitize(r.certtype||'')}</td>
+                <td>${sanitize(r.consultItem||'')}</td>
                 <td>${sanitize(r.manager||'')}</td>
                 <td>${sanitize(r.date||'')}</td>
                 <td><span class="badge badge-cert">${sanitize(r.contracted||'')}</span></td>
-                <td>${sanitize(r.quoteDate||'')}</td>
                 <td>${sanitize(r.failReason||'')}</td>
                 <td>
                     <button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>
+                    ${currentUser === SUPER_ADMIN ? `<button class="btn btn-sm btn-danger" onclick="deleteCertConsult('${r.id}')">${tt('삭제','删除')}</button>` : ''}
                 </td>
             </tr>`).join('');
     }
@@ -289,3 +293,19 @@ export function renderCertDone() {
 
 window.renderMedDone  = renderMedDone;
 window.renderCertDone = renderCertDone;
+
+// ── 인증팀 상담 삭제 (지윤규만 가능) ────────────────────────────
+export async function deleteCertConsult(id) {
+    const SUPER_ADMIN = window.SUPER_ADMIN || '지윤규';
+    const currentUser = getCurrentUser();
+    if (currentUser !== SUPER_ADMIN) return;
+    if (!confirm(`[관리자 삭제]\n이 상담 데이터를 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.`)) return;
+    const state = getState();
+    state.cert = state.cert.filter(x => x.id !== id);
+    const { saveState } = await import('../core/store.js');
+    const { deleteCertRecord } = await import('../core/api.js');
+    await deleteCertRecord(id);
+    await saveState();
+    renderCertConsult();
+}
+window.deleteCertConsult = deleteCertConsult;
