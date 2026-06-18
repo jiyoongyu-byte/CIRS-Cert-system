@@ -29,7 +29,7 @@ export async function saveMed() {
         product:      sanitize(document.getElementById('m-product')?.value || ''),
         grade:        document.getElementById('m-grade')?.value === '기타'
                         ? (sanitize(document.getElementById('m-grade-etc')?.value || '') || '기타')
-                        : (document.getElementById('m-grade')?.value || ''),document.getElementById('m-grade')?.value || '',
+                        : (document.getElementById('m-grade')?.value || ''),
         biztype:      document.getElementById('m-biztype')?.value || '',
         stages:       Array.from(document.querySelectorAll('#m-stage-wrap input:checked')).map(x => x.value),
         stage:        Array.from(document.querySelectorAll('#m-stage-wrap input:checked')).map(x => x.value).join(', '),
@@ -53,7 +53,6 @@ export async function saveMed() {
         quoteDate:    document.getElementById('m-quote-date')?.value || '',
         quoteAmount:  Number(document.getElementById('m-quote-amount')?.value || 0),
         quoteFile:    sanitize(document.getElementById('m-quote-file')?.value || ''),
-        expense:      Number(String(document.getElementById('m-expense')?.value || '0').replace(/,/g,'')),
         q: quarter(startdate) || 1,
     };
 
@@ -90,7 +89,7 @@ export async function saveCert() {
     const y      = editId
         ? (state.cert.find(x => x.id === editId)?.year || getCurrentYear())
         : getCurrentYear();
-const certtype = document.getElementById('c-certtype')?.value || '';
+    const certtype = document.getElementById('c-certtype')?.value || '';
     // 품목명은 항상 저장 (기타 인증 시 인증명+품목명 함께 입력)
     const certtypeRaw = document.getElementById('c-certtype-etc')?.value || certtype;
     // etcMemo도 품목명으로 통일 저장
@@ -103,8 +102,6 @@ const certtype = document.getElementById('c-certtype')?.value || '';
         recordType: isContract ? 'contract' : 'consult',
         client:     sanitize(clientEl.value),
         certtype, certtypeRaw,
-        stdNo:      document.getElementById('c-std-no')?.value || '',
-        product:    document.getElementById('c-product')?.value || '',
         manager:    document.getElementById('c-manager')?.value || '',
         contracted: isContract ? '계약완료' : (document.getElementById('c-contracted')?.value || '미계약'),
         amount:     isContract ? Number(document.getElementById('c-amount')?.value || 0) : 0,
@@ -126,7 +123,6 @@ const certtype = document.getElementById('c-certtype')?.value || '';
         quoteDate:  document.getElementById('c-quote-date')?.value || '',
         quoteAmount: Number(document.getElementById('c-quote-amount')?.value || 0),
         quoteFile:  sanitize(document.getElementById('c-quote-file')?.value || ''),
-        expense:    Number(String(document.getElementById('c-expense')?.value || '0').replace(/,/g,'')),
         q: quarter(contractdate || consultdate) || 1,
     };
 
