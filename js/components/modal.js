@@ -160,9 +160,8 @@ export function openCertModal(type) {
 }
 
 export function toggleCertTypeEtc() {
-    const v = document.getElementById('c-certtype')?.value;
-    const w = document.getElementById('c-certtype-etc-wrap');
-    if (w) w.style.display = v === '기타' ? '' : 'none';
+    // 품목명 필드는 항상 표시 (기타 인증 시 인증명+품목명 함께 입력)
+    // c-certtype-etc-wrap 제거됨 — 하위 호환을 위해 함수는 유지
 }
 
 export function editCert(id) {
