@@ -117,6 +117,7 @@ export async function saveCert() {
         failReason: document.getElementById('c-fail-reason')?.value || '',
         note:       sanitize(document.getElementById('c-note')?.value || ''),
         etcMemo:    itemName, // 품목명 (c-certtype-etc 필드)
+        consultItem: sanitize(document.getElementById('c-consult-item')?.value || ''), // 상담 품목
         contactName:  sanitize(document.getElementById('c-contact-name')?.value || ''),
         contactPhone: sanitize(document.getElementById('c-contact-phone')?.value || ''),
         contactEmail: sanitize(document.getElementById('c-contact-email')?.value || ''),
