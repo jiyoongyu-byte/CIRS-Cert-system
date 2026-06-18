@@ -27,7 +27,9 @@ export async function saveMed() {
         recordType: isContract ? 'contract' : 'consult',
         client:       sanitize(document.getElementById('m-client')?.value || ''),
         product:      sanitize(document.getElementById('m-product')?.value || ''),
-        grade:        document.getElementById('m-grade')?.value || '',
+        grade:        document.getElementById('m-grade')?.value === '기타'
+                        ? (sanitize(document.getElementById('m-grade-etc')?.value || '') || '기타')
+                        : (document.getElementById('m-grade')?.value || ''),document.getElementById('m-grade')?.value || '',
         biztype:      document.getElementById('m-biztype')?.value || '',
         stages:       Array.from(document.querySelectorAll('#m-stage-wrap input:checked')).map(x => x.value),
         stage:        Array.from(document.querySelectorAll('#m-stage-wrap input:checked')).map(x => x.value).join(', '),
@@ -88,10 +90,11 @@ export async function saveCert() {
     const y      = editId
         ? (state.cert.find(x => x.id === editId)?.year || getCurrentYear())
         : getCurrentYear();
-    const certtype = document.getElementById('c-certtype')?.value || '';
-    const certtypeRaw = certtype === '기타'
-        ? document.getElementById('c-certtype-etc')?.value || certtype
-        : certtype;
+const certtype = document.getElementById('c-certtype')?.value || '';
+    // 품목명은 항상 저장 (기타 인증 시 인증명+품목명 함께 입력)
+    const certtypeRaw = document.getElementById('c-certtype-etc')?.value || certtype;
+    // etcMemo도 품목명으로 통일 저장
+    const itemName = sanitize(document.getElementById('c-certtype-etc')?.value || '');
     const contractdate = document.getElementById('c-contractdate')?.value || '';
     const consultdate  = document.getElementById('c-date')?.value || '';
 
@@ -116,7 +119,7 @@ export async function saveCert() {
         expiredate: document.getElementById('c-expiredate')?.value || '',
         failReason: document.getElementById('c-fail-reason')?.value || '',
         note:       sanitize(document.getElementById('c-note')?.value || ''),
-        etcMemo:    sanitize(document.getElementById('c-etc-memo')?.value || ''),
+        etcMemo:    itemName, // 품목명 (c-certtype-etc 필드)
         contactName:  sanitize(document.getElementById('c-contact-name')?.value || ''),
         contactPhone: sanitize(document.getElementById('c-contact-phone')?.value || ''),
         contactEmail: sanitize(document.getElementById('c-contact-email')?.value || ''),
