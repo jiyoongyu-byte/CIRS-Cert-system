@@ -14,7 +14,8 @@ export function renderMedContract() {
     if (!tbody) return;
     const state = getState();
     const year = getCurrentYear();
-    const data = (state.med || []).filter(x => x.year === year && x.recordType === 'contract' && !isCompleted(x));
+    // 미완료 계약은 계약 연도 상관없이 모두 표시
+    const data = (state.med || []).filter(x => x.recordType === 'contract' && !isCompleted(x));
     if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
         return;
@@ -102,7 +103,9 @@ export function renderCertContract() {
     if (!tbody) return;
     const state = getState();
     const year = getCurrentYear();
-    const data = (state.cert || []).filter(x => x.year === year && x.recordType === 'contract' && !isCompleted(x));
+    // 미완료 계약은 계약 연도 상관없이 모두 표시
+    const data = (state.cert || []).filter(x => x.recordType === 'contract' && !isCompleted(x));
+    // 완료된 계약은 연도 필터 적용
     const done = (state.cert || []).filter(x => x.year === year && x.recordType === 'contract' && isCompleted(x));
 
     if (!data.length) {
@@ -237,7 +240,7 @@ export function renderMedDone() {
     const tbody = getBody('medDoneTable');
     if (!tbody) return;
     const state = getState();
-    const data  = (state.med || []).filter(r => r.recordType === 'contract' && isCompleted(r));
+    const data  = (state.med || []).filter(r => r.recordType === 'contract' && isCompleted(r) && r.year === year);
 
     if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text3)">완료된 계약이 없습니다.</td></tr>`;
@@ -263,7 +266,7 @@ export function renderCertDone() {
     const tbody = getBody('certDoneTable');
     if (!tbody) return;
     const state = getState();
-    const data  = (state.cert || []).filter(r => r.recordType === 'contract' && isCompleted(r));
+    const data  = (state.cert || []).filter(r => r.recordType === 'contract' && isCompleted(r) && r.year === year);
 
     if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text3)">완료된 계약이 없습니다.</td></tr>`;
