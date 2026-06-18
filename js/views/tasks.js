@@ -27,9 +27,8 @@ export function renderTasks() {
 
     const isRep    = currentUser === REP_USER;
     const userTeam = getUserTeam(currentUser);
-
     let tasks = (state.tasks || []).filter(t => {
-        // 대표이사: 본인이 작성한 업무지시만 확인
+        // 대표이사: 본인이 작성한(from) 업무지시만 확인
         if (isRep) return t.from === currentUser;
         if (currentUser && userTeam !== '관리자' && userTeam !== '열람전용') {
             if (t.team !== '공통' && t.team !== userTeam) return false;
@@ -120,7 +119,7 @@ export function renderTasks() {
 
 function getUserTeam(user) {
     if (user === '지윤규') return '관리자';
-    if (user === (window.REP_USER || '대표이사')) return '대표이사';
+    if (user === (window.REP_USER || '대표이사')) return '대표이사'; // 본인 작성만
     if (['유재용','윤미령','차상호','Zhao Lijie'].includes(user)) return '의료기기팀';
     if (['엄태호','Lyu Cuicui','박성재'].includes(user)) return '제품환경인증팀';
     return '관리자';
@@ -167,6 +166,7 @@ export function openTaskEdit(id) {
 
 export function openTaskComplete(id) {
     setCompletingTaskId(id);
+    document.getElementById('task-complete-date')?.setAttribute('value', new Date().toISOString().slice(0,10));
     if (document.getElementById('task-complete-date')) document.getElementById('task-complete-date').value = new Date().toISOString().slice(0,10);
     if (document.getElementById('task-complete-note')) document.getElementById('task-complete-note').value = '';
     document.getElementById('modal-task-complete')?.classList.add('open');
@@ -205,9 +205,9 @@ export async function confirmTask(id) {
 }
 
 // ── window 전역 등록 ─────────────────────────────────────────────
-window.renderTasks         = renderTasks;
+window.renderTasks       = renderTasks;
 window.updateTaskToOptions = updateTaskToOptions;
-window.openTaskEdit        = openTaskEdit;
-window.openTaskComplete    = openTaskComplete;
-window.deleteTask          = deleteTask;
-window.confirmTask         = confirmTask;
+window.openTaskEdit      = openTaskEdit;
+window.openTaskComplete  = openTaskComplete;
+window.deleteTask        = deleteTask;
+window.confirmTask       = confirmTask;
