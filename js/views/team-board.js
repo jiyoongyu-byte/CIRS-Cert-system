@@ -9,9 +9,16 @@ const getBody = id => {
 };
 
 // ── 완료 자동판정 헬퍼 ────────────────────────────────────────────
+// ── 완료 자동판정 헬퍼 ────────────────────────────────────────────
 function isCompleted(r) {
-    const amt  = Number(r.amount || 0);
-    const paid = (r.billing || []).reduce((a, b) => a + Number(b || 0), 0);
+    const amt   = Number(r.amount || 0);
+    const today = new Date().toISOString().slice(0, 10);
+    // 오늘 이전(당일 포함) 날짜의 수입만 합산
+    const paid  = (r.billing || []).reduce((a, b, i) => {
+        const d = (r.billingDates || [])[i];
+        if (!d || d > today) return a; // 날짜 없거나 미래면 제외
+        return a + Number(b || 0);
+    }, 0);
     return amt > 0 && paid >= amt;
 }
 
