@@ -117,7 +117,69 @@ export function renderMedConsult() {
 }
 
 // 제품환경인증팀 계약
+// 제품환경인증팀 계약
 export function renderCertContract() {
+    const tbody = getBody('certContractTable');
+    if (!tbody) return;
+    const state = getState();
+    const year = getCurrentYear();
+    const data = (state.cert || []).filter(x => x.year === year && x.recordType === 'contract' && !isCompleted(x));
+    const done = (state.cert || []).filter(x => x.year === year && x.recordType === 'contract' && isCompleted(x));
+
+    if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
+    } else {
+        tbody.innerHTML = data.map((r, i) => {
+            const amt  = fmt(r.amount || 0);
+            const paid = fmt(r.billing ? r.billing.reduce((a,b)=>a+Number(b||0),0) : 0);
+            return `<tr>
+                <td>${i+1}</td>
+                <td class="client-name">${sanitize(r.client)}</td>
+                <td>${sanitize(r.certtype||'')}</td>
+                <td>${sanitize(r.etcMemo||r.certtypeRaw||'')}</td>
+                <td>${sanitize(r.manager||'')}</td>
+                <td>${sanitize(r.contractdate||'')}</td>
+                <td>${sanitize(r.issuedate||'')}</td>
+                <td>${amt} ${r.amountCurrency||'KRW'}</td>
+                <td>${paid}</td>
+                <td style="color:${Number(r.amount||0)-Number((r.billing||[]).reduce((a,b)=>a+Number(b||0),0))>0?'var(--warn)':'var(--text3)'}">
+                    ${fmt(Math.max(0, Number(r.amount||0)-Number((r.billing||[]).reduce((a,b)=>a+Number(b||0),0))))}
+                </td>
+                <td>${sanitize(r.stage||'')}</td>
+                <td>
+                    <button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCert('${r.id}')">${tt('삭제','删除')}</button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    const doneBody = getBody('certContractDoneTable');
+    if (doneBody) {
+        doneBody.innerHTML = !done.length
+            ? `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">없음</td></tr>`
+            : done.map((r, i) => {
+                const amt  = fmt(r.amount || 0);
+                const paid = fmt(r.billing ? r.billing.reduce((a,b)=>a+Number(b||0),0) : 0);
+                return `<tr>
+                    <td>${i+1}</td>
+                    <td class="client-name">${sanitize(r.client)}</td>
+                    <td>${sanitize(r.certtype||'')}</td>
+                    <td>${sanitize(r.etcMemo||r.certtypeRaw||'')}</td>
+                    <td>${sanitize(r.manager||'')}</td>
+                    <td>${sanitize(r.contractdate||'')}</td>
+                    <td>${sanitize(r.issuedate||'')}</td>
+                    <td>${amt} ${r.amountCurrency||'KRW'}</td>
+                    <td>${paid}</td>
+                    <td>${sanitize(r.stage||'')}</td>
+                    <td>
+                        <button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCert('${r.id}')">${tt('삭제','删除')}</button>
+                    </td>
+                </tr>`;
+            }).join('');
+    }
+}
     const tbody = getBody('certContractTable');
     if (!tbody) return;
     const state = getState();
