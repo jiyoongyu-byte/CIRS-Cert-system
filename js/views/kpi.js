@@ -7,20 +7,10 @@ import { getState, getCurrentYear, getCurrentUser, setKpiTab, getKpiTab,
 export function renderKpi() {
     const el = document.getElementById('kpiYear');
     if (el) el.textContent = getCurrentYear() + '년';
-
-    // 수익률 탭 - 지윤규, 대표이사만 표시
-    const cur = getCurrentUser();
-    const PROFIT_USERS = ['지윤규','대표이사'];
-    const profitTab = document.getElementById('kpi-tab-profit');
-    if (profitTab) profitTab.style.display = PROFIT_USERS.includes(cur) ? '' : 'none';
-
     const tab = getKpiTab();
     if (tab === 'qual') renderKpiQual();
     else if (tab === 'edu') renderKpiEdu();
-    else if (tab === 'profit') {
-        if (PROFIT_USERS.includes(cur)) renderKpiProfit();
-        else renderKpiQual(); // 권한 없으면 기본 탭으로
-    }
+    else if (tab === 'profit') renderKpiProfit();
 }
 
 export function switchKpiTab(tab, el) {

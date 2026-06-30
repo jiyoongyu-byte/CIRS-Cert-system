@@ -35,7 +35,6 @@ export async function saveMedRecord(record) {
             contact_phone: record.contactPhone || '', contact_email: record.contactEmail || '',
             quote_date: record.quoteDate || null, quote_amount: record.quoteAmount || 0,
             quote_file: record.quoteFile || '',
-            expense: record.expense || 0,
         });
         if (error) throw error;
     } catch (e) { console.error('saveMedRecord 오류:', e); }
@@ -57,7 +56,6 @@ export async function saveCertRecord(record) {
             id: record.id, year: record.year,
             record_type: record.recordType, client: record.client,
             cert_type: record.certtype || '', manager: record.manager || '',
-            std_no: record.stdNo || '', product: record.product || '',
             contract_date: record.contractdate || null, date: record.date || null,
             stage: record.stage || '', issue_date: record.issuedate || null,
             contracted: record.contracted || '미계약',
@@ -71,7 +69,6 @@ export async function saveCertRecord(record) {
             contact_email: record.contactEmail || '', quote_date: record.quoteDate || null,
             quote_amount: record.quoteAmount || 0, quote_file: record.quoteFile || '',
             etc_memo: record.etcMemo || '',
-            expense: record.expense || 0,
         });
         if (error) throw error;
     } catch (e) { console.error('saveCertRecord 오류:', e); }
@@ -171,13 +168,11 @@ export async function loadAllData(state) {
             contactPhone: r.contact_phone || '', contactEmail: r.contact_email || '',
             quoteDate: r.quote_date || '', quoteAmount: Number(r.quote_amount || 0),
             quoteFile: r.quote_file || '', q: r.q || 1,
-            expense: Number(r.expense || 0),
         }));
 
         state.cert = (cR.data || []).map(r => ({
             id: r.id, year: r.year, recordType: r.record_type || 'contract',
             client: r.client || '', certtype: r.cert_type || '',
-            stdNo: r.std_no || '', product: r.product || '',
             manager: r.manager || '', contractdate: r.contract_date || '',
             date: r.date || '', stage: r.stage || '',
             issuedate: r.issue_date || '', contracted: r.contracted || '미계약',
@@ -191,7 +186,6 @@ export async function loadAllData(state) {
             contactEmail: r.contact_email || '', quoteDate: r.quote_date || '',
             quoteAmount: Number(r.quote_amount || 0), quoteFile: r.quote_file || '',
             etcMemo: r.etc_memo || '', q: r.q || 1,
-            expense: Number(r.expense || 0),
         }));
 
         const rd = rR.data?.data || {};

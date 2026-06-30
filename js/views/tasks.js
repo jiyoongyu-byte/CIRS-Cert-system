@@ -7,16 +7,18 @@ import { getState, getCurrentUser, setEditingTaskId, setCompletingTaskId,
 export function renderTasks() {
     const state       = getState();
     const currentUser = getCurrentUser();
-    const SUPER_ADMIN = window.SUPER_ADMIN || '지윤규';
+    const ADMIN_USERS = window.ADMIN_USERS || ['지윤규','엄태호','유재용'];
 
     const badge = document.getElementById('taskUserBadge');
     const warn  = document.getElementById('taskLoginWarn');
     if (badge) badge.textContent = currentUser || '(이름 미선택)';
     if (warn)  warn.style.display = currentUser ? 'none' : '';
 
-    const REP_USER  = window.REP_USER || '대표이사';
-    const orderBtn  = document.getElementById('taskOrderBtn');
-    const collabBtn = document.getElementById('taskCollabBtn');
+    const REP_USER = window.REP_USER || '대표이사';
+    const isRep    = currentUser === REP_USER;
+    const orderBtn = document.getElementById('taskOrderBtn');
+    const collabBtn= document.getElementById('taskCollabBtn');
+    // 대표이사도 업무지시 작성 가능
     if (orderBtn)  orderBtn.style.display  = currentUser ? '' : 'none';
     if (collabBtn) collabBtn.style.display = currentUser ? '' : 'none';
 
@@ -25,11 +27,12 @@ export function renderTasks() {
     const statF  = document.getElementById('taskStatusFilter')?.value || '';
     const sortBy = document.getElementById('taskSortSel')?.value || 'date';
 
-    const isRep    = currentUser === REP_USER;
-    const userTeam = getUserTeam(currentUser);
+    const REP_USER2 = window.REP_USER || '대표이사';
+    const isRep2    = currentUser === REP_USER2;
+    const userTeam  = getUserTeam(currentUser);
     let tasks = (state.tasks || []).filter(t => {
         // 대표이사: 본인이 작성한(from) 업무지시만 확인
-        if (isRep) return t.from === currentUser;
+        if (isRep2) return t.from === currentUser;
         if (currentUser && userTeam !== '관리자' && userTeam !== '열람전용') {
             if (t.team !== '공통' && t.team !== userTeam) return false;
         }
@@ -65,20 +68,13 @@ export function renderTasks() {
     const today  = new Date().toISOString().slice(0, 10);
 
     container.innerHTML = tasks.map(t => {
-        const isDone      = !!t.completedDate;
-        const isConfirmed = !!t.confirmedDate;
-        const isOrder     = (t.type || 'order') === 'order';
-        const pc          = PCOLOR[t.priority] || 'var(--text3)';
-        const overdue     = !isDone && t.due && t.due < today;
-
-        // 수정: 작성자(from) 본인만, 미완료 상태만
-        const canEdit     = t.from === currentUser && !isDone;
-        // 삭제: 작성자(from) 본인 또는 지윤규
-        const canDelete   = t.from === currentUser || currentUser === SUPER_ADMIN;
-        // 완료보고: 담당자(to) 본인만, 미완료 상태
-        const canComplete = t.to === currentUser && !isDone;
-        // 작성자 확인: 작성자(from) 본인, 담당자 완료 후, 아직 미확인
-        const canConfirm  = t.from === currentUser && isDone && !isConfirmed;
+        const isDone    = !!t.completedDate;
+        const isOrder   = (t.type || 'order') === 'order';
+        const pc        = PCOLOR[t.priority] || 'var(--text3)';
+        const overdue   = !isDone && t.due && t.due < today;
+        const canEdit   = ADMIN_USERS.includes(currentUser) || t.to === currentUser;
+        const canDelete = ADMIN_USERS.includes(currentUser);
+        const canComplete = currentUser && !isDone;
 
         return `<div class="card" style="margin-bottom:10px;border-left:4px solid ${isDone?'var(--border)':pc};opacity:${isDone?0.72:1}">
             <div style="padding:13px 15px">
@@ -89,8 +85,7 @@ export function renderTasks() {
                     </span>
                     <span class="badge badge-gray" style="font-size:10px">${t.team||'공통'}</span>
                     ${overdue?'<span class="badge badge-red" style="font-size:10px">⚠ 기한초과</span>':''}
-                    ${isDone&&!isConfirmed?'<span class="badge badge-amber" style="font-size:10px">⏳ 확인 대기</span>':''}
-                    ${isConfirmed?'<span class="badge badge-green" style="font-size:10px">✓ 확인완료</span>':''}
+                    ${isDone?'<span class="badge badge-green" style="font-size:10px">✓ 완료</span>':''}
                     <span style="margin-left:auto;font-size:10px;color:var(--text3)">
                         지시일: ${t.date||'-'}${t.due?' | 기한: '+t.due:''}
                     </span>
@@ -103,14 +98,13 @@ export function renderTasks() {
                 ${isDone?`<div style="font-size:11px;padding:7px 11px;background:var(--success-light);border-radius:6px;color:var(--success);margin-bottom:7px">
                     ✅ 완료 (${t.completedDate}): ${t.completeNote||''}
                 </div>`:''}
-                ${isConfirmed?`<div style="font-size:11px;padding:7px 11px;background:var(--med-light);border-radius:6px;color:var(--med);margin-bottom:7px">
-                    ✓ 작성자 확인완료 (${t.confirmedDate})
-                </div>`:''}
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    ${canComplete ? `<button class="btn btn-cert btn-sm" onclick="openTaskComplete('${t.id}')">완료 보고</button>` : ''}
-                    ${canConfirm  ? `<button class="btn btn-sm" style="border-color:var(--med);color:var(--med)" onclick="confirmTask('${t.id}')">✓ 확인 완료</button>` : ''}
-                    ${canEdit     ? `<button class="btn btn-sm" onclick="openTaskEdit('${t.id}')">수정</button>` : ''}
-                    ${canDelete   ? `<button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">삭제</button>` : ''}
+                    ${canComplete?`<button class="btn btn-cert btn-sm" onclick="openTaskComplete('${t.id}')">완료 보고</button>`:''}
+                    ${isDone&&!t.confirmedDate&&ADMIN_USERS.includes(currentUser)
+                        ?`<button class="btn btn-sm" style="border-color:var(--med);color:var(--med)" onclick="confirmTask('${t.id}')">✓ 관리자 확인</button>`:''}
+                    ${t.confirmedDate?`<span style="font-size:10px;color:var(--text3)">확인: ${t.confirmedDate}</span>`:''}
+                    ${canEdit&&!isDone?`<button class="btn btn-sm" onclick="openTaskEdit('${t.id}')">수정</button>`:''}
+                    ${canDelete?`<button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">삭제</button>`:''}
                 </div>
             </div>
         </div>`;
@@ -119,7 +113,7 @@ export function renderTasks() {
 
 function getUserTeam(user) {
     if (user === '지윤규') return '관리자';
-    if (user === (window.REP_USER || '대표이사')) return '대표이사'; // 본인 작성만
+    if (user === (window.REP_USER || '대표이사')) return '관리자'; // 대표이사도 전체 조회 가능
     if (['유재용','윤미령','차상호','Zhao Lijie'].includes(user)) return '의료기기팀';
     if (['엄태호','Lyu Cuicui','박성재'].includes(user)) return '제품환경인증팀';
     return '관리자';
@@ -142,8 +136,6 @@ export function updateTaskToOptions(team) {
 export function openTaskEdit(id) {
     const t = getState().tasks?.find(x => x.id === id);
     if (!t) return;
-    // 작성자 본인만 수정 가능
-    if (t.from !== getCurrentUser()) return;
     setEditingTaskId(id);
     const modal = document.getElementById('modal-task');
     if (!modal) return;
@@ -173,18 +165,7 @@ export function openTaskComplete(id) {
 }
 
 export async function deleteTask(id) {
-    const SUPER_ADMIN = window.SUPER_ADMIN || '지윤규';
-    const currentUser = getCurrentUser();
-    const t = getState().tasks?.find(x => x.id === id);
-    if (!t) return;
-    // 작성자 본인 또는 지윤규만 삭제 가능
-    if (t.from !== currentUser && currentUser !== SUPER_ADMIN) return;
-    // 지윤규는 항상 상세 확인 팝업
-    if (currentUser === SUPER_ADMIN) {
-        if (!confirm(`[관리자 삭제]\n"${t.content?.slice(0,30)||''}"\n\n위 업무를 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.`)) return;
-    } else {
-        if (!confirm('삭제하시겠습니까?')) return;
-    }
+    if (!confirm('삭제하시겠습니까?')) return;
     const state = getState();
     state.tasks = state.tasks.filter(x => x.id !== id);
     const { saveState } = await import('../core/store.js');
@@ -193,11 +174,8 @@ export async function deleteTask(id) {
 }
 
 export async function confirmTask(id) {
-    const currentUser = getCurrentUser();
     const t = getState().tasks?.find(x => x.id === id);
     if (!t) return;
-    // 작성자 본인만 확인 가능
-    if (t.from !== currentUser) return;
     t.confirmedDate = new Date().toISOString().slice(0, 10);
     const { saveState } = await import('../core/store.js');
     await saveState();

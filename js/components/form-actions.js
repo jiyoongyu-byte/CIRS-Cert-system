@@ -5,7 +5,7 @@ import { getState, getCurrentYear, getCurrentUser, getMedEditId, getCertEditId,
          getEditingTaskId, setEditingTaskId, getCompletingTaskId,
          getEditingEduId, setEditingEduId, saveState, getQualData } from '../core/store.js';
 import { uid, sanitize, toKRW, fmt, fmtM, quarter } from '../core/utils.js';
-import { saveMedRecord, saveCertRecord, deleteMedRecord, deleteCertRecord } from '../core/api.js';
+import { saveMedRecord, saveCertRecord, deleteMedRecord, deleteCertRecord, logAudit } from '../core/api.js';
 import { getBillingValues, getBillingDates, getBillingCurrencies } from './modal.js';
 
 // ── 의료기기팀 저장 ───────────────────────────────────────────────
@@ -64,6 +64,8 @@ export async function saveMed() {
     }
 
     await saveMedRecord(record);
+    await logAudit(editId ? '수정' : '신규', `'${record.client}' 의료기기팀`, getCurrentUser());
+    setMedEditId(null);
     window.closeModal?.('med');
     isContract ? window.renderMedContract?.() : window.renderMedConsult?.();
 }
@@ -73,6 +75,7 @@ export async function deleteMed(id) {
     const state = getState();
     state.med = state.med.filter(x => x.id !== id);
     await deleteMedRecord(id);
+    await logAudit('삭제', `id:${id} 의료기기팀`, getCurrentUser());
     window.renderMedContract?.();
     window.renderMedConsult?.();
 }
@@ -135,6 +138,8 @@ export async function saveCert() {
     }
 
     await saveCertRecord(record);
+    await logAudit(editId ? '수정' : '신규', `'${record.client}' 인증팀`, getCurrentUser());
+    setCertEditId(null);
     window.closeModal?.('cert');
     isContract ? window.renderCertContract?.() : window.renderCertConsult?.();
 }
@@ -144,6 +149,7 @@ export async function deleteCert(id) {
     const state = getState();
     state.cert = state.cert.filter(x => x.id !== id);
     await deleteCertRecord(id);
+    await logAudit('삭제', `id:${id} 인증팀`, getCurrentUser());
     window.renderCertContract?.();
     window.renderCertConsult?.();
 }
@@ -166,6 +172,7 @@ export async function convertToContract(team, id) {
         window.renderCertConsult?.(); window.renderCertContract?.();
     }
     alert('✅ 계약으로 전환되었습니다.');
+    await logAudit('전환', `'${record.client}' 상담→계약`, getCurrentUser());
 }
 
 // ── 업무지시 저장 ────────────────────────────────────────────────

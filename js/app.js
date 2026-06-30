@@ -1,6 +1,6 @@
 // js/app.js — 로그인, 네비게이션, 설정 (기존 구조 유지)
 
-import { setCurrentUser, setCurrentYear, setCurrentView, getCurrentView, getCurrentYear,
+import { setCurrentUser, setCurrentYear, setCurrentView, getCurrentYear,
          loadFromSupabase, saveState, getState, ensureRevYear } from './core/store.js';
 import { savePw, initSb, loadPw, resetPw } from './core/api.js';
 import { tt } from './core/utils.js';
@@ -10,10 +10,9 @@ const SUPER_ADMIN  = '지윤규';
 const ADMIN_USERS  = ['지윤규','엄태호','유재용'];
 const REP_USER     = '대표이사';  // 업무지시 작성 가능, 본인 지시만 확인
 const TEAM_USERS   = {
-    '제품환경인증팀':['엄태호','Lyu Cuicui','박성재'],
-    '의료기기팀':    ['유재용','윤미령','차상호','Zhao Lijie'],
-    '제품인증부문이사': ['지윤규'],
-'대표이사': ['대표이사'],
+    '의료기기팀':    ['유재용','윤미령','차상호','Zhao Lijie','지윤규'],
+    '제품환경인증팀':['엄태호','Lyu Cuicui','박성재','지윤규'],
+    '임원진':        ['지윤규','대표이사'],
 };
 const QUAL_MASTER = {
     '지윤규': [
@@ -53,7 +52,6 @@ export async function doLogin() {
     }
     if (err) err.textContent = '';
     setCurrentUser(user);
-localStorage.setItem('cirs_user', user);
 
     document.getElementById('loginScreen').style.display  = 'none';
     document.getElementById('appShell').style.display     = 'flex';
@@ -85,16 +83,10 @@ localStorage.setItem('cirs_user', user);
     window._store?.syncQualData?.(QUAL_MASTER);
 
     nav('dashboard');
-
-    // 지윤규 로그인 시 브리핑 자동 표시
-    if (user === '지윤규') {
-        setTimeout(() => window.showBriefing?.(), 800);
-    }
 }
 
 export function doLogout() {
     setCurrentUser('');
-    localStorage.removeItem('cirs_user');
     document.getElementById('appShell').style.display  = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('loginPw').value = '';
@@ -191,8 +183,8 @@ export function nav(viewName, element = null) {
     // topbar 타이틀
     const titles = {
         dashboard:'전체 현황', revenue:'수입계획 및 실적',
-        medContract:'의료기기팀 · 계약업체', medConsult:'의료기기팀 · 상담', medDone:'의료기기팀 · 완료대장',
-        certContract:'제품환경인증팀 · 계약업체', certConsult:'제품환경인증팀 · 상담', certDone:'제품환경인증팀 · 완료대장',
+        medContract:'의료기기팀 · 계약업체', medConsult:'의료기기팀 · 상담',
+        certContract:'제품환경인증팀 · 계약업체', certConsult:'제품환경인증팀 · 상담',
         kpi:'KPI 현황', tasks:'업무지시서',
     };
     const tb = document.getElementById('topbarTitle');
@@ -210,10 +202,8 @@ export function renderView(v) {
     if (v === 'revenue'      && window.renderRevenue)      window.renderRevenue();
     if (v === 'medContract'  && window.renderMedContract)  window.renderMedContract();
     if (v === 'medConsult'   && window.renderMedConsult)   window.renderMedConsult();
-    if (v === 'medDone'      && window.renderMedDone)      window.renderMedDone();
     if (v === 'certContract' && window.renderCertContract) window.renderCertContract();
     if (v === 'certConsult'  && window.renderCertConsult)  window.renderCertConsult();
-    if (v === 'certDone'     && window.renderCertDone)     window.renderCertDone();
     if (v === 'kpi'          && window.renderKpi)          window.renderKpi();
     if (v === 'tasks'        && window.renderTasks)        window.renderTasks();
 }
@@ -235,46 +225,5 @@ window.SUPER_ADMIN      = SUPER_ADMIN;
 window.REP_USER         = REP_USER;
 window.QUAL_MASTER      = QUAL_MASTER;
 
-// 새로고침 시 자동 로그인
-document.addEventListener('DOMContentLoaded', () => {
-    const savedUser = localStorage.getItem('cirs_user');
-    if (savedUser) {
-        const loginUser = document.getElementById('loginUser');
-        if (loginUser) {
-            loginUser.innerHTML = `<option value="${savedUser}">${savedUser}</option>`;
-            loginUser.value = savedUser;
-        }
-        const loginPw = document.getElementById('loginPw');
-        if (loginPw) loginPw.value = 'auto';
-        // 저장된 비번으로 자동 로그인
-        setTimeout(async () => {
-            initSb();
-            const state = getState();
-            await loadPw(state, savedUser);
-            setCurrentUser(savedUser);
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appShell').style.display = 'flex';
-            const sb = document.getElementById('sidebarUser');
-            if (sb) sb.textContent = savedUser + ' 님 환영합니다';
-            const ySel = document.getElementById('yearSelect');
-            if (ySel && !ySel.options.length) {
-                const y = new Date().getFullYear();
-                for (let i = y + 2; i >= 2020; i--) {
-                    const o = document.createElement('option');
-                    o.value = i; o.textContent = i + '년';
-                    if (i === y) o.selected = true;
-                    ySel.appendChild(o);
-                }
-            }
-            const savedRmb = localStorage.getItem('cirs_rmb_rate');
-            const savedUsd = localStorage.getItem('cirs_usd_rate');
-            if (savedRmb) { const e = document.getElementById('rmbRateInput'); if (e) e.value = savedRmb; }
-            if (savedUsd) { const e = document.getElementById('usdRateInput'); if (e) e.value = savedUsd; }
-            await loadFromSupabase();
-            window._store?.syncQualData?.(QUAL_MASTER);
-            nav('dashboard');
-        }, 500);
-    }
-});
 // 로그인 이벤트 바인딩은 index.html 인라인 스크립트에서 처리
 // 연도 셀렉트 초기화는 doLogin() 내부에서 처리
