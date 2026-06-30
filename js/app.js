@@ -1,6 +1,6 @@
-// js/app.js — 로그인, 네비게이션, 설정 (기존 구조 유지)
+// js/app.js — 로그인, 네비게이션, 설정, 권한 관리
 
-import { setCurrentUser, setCurrentYear, setCurrentView, getCurrentYear,
+import { setCurrentUser, setCurrentYear, setCurrentView, getCurrentYear, getCurrentUser,
          loadFromSupabase, saveState, getState, ensureRevYear } from './core/store.js';
 import { savePw, initSb, loadPw, resetPw } from './core/api.js';
 import { tt } from './core/utils.js';
@@ -8,12 +8,15 @@ import { tt } from './core/utils.js';
 const DEFAULT_PW   = 'cirs2026!';
 const SUPER_ADMIN  = '지윤규';
 const ADMIN_USERS  = ['지윤규','엄태호','유재용'];
-const REP_USER     = '대표이사';  // 업무지시 작성 가능, 본인 지시만 확인
-const TEAM_USERS   = {
+const REP_USER     = '대표이사';
+const EXECS        = ['대표이사', '지윤규']; // 전체 금액 열람 가능 권한자
+
+const TEAM_USERS = {
     '의료기기팀':    ['유재용','윤미령','차상호','Zhao Lijie','지윤규'],
     '제품환경인증팀':['엄태호','Lyu Cuicui','박성재','지윤규'],
     '임원진':        ['지윤규','대표이사'],
 };
+
 const QUAL_MASTER = {
     '지윤규': [
         {name:'내부감사원',date:'2022-03-02',edu:null,org:'CIRS Group Korea',remark:'전사 공통'},
@@ -28,7 +31,42 @@ const QUAL_MASTER = {
     ],
 };
 
-// ── 로그인 (팀 선택 → 사용자 선택 → 비번) ────────────────────────
+// ── 팀 판별 헬퍼 ─────────────────────────────────────────────────
+function getUserTeam(user) {
+    if (['유재용','윤미령','차상호','Zhao Lijie'].includes(user)) return '의료기기팀';
+    if (['엄태호','Lyu Cuicui','박성재'].includes(user))          return '제품환경인증팀';
+    if (user === REP_USER)                                         return '열람전용'; // 대표이사: 전팀 열람 가능, 수정 불가
+    return '관리자'; // 지윤규
+}
+
+// ── 사이드바 네비게이션 항목 팀별 표시/숨김 ──────────────────────
+function applyNavVisibility(user) {
+    const team   = getUserTeam(user);
+    const showMed  = team === '관리자' || team === '열람전용' || team === '의료기기팀';
+    const showCert = team === '관리자' || team === '열람전용' || team === '제품환경인증팀';
+
+    ['nav-label-med','nav-item-medC','nav-item-medCons','nav-item-medDone'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = showMed ? '' : 'none';
+    });
+    ['nav-label-cert','nav-item-certC','nav-item-certCons','nav-item-certDone'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = showCert ? '' : 'none';
+    });
+}
+
+// ── 대표이사: 현재 화면의 추가/수정 버튼 숨김 ─────────────────────
+function applyRepRestrictions(viewName) {
+    if (getCurrentUser() !== REP_USER) return;
+    const target = document.getElementById(`view-${viewName}`);
+    if (!target) return;
+    // section-head 내 버튼(추가/수정 등) 모두 숨김
+    target.querySelectorAll('.section-head button').forEach(btn => {
+        btn.style.display = 'none';
+    });
+}
+
+// ── 로그인 ────────────────────────────────────────────────────────
 export async function doLogin() {
     const user = document.getElementById('loginUser')?.value;
     const pw   = document.getElementById('loginPw')?.value;
@@ -39,11 +77,10 @@ export async function doLogin() {
         return;
     }
 
-    // Supabase에서 저장된 비밀번호 먼저 로드 후 검증
     initSb();
     const state = getState();
     try {
-        await loadPw(state, user);  // 개인별 비번 로드
+        await loadPw(state, user);
     } catch (_) {}
 
     if (pw !== (state.pw || DEFAULT_PW)) {
@@ -82,6 +119,9 @@ export async function doLogin() {
     // qualData 동기화
     window._store?.syncQualData?.(QUAL_MASTER);
 
+    // 팀별 사이드바 표시 제어
+    applyNavVisibility(user);
+
     nav('dashboard');
 }
 
@@ -100,13 +140,12 @@ export function changeYear() {
     renderView(getCurrentView?.() || 'dashboard');
 }
 
-// ── 환율 변경 ────────────────────────────────────────────────────
+// ── 환율 변경 ─────────────────────────────────────────────────────
 export function onExchangeRateChange() {
     const r = document.getElementById('rmbRateInput')?.value;
     const u = document.getElementById('usdRateInput')?.value;
     if (r) localStorage.setItem('cirs_rmb_rate', r);
     if (u) localStorage.setItem('cirs_usd_rate', u);
-    // 환율 의존 뷰 갱신
     const view = window._currentView || 'dashboard';
     if (['dashboard','revenue'].includes(view)) renderView(view);
 }
@@ -125,7 +164,7 @@ export async function changePw() {
     if (nw !== conf) { if (msg) msg.textContent = '새 비밀번호가 일치하지 않습니다.'; return; }
 
     state.pw = nw;
-    await savePw(nw, currentUser);  // 개인별 저장
+    await savePw(nw, currentUser);
     if (msg) { msg.style.color = 'var(--success)'; msg.textContent = '✅ 변경되었습니다.'; }
     setTimeout(() => window.closeModal?.('settings'), 1200);
 }
@@ -180,21 +219,24 @@ export function nav(viewName, element = null) {
         element.classList.add('active');
     }
 
-    // topbar 타이틀
     const titles = {
-        dashboard:'전체 현황', revenue:'수입계획 및 실적',
+        dashboard:'전체 현황', orgchart:'조직도', revenue:'수입계획 및 실적',
         medContract:'의료기기팀 · 계약업체', medConsult:'의료기기팀 · 상담',
+        medDone:'의료기기팀 · 완료대장',
         certContract:'제품환경인증팀 · 계약업체', certConsult:'제품환경인증팀 · 상담',
+        certDone:'제품환경인증팀 · 완료대장',
         kpi:'KPI 현황', tasks:'업무지시서',
     };
     const tb = document.getElementById('topbarTitle');
     if (tb) tb.textContent = titles[viewName] || viewName;
 
-    // 환율 입력란
     const rateBox = document.getElementById('rateInputBox');
     if (rateBox) rateBox.style.display = ['dashboard','revenue'].includes(viewName) ? 'flex' : 'none';
 
     renderView(viewName);
+
+    // 대표이사: 추가/수정 버튼 숨김 (렌더링 이후 적용)
+    applyRepRestrictions(viewName);
 }
 
 export function renderView(v) {
@@ -202,15 +244,17 @@ export function renderView(v) {
     if (v === 'revenue'      && window.renderRevenue)      window.renderRevenue();
     if (v === 'medContract'  && window.renderMedContract)  window.renderMedContract();
     if (v === 'medConsult'   && window.renderMedConsult)   window.renderMedConsult();
+    if (v === 'medDone'      && window.renderMedDone)      window.renderMedDone();
     if (v === 'certContract' && window.renderCertContract) window.renderCertContract();
     if (v === 'certConsult'  && window.renderCertConsult)  window.renderCertConsult();
+    if (v === 'certDone'     && window.renderCertDone)     window.renderCertDone();
     if (v === 'kpi'          && window.renderKpi)          window.renderKpi();
     if (v === 'tasks'        && window.renderTasks)        window.renderTasks();
 }
 
 // ── window 전역 등록 ─────────────────────────────────────────────
 window.doLogin          = doLogin;
-window._doLogin         = doLogin;  // 인라인 loginClick용
+window._doLogin         = doLogin;
 window.doLogout         = doLogout;
 window.nav              = nav;
 window.changeYear       = changeYear;
@@ -223,7 +267,7 @@ window.renderView       = renderView;
 window.ADMIN_USERS      = ADMIN_USERS;
 window.SUPER_ADMIN      = SUPER_ADMIN;
 window.REP_USER         = REP_USER;
+window.EXECS            = EXECS;          // ['대표이사', '지윤규']
+window.getUserTeam      = getUserTeam;    // 팀 판별 헬퍼 (다른 모듈에서 사용)
 window.QUAL_MASTER      = QUAL_MASTER;
-
-// 로그인 이벤트 바인딩은 index.html 인라인 스크립트에서 처리
-// 연도 셀렉트 초기화는 doLogin() 내부에서 처리
+window.applyNavVisibility = applyNavVisibility;
