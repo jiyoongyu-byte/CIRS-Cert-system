@@ -77,10 +77,10 @@ export function openMedModal(type) {
     const sw = document.getElementById('m-stage-wrap');
     if (sw) sw.innerHTML = '';
     buildBillingGrid('medBillingGrid','medBillingTotal','m',[],[],[]);
-    const mf = document.getElementById('medContractFields');
-    const ms = document.getElementById('medConsultSection');
-    if (mf) mf.style.display = isContract ? 'contents' : 'none';
-    if (ms) ms.style.display = isContract ? 'none' : 'contents';
+    // 의료기기 '상담'은 계약이 아니므로 계약금액/지출비용/수입분할 섹션 숨김
+    document.querySelectorAll('.contract-only-med').forEach(el => {
+        el.style.display = isContract ? '' : 'none';
+    });
 }
 
 export function updateMedStageOptions() {
@@ -132,10 +132,9 @@ export function editMed(id) {
         if (cb) { cb.checked = true; cb.parentElement.style.background = 'var(--med-light)'; cb.parentElement.style.color = 'var(--med)'; }
     });
     buildBillingGrid('medBillingGrid','medBillingTotal','m', r.billing, r.billingDates, r.billingCurrencies);
-    const mf = document.getElementById('medContractFields');
-    const ms = document.getElementById('medConsultSection');
-    if (mf) mf.style.display = r.recordType === 'contract' ? 'contents' : 'none';
-    if (ms) ms.style.display = r.recordType === 'contract' ? 'none' : 'contents';
+    document.querySelectorAll('.contract-only-med').forEach(el => {
+        el.style.display = r.recordType === 'contract' ? '' : 'none';
+    });
 }
 
 // ── 인증팀 모달 ──────────────────────────────────────────────────

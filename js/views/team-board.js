@@ -1,14 +1,42 @@
 // js/views/team-board.js
 
 import { getState, getCurrentYear, getCurrentUser } from '../core/store.js';
-import { fmt, tt, sanitize } from '../core/utils.js';
+import { fmt, tt, sanitize, toKRW } from '../core/utils.js';
 
 const getBody = id => {
     const t = document.getElementById(id);
     return t?.tagName === 'TABLE' ? (t.querySelector('tbody') || t) : t;
 };
 
-// 의료기기팀 계약
+// 금액 표기: "단위 숫자" 형식, 우측정렬
+function fmtAmt(amount, currency) {
+    return `<td style="text-align:right;white-space:nowrap">${currency||'KRW'} ${fmt(amount||0)}</td>`;
+}
+
+// 잔금 계산 (계약금액 - 수입실적 합계), 우측정렬
+function fmtRemain(r) {
+    const total = toKRW(Number(r.amount||0), r.amountCurrency||'KRW');
+    const paid  = (r.billing||[]).reduce((s,v,i) => s + toKRW(Number(v||0), (r.billingCurrencies||[])[i]||'KRW'), 0);
+    const remain = Math.round(total - paid);
+    const color = remain > 0 ? 'var(--warn)' : 'var(--text3)';
+    return `<td style="text-align:right;white-space:nowrap;color:${color};font-weight:600">${fmt(remain)}</td>`;
+}
+
+// 상태 배지 색상 (협의중/계약완료/보류/계약불가)
+function statusBadge(status, teamColor) {
+    const colorMap = {
+        '협의중':   teamColor,
+        '계약완료': 'badge-success',
+        '보류':     'badge-amber',
+        '계약불가': 'badge-red',
+        '완료':     'badge-success',
+        '미계약':   'badge-gray',
+    };
+    return `<span class="badge ${colorMap[status]||'badge-gray'}">${sanitize(status||'')}</span>`;
+}
+
+// ── 의료기기팀 계약 ───────────────────────────────────────────────
+// 컬럼: 순번-업체명-제품명/업무유형-담당자-계약일-완료목표-계약금액-잔금-진행단계-상태-관리
 export function renderMedContract() {
     const tbody = getBody('medContractTable');
     if (!tbody) return;
@@ -16,24 +44,22 @@ export function renderMedContract() {
     const year = getCurrentYear();
     const data = (state.med || []).filter(x => x.year === year && x.recordType === 'contract');
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
         return;
     }
     tbody.innerHTML = data.map((r, i) => {
-        const amt = fmt(r.amount || 0);
-        const paid = fmt(r.billing ? r.billing.reduce((a,b)=>a+Number(b||0),0) : 0);
+        const itemCol = [r.product, r.biztype].filter(Boolean).join(' / ');
         return `<tr>
             <td>${i+1}</td>
-            <td class="client-name">${sanitize(r.client)}</td>
-            <td>${sanitize(r.product||'')}</td>
-            <td>${sanitize(r.biztype||'')}</td>
+            <td class="client-name" style="white-space:normal;word-break:break-word;max-width:160px">${sanitize(r.client)}</td>
+            <td style="white-space:normal;word-break:break-word;max-width:160px">${sanitize(itemCol)}</td>
             <td>${sanitize(r.manager||'')}</td>
             <td>${sanitize(r.startdate||'')}</td>
             <td>${sanitize(r.duedate||'')}</td>
-            <td>${amt} ${r.amountCurrency||'KRW'}</td>
-            <td>${paid}</td>
+            ${fmtAmt(r.amount, r.amountCurrency)}
+            ${fmtRemain(r)}
             <td>${sanitize(r.stage||'')}</td>
-            <td><span class="badge ${r.status==='완료'?'badge-success':'badge-med'}">${sanitize(r.status||'')}</span></td>
+            <td>${statusBadge(r.status, 'badge-med')}</td>
             <td>
                 <button class="btn btn-sm" onclick="editMed('${r.id}')">${tt('수정','修改')}</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteMed('${r.id}')">${tt('삭제','删除')}</button>
@@ -62,7 +88,7 @@ export function renderMedConsult() {
             <td>${sanitize(r.biztype||'')}</td>
             <td>${sanitize(r.manager||'')}</td>
             <td>${sanitize(r.startdate||'')}</td>
-            <td><span class="badge badge-med">${sanitize(r.consultStatus||'')}</span></td>
+            <td>${statusBadge(r.consultStatus, 'badge-med')}</td>
             <td>${sanitize(r.quoteDate||'')}</td>
             <td>${sanitize(r.note||'')}</td>
             <td>
@@ -84,7 +110,7 @@ export function renderMedConsult() {
                 <td>${sanitize(r.biztype||'')}</td>
                 <td>${sanitize(r.manager||'')}</td>
                 <td>${sanitize(r.startdate||'')}</td>
-                <td><span class="badge badge-med">${sanitize(r.consultStatus||'')}</span></td>
+                <td>${statusBadge(r.consultStatus, 'badge-med')}</td>
                 <td>${sanitize(r.quoteDate||'')}</td>
                 <td>${sanitize(r.failReason||'')}</td>
                 <td>
@@ -94,7 +120,8 @@ export function renderMedConsult() {
     }
 }
 
-// 제품환경인증팀 계약
+// ── 제품환경인증팀 계약 ──────────────────────────────────────────
+// 컬럼: 순번-업체명-인증종류/품목-담당자-계약일-완료목표(구 발급일)-계약금액-잔금-진행단계-상태-관리
 export function renderCertContract() {
     const tbody = getBody('certContractTable');
     if (!tbody) return;
@@ -104,21 +131,21 @@ export function renderCertContract() {
     const done = (state.cert || []).filter(x => x.year === year && x.recordType === 'contract' && x.contracted === '완료');
 
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
     } else {
         tbody.innerHTML = data.map((r, i) => {
-            const amt = fmt(r.amount || 0);
-            const paid = fmt(r.billing ? r.billing.reduce((a,b)=>a+Number(b||0),0) : 0);
+            const itemCol = [r.certtype, r.etcMemo].filter(Boolean).join(' / ');
             return `<tr>
                 <td>${i+1}</td>
-                <td class="client-name">${sanitize(r.client)}</td>
-                <td>${sanitize(r.certtype||'')}</td>
+                <td class="client-name" style="white-space:normal;word-break:break-word;max-width:160px">${sanitize(r.client)}</td>
+                <td style="white-space:normal;word-break:break-word;max-width:160px">${sanitize(itemCol)}</td>
                 <td>${sanitize(r.manager||'')}</td>
                 <td>${sanitize(r.contractdate||'')}</td>
                 <td>${sanitize(r.issuedate||'')}</td>
-                <td>${amt} ${r.amountCurrency||'KRW'}</td>
-                <td>${paid}</td>
+                ${fmtAmt(r.amount, r.amountCurrency)}
+                ${fmtRemain(r)}
                 <td>${sanitize(r.stage||'')}</td>
+                <td>${statusBadge(r.contracted, 'badge-cert')}</td>
                 <td>
                     <button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>
                     <button class="btn btn-sm btn-danger" onclick="deleteCert('${r.id}')">${tt('삭제','删除')}</button>
@@ -130,20 +157,20 @@ export function renderCertContract() {
     const doneBody = getBody('certContractDoneTable');
     if (doneBody) {
         doneBody.innerHTML = !done.length
-            ? `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text3)">없음</td></tr>`
+            ? `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">없음</td></tr>`
             : done.map((r, i) => {
-                const amt = fmt(r.amount || 0);
-                const paid = fmt(r.billing ? r.billing.reduce((a,b)=>a+Number(b||0),0) : 0);
+                const itemCol = [r.certtype, r.etcMemo].filter(Boolean).join(' / ');
                 return `<tr>
                     <td>${i+1}</td>
-                    <td class="client-name">${sanitize(r.client)}</td>
-                    <td>${sanitize(r.certtype||'')}</td>
+                    <td class="client-name" style="white-space:normal;word-break:break-word;max-width:160px">${sanitize(r.client)}</td>
+                    <td style="white-space:normal;word-break:break-word;max-width:160px">${sanitize(itemCol)}</td>
                     <td>${sanitize(r.manager||'')}</td>
                     <td>${sanitize(r.contractdate||'')}</td>
                     <td>${sanitize(r.issuedate||'')}</td>
-                    <td>${amt} ${r.amountCurrency||'KRW'}</td>
-                    <td>${paid}</td>
+                    ${fmtAmt(r.amount, r.amountCurrency)}
+                    ${fmtRemain(r)}
                     <td>${sanitize(r.stage||'')}</td>
+                    <td>${statusBadge(r.contracted, 'badge-cert')}</td>
                     <td>
                         <button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteCert('${r.id}')">${tt('삭제','删除')}</button>
@@ -171,7 +198,7 @@ export function renderCertConsult() {
             <td>${sanitize(r.certtype||'')}</td>
             <td>${sanitize(r.manager||'')}</td>
             <td>${sanitize(r.date||'')}</td>
-            <td><span class="badge badge-cert">${sanitize(r.contracted||'')}</span></td>
+            <td>${statusBadge(r.contracted, 'badge-cert')}</td>
             <td>${sanitize(r.quoteDate||'')}</td>
             <td>${sanitize(r.note||'')}</td>
             <td>
@@ -191,7 +218,7 @@ export function renderCertConsult() {
                 <td>${sanitize(r.certtype||'')}</td>
                 <td>${sanitize(r.manager||'')}</td>
                 <td>${sanitize(r.date||'')}</td>
-                <td><span class="badge badge-cert">${sanitize(r.contracted||'')}</span></td>
+                <td>${statusBadge(r.contracted, 'badge-cert')}</td>
                 <td>${sanitize(r.quoteDate||'')}</td>
                 <td>${sanitize(r.failReason||'')}</td>
                 <td>
