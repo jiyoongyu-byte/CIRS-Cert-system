@@ -193,14 +193,12 @@ input[type=date]{color-scheme:dark}
     <div class="nav-item" id="nav-item-certC" onclick="nav('certContract',this)"><span class="dot dot-cert"></span><span data-ko="계약업체" data-zh="签约企业">계약업체</span></div>
     <div class="nav-item" id="nav-item-certCons" onclick="nav('certConsult',this)"><span class="dot dot-cert"></span><span data-ko="상담" data-zh="咨询">상담</span></div>
     <div class="nav-item" id="nav-item-certDone" onclick="nav('certDone',this)"><span class="dot dot-cert"></span><span data-ko="완료대장" data-zh="完成台账">완료대장</span></div>
-    <div class="nav-label" data-ko="전략기획" data-zh="战略规划">전략기획</div>
-    <div class="nav-item" onclick="nav('strategy',this)"><span class="dot dot-all"></span><span>📊 3년 전략기획 (2027~2029)</span></div>
     <div class="nav-label" data-ko="평가" data-zh="绩效评估">평가</div>
     <div class="nav-item" onclick="nav('kpi',this)"><span class="dot dot-all"></span><span data-ko="KPI 현황" data-zh="KPI现状">KPI 현황</span></div>
+    <div class="nav-item" onclick="nav('strategy',this)"><span class="dot dot-all"></span><span>📊 3년 전략기획 (2027~2029)</span></div>
+    <div class="nav-item" onclick="openReportModal()"><span class="dot dot-all"></span><span data-ko="📄 월보/분기보 생성" data-zh="生成报告">📄 월보/분기보 생성</span></div>
     <div class="nav-label" id="nav-label-tasks" data-ko="업무" data-zh="工作">업무</div>
     <div class="nav-item" id="nav-item-tasks" onclick="nav('tasks',this)"><span class="dot dot-all"></span><span data-ko="업무지시서" data-zh="工作指示单">업무지시서</span></div>
-    <div class="nav-label" data-ko="보고서" data-zh="报告">보고서</div>
-    <div class="nav-item" onclick="openReportModal()"><span class="dot dot-all"></span><span data-ko="📄 월보/분기보 생성" data-zh="生成报告">📄 월보/분기보 생성</span></div>
   </div>
   <div class="sidebar-bottom">
     <div><label data-ko="기준 연도" data-zh="基准年份">기준 연도</label><select class="yr-sel" id="yearSelect" onchange="changeYear()"></select></div>
