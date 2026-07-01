@@ -72,7 +72,8 @@ export function openMedModal(type) {
     ['m-client','m-product','m-grade','m-biztype','m-manager','m-startdate','m-duedate',
      'm-status','m-progress','m-amount','m-amount-currency','m-consult-status',
      'm-fail-reason','m-consult-etc','m-quote-date','m-quote-amount','m-quote-file',
-     'm-contact-name','m-contact-phone','m-contact-email','m-note','m-renewcycle','m-expiredate']
+     'm-contact-name','m-contact-phone','m-contact-email','m-note','m-renewcycle','m-expiredate',
+     'm-ref-audit','m-ref-fee','m-ref-memo']
         .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
     const sw = document.getElementById('m-stage-wrap');
     if (sw) sw.innerHTML = '';
@@ -121,6 +122,7 @@ export function editMed(id) {
         'm-consult-status': r.consultStatus, 'm-fail-reason': r.failReason,
         'm-note': r.note, 'm-quote-amount': r.quoteAmount || '',
         'm-renewcycle': r.renewcycle, 'm-expiredate': r.expiredate,
+        'm-ref-audit': r.refAudit || '', 'm-ref-fee': r.refFee || '', 'm-ref-memo': r.refMemo || '',
     };
     Object.entries(fields).forEach(([id, val]) => {
         const el = document.getElementById(id);
@@ -146,7 +148,8 @@ export function openCertModal(type) {
     ['c-client','c-certtype','c-certtype-etc','c-manager','c-amount','c-amount-currency',
      'c-contractdate','c-stage','c-issuedate','c-contracted','c-date','c-fail-reason',
      'c-quote-date','c-quote-amount','c-quote-file','c-contact-name','c-contact-phone',
-     'c-contact-email','c-etc-memo','c-note','c-renewcycle','c-expiredate']
+     'c-contact-email','c-etc-memo','c-note','c-renewcycle','c-expiredate',
+     'c-ref-audit','c-ref-fee','c-ref-memo']
         .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
     buildBillingGrid('certBillingGrid','certBillingTotal','c',[],[],[]);
     const cf = document.getElementById('certContractFields');
@@ -174,6 +177,7 @@ export function editCert(id) {
         'c-contracted': r.contracted, 'c-date': r.date, 'c-fail-reason': r.failReason,
         'c-note': r.note, 'c-etc-memo': r.etcMemo, 'c-quote-amount': r.quoteAmount || '',
         'c-renewcycle': r.renewcycle, 'c-expiredate': r.expiredate,
+        'c-ref-audit': r.refAudit || '', 'c-ref-fee': r.refFee || '', 'c-ref-memo': r.refMemo || '',
     };
     Object.entries(fields).forEach(([id, val]) => {
         const el = document.getElementById(id);

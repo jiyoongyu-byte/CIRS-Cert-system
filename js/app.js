@@ -237,6 +237,9 @@ export function nav(viewName, element = null) {
 
     // 대표이사: 추가/수정 버튼 숨김 (렌더링 이후 적용)
     applyRepRestrictions(viewName);
+
+    // 검색 필터 적용 (렌더링 이후)
+    applySearchFilter(viewName);
 }
 
 export function renderView(v) {
@@ -250,6 +253,53 @@ export function renderView(v) {
     if (v === 'certDone'     && window.renderCertDone)     window.renderCertDone();
     if (v === 'kpi'          && window.renderKpi)          window.renderKpi();
     if (v === 'tasks'        && window.renderTasks)        window.renderTasks();
+}
+
+// ── 검색 필터: 현재 뷰 테이블 행 필터링 ──────────────────────────
+window._searchFilter = '';
+
+function applySearchFilter(viewName) {
+    const q      = (window._searchFilter || '').trim().toLowerCase();
+    const view   = document.getElementById(`view-${viewName}`);
+    if (!view) return;
+
+    // 배너 생성 (없으면)
+    let banner = document.getElementById('searchFilterBanner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'searchFilterBanner';
+        banner.style.cssText = 'display:none;align-items:center;gap:10px;padding:8px 14px;margin-bottom:12px;background:var(--surface);border:1px solid var(--accent);border-radius:8px;font-size:13px;';
+        document.getElementById('mainContent')?.prepend(banner);
+    }
+
+    if (!q) {
+        banner.style.display = 'none';
+        view.querySelectorAll('tbody tr').forEach(tr => tr.style.display = '');
+        return;
+    }
+
+    // 배너 표시
+    banner.style.display = 'flex';
+    banner.innerHTML = `<span style="color:var(--accent)">🔍 검색 필터:</span>
+        <strong style="color:var(--text1)">${window._searchFilter}</strong>
+        <button class="btn btn-sm" onclick="clearSearchFilter()" style="margin-left:6px;border-color:var(--danger);color:var(--danger)">× 전체 보기</button>`;
+
+    // 행 필터링: 모든 td 텍스트에서 검색어 포함 여부
+    view.querySelectorAll('tbody tr').forEach(tr => {
+        const text = Array.from(tr.querySelectorAll('td')).map(td => td.textContent).join(' ').toLowerCase();
+        tr.style.display = text.includes(q) ? '' : 'none';
+    });
+}
+
+function clearSearchFilter() {
+    window._searchFilter = '';
+    const banner = document.getElementById('searchFilterBanner');
+    if (banner) banner.style.display = 'none';
+    const v = window._currentView;
+    if (v) {
+        window.renderView?.(v);
+        document.getElementById(`view-${v}`)?.querySelectorAll('tbody tr').forEach(tr => tr.style.display = '');
+    }
 }
 
 // ── window 전역 등록 ─────────────────────────────────────────────
@@ -269,5 +319,7 @@ window.SUPER_ADMIN      = SUPER_ADMIN;
 window.REP_USER         = REP_USER;
 window.EXECS            = EXECS;          // ['대표이사', '지윤규']
 window.getUserTeam      = getUserTeam;    // 팀 판별 헬퍼 (다른 모듈에서 사용)
-window.QUAL_MASTER      = QUAL_MASTER;
+window.QUAL_MASTER        = QUAL_MASTER;
 window.applyNavVisibility = applyNavVisibility;
+window.applySearchFilter  = applySearchFilter;
+window.clearSearchFilter  = clearSearchFilter;

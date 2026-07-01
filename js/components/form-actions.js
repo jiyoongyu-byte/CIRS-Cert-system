@@ -53,6 +53,10 @@ export async function saveMed() {
         quoteDate:    document.getElementById('m-quote-date')?.value || '',
         quoteAmount:  Number(document.getElementById('m-quote-amount')?.value || 0),
         quoteFile:    sanitize(document.getElementById('m-quote-file')?.value || ''),
+        // 향후 컨설팅 예산 참고 비용 (실제 청구 불포함)
+        refAudit:     Number(document.getElementById('m-ref-audit')?.value || 0),
+        refFee:       Number(document.getElementById('m-ref-fee')?.value || 0),
+        refMemo:      sanitize(document.getElementById('m-ref-memo')?.value || ''),
         q: quarter(startdate) || 1,
     };
 
@@ -127,6 +131,10 @@ export async function saveCert() {
         quoteDate:  document.getElementById('c-quote-date')?.value || '',
         quoteAmount: Number(document.getElementById('c-quote-amount')?.value || 0),
         quoteFile:  sanitize(document.getElementById('c-quote-file')?.value || ''),
+        // 향후 컨설팅 예산 참고 비용 (실제 청구 불포함)
+        refAudit:   Number(document.getElementById('c-ref-audit')?.value || 0),
+        refFee:     Number(document.getElementById('c-ref-fee')?.value || 0),
+        refMemo:    sanitize(document.getElementById('c-ref-memo')?.value || ''),
         q: quarter(contractdate || consultdate) || 1,
     };
 
