@@ -1,7 +1,28 @@
-// js/views/report.js — 월보고/분기보고 Word 문서 생성
+// js/views/report.js — 월보고/분기보고/반기보고 Word 문서 생성
 
 import { getState, getCurrentYear, getCurrentUser } from '../core/store.js';
 import { toKRW } from '../core/utils.js';
+
+// ── docx 라이브러리 동적 로드 (CDN 지연/차단 대비 자동 재시도) ──────
+async function ensureDocx() {
+    if (window.docx) return;
+    const cdns = [
+        'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js',
+        'https://unpkg.com/docx@8.5.0/build/index.js',
+    ];
+    for (const url of cdns) {
+        try {
+            await new Promise((res, rej) => {
+                if (document.querySelector(`script[src="${url}"]`)) { res(); return; }
+                const s = document.createElement('script');
+                s.src = url; s.onload = res; s.onerror = rej;
+                document.head.appendChild(s);
+            });
+            if (window.docx) return;
+        } catch (_) { /* 다음 CDN 시도 */ }
+    }
+    throw new Error('docx 라이브러리를 로드할 수 없습니다. 인터넷 연결을 확인해주세요.');
+}
 
 // ── 기간 내 날짜 여부 ─────────────────────────────────────────────
 function inPeriod(dateStr, year, sm, em) {
@@ -48,8 +69,10 @@ export function toggleRepPeriod() {
     const type = document.querySelector('input[name="rep-type"]:checked')?.value || 'month';
     const mw = document.getElementById('rep-month-wrap');
     const qw = document.getElementById('rep-quarter-wrap');
-    if (mw) mw.style.display = type === 'month' ? '' : 'none';
+    const hw = document.getElementById('rep-half-wrap');
+    if (mw) mw.style.display = type === 'month'   ? '' : 'none';
     if (qw) qw.style.display = type === 'quarter' ? '' : 'none';
+    if (hw) hw.style.display = type === 'half'    ? '' : 'none';
 }
 
 // ── 데이터 수집 ───────────────────────────────────────────────────
@@ -72,15 +95,59 @@ function collectData(state, year, sm, em, teamFilter) {
         return Math.round(total);
     }
 
-    // 수입 계획 (quarters 배열 ÷ 3)
+    // 수입 계획 (q1/q2/q3/q4 분기목표 ÷ 3 = 월목표)
     function calcTarget(team) {
-        const quarters = ((state.rev || {})[year]?.[team]?.quarters) || [];
+        const teamRev = (state.revenue || {})[year]?.[team] || {};
         let total = 0;
         for (let m = sm; m <= em; m++) {
-            const qIdx = Math.floor((m - 1) / 3);
-            total += Math.round(Number(quarters[qIdx] || 0) / 3);
+            const qKey = ['q1','q2','q3','q4'][Math.floor((m - 1) / 3)];
+            total += Math.round(Number(teamRev[qKey] || 0) / 3);
         }
         return total;
+    }
+
+    // 특정 월의 수입 실적
+    function calcMonthActual(records, m) {
+        let total = 0;
+        records.forEach(r => {
+            (r.billing || []).forEach((amt, i) => {
+                const date = (r.billingDates || [])[i];
+                const cur  = (r.billingCurrencies || [])[i] || 'KRW';
+                if (inPeriod(date, year, m, m)) total += toKRW(Number(amt || 0), cur);
+            });
+        });
+        return Math.round(total);
+    }
+
+    // 특정 월의 수입 계획 (분기목표 ÷ 3)
+    function calcMonthTarget(team, m) {
+        const teamRev = (state.revenue || {})[year]?.[team] || {};
+        const qKey = ['q1','q2','q3','q4'][Math.floor((m - 1) / 3)];
+        return Math.round(Number(teamRev[qKey] || 0) / 3);
+    }
+
+    // 월별 누적 데이터 계산
+    function buildMonthlyData() {
+        const months = [];
+        let cumMedAct = 0, cumCertAct = 0, cumMedTgt = 0, cumCertTgt = 0;
+        for (let m = sm; m <= em; m++) {
+            const medAct  = (teamFilter !== 'cert') ? calcMonthActual(allMed, m)  : 0;
+            const certAct = (teamFilter !== 'med')  ? calcMonthActual(allCert, m) : 0;
+            const medTgt  = (teamFilter !== 'cert') ? calcMonthTarget('med', m)   : 0;
+            const certTgt = (teamFilter !== 'med')  ? calcMonthTarget('cert', m)  : 0;
+            cumMedAct  += medAct;  cumCertAct += certAct;
+            cumMedTgt  += medTgt;  cumCertTgt += certTgt;
+            months.push({
+                month: m,
+                medActual: medAct,    certActual: certAct,
+                medTarget: medTgt,    certTarget: certTgt,
+                cumMedActual: cumMedAct, cumCertActual: cumCertAct,
+                cumMedTarget: cumMedTgt, cumCertTarget: cumCertTgt,
+                cumTotal: cumMedAct + cumCertAct,
+                cumTotalTarget: cumMedTgt + cumCertTgt,
+            });
+        }
+        return months;
     }
 
     // 전년 동기 실적
@@ -127,6 +194,7 @@ function collectData(state, year, sm, em, teamFilter) {
         med:  { actual: calcActual(med),  target: calcTarget('med'),  prev: calcPrev(allMed),  stats: contractStats(med) },
         cert: { actual: calcActual(cert), target: calcTarget('cert'), prev: calcPrev(allCert), stats: contractStats(cert) },
         tasks: { total: tasks.length, done: taskDone, inProgress: tasks.length - taskDone, overdue: taskOverdue },
+        monthlyData: buildMonthlyData(),
         teamFilter,
     };
 }
@@ -217,7 +285,36 @@ async function buildDocx(data, periodLabel, memo, currentUser, teamFilter) {
     }
     const revTable = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: revRows, layout: TableLayoutType.FIXED });
 
-    // ── 2. 계약 현황 테이블 ─────────────────────────────────────────
+    // ── 2. 월별 실적 및 누적 테이블 ────────────────────────────────
+    const monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    const showBothTeams = teamFilter === 'all';
+
+    // 헤더 열 구성 (팀 선택에 따라 동적)
+    const mthHeaders = [hcell('월')];
+    if (teamFilter !== 'cert') { mthHeaders.push(hcell('의료기기\n계획')); mthHeaders.push(hcell('의료기기\n실적')); }
+    if (teamFilter !== 'med')  { mthHeaders.push(hcell('인증팀\n계획')); mthHeaders.push(hcell('인증팀\n실적')); }
+    if (showBothTeams)          { mthHeaders.push(hcell('전체\n누적계획')); mthHeaders.push(hcell('전체\n누적실적')); mthHeaders.push(hcell('누적\n달성률')); }
+    else if (teamFilter === 'med')  { mthHeaders.push(hcell('누적계획')); mthHeaders.push(hcell('누적실적')); mthHeaders.push(hcell('달성률')); }
+    else                            { mthHeaders.push(hcell('누적계획')); mthHeaders.push(hcell('누적실적')); mthHeaders.push(hcell('달성률')); }
+
+    const mthRows = [new TableRow({ children: mthHeaders, tableHeader: true })];
+
+    (data.monthlyData || []).forEach(md => {
+        const cumAct = showBothTeams ? md.cumTotal : (teamFilter === 'med' ? md.cumMedActual : md.cumCertActual);
+        const cumTgt = showBothTeams ? md.cumTotalTarget : (teamFilter === 'med' ? md.cumMedTarget : md.cumCertTarget);
+        const achColor = cumAct >= cumTgt && cumTgt > 0 ? '0070C0' : 'C00000';
+        const cells = [cell(monthNames[md.month - 1], { bold: true })];
+        if (teamFilter !== 'cert') { cells.push(cell(fmtKRW(md.medTarget))); cells.push(cell(fmtKRW(md.medActual))); }
+        if (teamFilter !== 'med')  { cells.push(cell(fmtKRW(md.certTarget))); cells.push(cell(fmtKRW(md.certActual))); }
+        cells.push(cell(fmtKRW(cumTgt), { bg: 'EBF0FA' }));
+        cells.push(cell(fmtKRW(cumAct), { bold: true, bg: 'EBF0FA' }));
+        cells.push(cell(pctStr(cumAct, cumTgt), { bold: true, bg: 'EBF0FA', color: achColor }));
+        mthRows.push(new TableRow({ children: cells }));
+    });
+
+    const mthTable = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: mthRows, layout: TableLayoutType.FIXED });
+
+    // ── 3. 계약 현황 테이블 ─────────────────────────────────────────
     const conRows = [
         new TableRow({ children: [hcell('구분'), hcell('진행중'), hcell('진행중 금액'), hcell('기간 내 신규'), hcell('완료 누적'), hcell('미청구 잔액')], tableHeader: true }),
     ];
@@ -300,24 +397,30 @@ async function buildDocx(data, periodLabel, memo, currentUser, teamFilter) {
                     border: { bottom: { color: '1F3864', size: 8, space: 4, style: BorderStyle.SINGLE } },
                 }),
 
-                // 1. 수입 실적
+                // 1. 수입 실적 요약
                 sectionTitle('1', '수입 실적 요약'),
                 revTable,
                 new Paragraph({ spacing: { after: 200 }, children: [] }),
 
-                // 2. 계약업체 현황
-                sectionTitle('2', '계약업체 현황'),
+                // 2. 월별 실적 및 누적 현황
+                sectionTitle('2', '월별 실적 및 누적 현황'),
+                bodyText('※ 음영: 해당 월까지의 누적 계획/실적/달성률', { color: '888888' }),
+                mthTable,
+                new Paragraph({ spacing: { after: 200 }, children: [] }),
+
+                // 3. 계약업체 현황
+                sectionTitle('3', '계약업체 현황'),
                 conTable,
                 new Paragraph({ spacing: { after: 200 }, children: [] }),
 
-                // 3. 업무지시 현황
-                sectionTitle('3', '업무지시 현황'),
+                // 4. 업무지시 현황
+                sectionTitle('4', '업무지시 현황'),
                 bodyText('※ 기간 내 마감일 기준 집계', { color: '888888' }),
                 taskTable,
                 new Paragraph({ spacing: { after: 200 }, children: [] }),
 
-                // 4. 특이사항 및 달성률 사유
-                sectionTitle('4', '특이사항 및 달성률 사유'),
+                // 5. 특이사항 및 달성률 사유
+                sectionTitle('5', '특이사항 및 달성률 사유'),
                 ...memoParas,
             ],
         }],
@@ -328,26 +431,37 @@ async function buildDocx(data, periodLabel, memo, currentUser, teamFilter) {
 
 // ── 보고서 생성 진입점 ─────────────────────────────────────────────
 export async function generateReport() {
-    if (!window.docx) {
-        alert('보고서 라이브러리를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+    const btn = document.getElementById('repGenBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ 라이브러리 로드 중...'; }
+
+    try {
+        await ensureDocx(); // CDN에서 동적 로드 (이미 로드됐으면 즉시 반환)
+    } catch (e) {
+        if (btn) { btn.disabled = false; btn.textContent = '📄 보고서 생성'; }
+        alert('보고서 라이브러리 로드 실패: ' + e.message);
         return;
     }
 
-    const btn = document.getElementById('repGenBtn');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ 생성 중...'; }
+    if (btn) btn.textContent = '⏳ 생성 중...';
 
     try {
-        const type     = document.querySelector('input[name="rep-type"]:checked')?.value || 'month';
-        const year     = parseInt(document.getElementById('rep-year')?.value) || getCurrentYear();
-        const period   = parseInt(document.getElementById(type === 'month' ? 'rep-month' : 'rep-quarter')?.value) || 1;
+        const type       = document.querySelector('input[name="rep-type"]:checked')?.value || 'month';
+        const year       = parseInt(document.getElementById('rep-year')?.value) || getCurrentYear();
         const teamFilter = document.getElementById('rep-team')?.value || 'all';
-        const memo     = (document.getElementById('rep-memo')?.value || '').trim();
+        const memo       = (document.getElementById('rep-memo')?.value || '').trim();
 
         let sm, em, periodLabel;
         if (type === 'month') {
+            const period = parseInt(document.getElementById('rep-month')?.value) || 1;
             sm = em = period;
             periodLabel = `${year}년 ${period}월`;
+        } else if (type === 'half') {
+            const half = parseInt(document.getElementById('rep-half')?.value) || 1;
+            sm = half === 1 ? 1 : 7;
+            em = half === 1 ? 6 : 12;
+            periodLabel = `${year}년 ${half === 1 ? '상반기(1~6월)' : '하반기(7~12월)'}`;
         } else {
+            const period = parseInt(document.getElementById('rep-quarter')?.value) || 1;
             sm = (period - 1) * 3 + 1;
             em = period * 3;
             periodLabel = `${year}년 ${period}분기`;

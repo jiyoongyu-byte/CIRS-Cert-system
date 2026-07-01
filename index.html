@@ -537,12 +537,15 @@ input[type=date]{color-scheme:dark}
   <div class="modal-body"><div class="form-grid">
     <div class="form-group full">
       <label class="form-label">보고 유형</label>
-      <div style="display:flex;gap:20px;align-items:center;padding:8px 0">
+      <div style="display:flex;gap:20px;align-items:center;padding:8px 0;flex-wrap:wrap">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;font-weight:600">
           <input type="radio" name="rep-type" value="month" checked onchange="toggleRepPeriod()"> 월보고
         </label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;font-weight:600">
           <input type="radio" name="rep-type" value="quarter" onchange="toggleRepPeriod()"> 분기보고
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;font-weight:600">
+          <input type="radio" name="rep-type" value="half" onchange="toggleRepPeriod()"> 반기보고
         </label>
       </div>
     </div>
@@ -564,6 +567,13 @@ input[type=date]{color-scheme:dark}
       <select class="form-select" id="rep-quarter">
         <option value="1">1분기 (1~3월)</option><option value="2">2분기 (4~6월)</option>
         <option value="3">3분기 (7~9월)</option><option value="4">4분기 (10~12월)</option>
+      </select>
+    </div>
+    <div class="form-group" id="rep-half-wrap" style="display:none">
+      <label class="form-label">반기 선택</label>
+      <select class="form-select" id="rep-half">
+        <option value="1">상반기 (1~6월)</option>
+        <option value="2">하반기 (7~12월)</option>
       </select>
     </div>
     <div class="form-group full">
