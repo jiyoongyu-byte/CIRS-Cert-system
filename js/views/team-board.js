@@ -63,11 +63,13 @@ export function renderMedContract() {
     const year  = getCurrentYear();
 
     // 완료(status='완료') 및 취소 건은 완료대장으로 이관 → 여기서 제외
-    // 연도 무관: 과거 계약이라도 진행중이면 현재 화면에 표시
-    const data = (state.med || []).filter(x =>
-        x.recordType === 'contract' &&
-        x.status !== '완료' && x.status !== '취소'
-    );
+    // 계약 시작일 기준: 선택 연도 이하에 시작된 진행중 계약 모두 표시 (연도 무관 진행중 포함)
+    const data = (state.med || []).filter(x => {
+        if (x.recordType !== 'contract') return false;
+        if (x.status === '완료' || x.status === '취소') return false;
+        const contractYear = x.startdate ? parseInt(x.startdate.slice(0, 4)) : (x.year || 0);
+        return contractYear <= year;
+    });
 
     if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
@@ -185,10 +187,15 @@ export function renderCertContract() {
     const year  = getCurrentYear();
 
     // stage='완료' 건은 완료대장(view-certDone)으로 이관 → 여기서 제외
-    // 연도 무관: 과거 계약이라도 진행중이면 현재 화면에 표시
-    const data = (state.cert || []).filter(x =>
-        x.recordType === 'contract' && x.stage !== '완료'
-    );
+    // 계약 시작일 기준: 선택 연도 이하에 시작된 진행중 계약 모두 표시
+    const data = (state.cert || []).filter(x => {
+        if (x.recordType !== 'contract') return false;
+        if (x.stage === '완료') return false;
+        const contractYear = x.contractdate ? parseInt(x.contractdate.slice(0, 4))
+                           : x.startdate    ? parseInt(x.startdate.slice(0, 4))
+                           : (x.year || 0);
+        return contractYear <= year;
+    });
 
     if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
