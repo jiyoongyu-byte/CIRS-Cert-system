@@ -87,14 +87,22 @@ function _getMonthlyActual(rows, y) {
     return monthly;
 }
 
-// ── 의료기기팀 업무유형 카테고리 분류 ─────────────────────────────
+// ── 의료기기팀 등급/분류 카테고리 (grade 우선, biztype fallback) ──
 function categorizeMed(r) {
+    const grade = (r.grade || '').trim();
+
+    // grade 필드 직접 사용 (한국 1~4등급 / 중국 1~3등급 / KGMP / CGMP / 직접입력값)
+    // form-actions.js: "기타" 선택 시 직접입력 텍스트가 grade에 저장됨
+    if (grade && grade !== '선택') {
+        return grade;   // "한국 1등급", "중국 3등급", "KGMP", "CGMP", "기타", 직접입력 등 그대로 사용
+    }
+
+    // grade 없으면 biztype fallback
     const bt = (r.biztype || r.product || '').toLowerCase();
-    if (bt.includes('kgmp'))                                                           return 'KGMP';
-    if (bt.includes('cgmp'))                                                           return 'CGMP';
-    if (bt.includes('의료기기') && (bt.includes('한국') || bt.includes('korea')))     return '한국 의료기기등록';
-    if (bt.includes('의료기기') && (bt.includes('중국') || bt.includes('china') || bt.includes('중'))) return '중국 의료기기등록';
-    if (bt.includes('의료기기'))                                                       return '의료기기등록';
+    if (bt.includes('kgmp'))  return 'KGMP';
+    if (bt.includes('cgmp'))  return 'CGMP';
+    if (bt.includes('한국'))  return '한국';
+    if (bt.includes('중국'))  return '중국';
     return r.biztype || r.product || '기타';
 }
 
