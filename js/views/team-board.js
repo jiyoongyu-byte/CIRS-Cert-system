@@ -63,8 +63,9 @@ export function renderMedContract() {
     const year  = getCurrentYear();
 
     // 완료(status='완료') 및 취소 건은 완료대장으로 이관 → 여기서 제외
+    // 연도 무관: 과거 계약이라도 진행중이면 현재 화면에 표시
     const data = (state.med || []).filter(x =>
-        x.year === year && x.recordType === 'contract' &&
+        x.recordType === 'contract' &&
         x.status !== '완료' && x.status !== '취소'
     );
 
@@ -184,8 +185,9 @@ export function renderCertContract() {
     const year  = getCurrentYear();
 
     // stage='완료' 건은 완료대장(view-certDone)으로 이관 → 여기서 제외
+    // 연도 무관: 과거 계약이라도 진행중이면 현재 화면에 표시
     const data = (state.cert || []).filter(x =>
-        x.year === year && x.recordType === 'contract' && x.stage !== '완료'
+        x.recordType === 'contract' && x.stage !== '완료'
     );
 
     if (!data.length) {
