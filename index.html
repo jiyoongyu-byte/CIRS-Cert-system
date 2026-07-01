@@ -197,6 +197,8 @@ input[type=date]{color-scheme:dark}
     <div class="nav-item" onclick="nav('kpi',this)"><span class="dot dot-all"></span><span data-ko="KPI 현황" data-zh="KPI现状">KPI 현황</span></div>
     <div class="nav-label" id="nav-label-tasks" data-ko="업무" data-zh="工作">업무</div>
     <div class="nav-item" id="nav-item-tasks" onclick="nav('tasks',this)"><span class="dot dot-all"></span><span data-ko="업무지시서" data-zh="工作指示单">업무지시서</span></div>
+    <div class="nav-label" data-ko="보고서" data-zh="报告">보고서</div>
+    <div class="nav-item" onclick="openReportModal()"><span class="dot dot-all"></span><span data-ko="📄 월보/분기보 생성" data-zh="生成报告">📄 월보/분기보 생성</span></div>
   </div>
   <div class="sidebar-bottom">
     <div><label data-ko="기준 연도" data-zh="基准年份">기준 연도</label><select class="yr-sel" id="yearSelect" onchange="changeYear()"></select></div>
@@ -525,6 +527,60 @@ input[type=date]{color-scheme:dark}
   <div id="pw-msg" style="font-size:12px;color:var(--danger);margin-top:10px;font-weight:600"></div>
 </div><div class="modal-footer"><button class="btn" onclick="closeModal('settings')"><span data-ko="취소" data-zh="取消">취소</span></button><button class="btn btn-primary" onclick="changePw()"><span data-ko="변경" data-zh="修改">변경</span></button></div></div></div></div>
 
+<!-- 보고서 생성 모달 -->
+<div class="modal-overlay" id="modal-report"><div class="modal-wrapper"><div class="modal" style="max-width:500px">
+  <div class="modal-header"><span class="modal-title">📄 업무 보고서 생성</span><button class="modal-close" onclick="closeModal('report')">×</button></div>
+  <div class="modal-body"><div class="form-grid">
+    <div class="form-group full">
+      <label class="form-label">보고 유형</label>
+      <div style="display:flex;gap:20px;align-items:center;padding:8px 0">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;font-weight:600">
+          <input type="radio" name="rep-type" value="month" checked onchange="toggleRepPeriod()"> 월보고
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;font-weight:600">
+          <input type="radio" name="rep-type" value="quarter" onchange="toggleRepPeriod()"> 분기보고
+        </label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">기준 연도</label>
+      <select class="form-select" id="rep-year"></select>
+    </div>
+    <div class="form-group" id="rep-month-wrap">
+      <label class="form-label">월 선택</label>
+      <select class="form-select" id="rep-month">
+        <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option>
+        <option value="4">4월</option><option value="5">5월</option><option value="6">6월</option>
+        <option value="7">7월</option><option value="8">8월</option><option value="9">9월</option>
+        <option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+      </select>
+    </div>
+    <div class="form-group" id="rep-quarter-wrap" style="display:none">
+      <label class="form-label">분기 선택</label>
+      <select class="form-select" id="rep-quarter">
+        <option value="1">1분기 (1~3월)</option><option value="2">2분기 (4~6월)</option>
+        <option value="3">3분기 (7~9월)</option><option value="4">4분기 (10~12월)</option>
+      </select>
+    </div>
+    <div class="form-group full">
+      <label class="form-label">팀 선택</label>
+      <select class="form-select" id="rep-team">
+        <option value="all">전체 (의료기기팀 + 제품환경인증팀)</option>
+        <option value="med">의료기기팀</option>
+        <option value="cert">제품환경인증팀</option>
+      </select>
+    </div>
+    <div class="form-group full">
+      <label class="form-label">특이사항 및 달성률 사유 <span style="font-size:11px;color:var(--text3);font-weight:400">(목표 대비, 전년 대비 달성 사유 등)</span></label>
+      <textarea class="form-textarea" id="rep-memo" rows="5" placeholder="예) 2분기 목표 대비 85% 달성 — A업체 계약 지연으로 인한 수입 이월&#10;전년 동기 대비 ▲12% 성장 — 신규 의료기기 등록 수주 증가"></textarea>
+    </div>
+  </div></div>
+  <div class="modal-footer">
+    <button class="btn" onclick="closeModal('report')">취소</button>
+    <button class="btn btn-primary" id="repGenBtn" onclick="generateReport()">📄 보고서 생성</button>
+  </div>
+</div></div></div>
+
 <div class="modal-overlay" id="modal-edu-add"><div class="modal-wrapper"><div class="modal" style="max-width:540px"><div class="modal-header"><span class="modal-title" id="eduModalTitle">교육 이력 추가</span><button class="modal-close" onclick="closeModal('edu-add')">×</button></div><div class="modal-body"><div class="form-grid">
   <div class="form-group"><label class="form-label" data-ko="구성원" data-zh="成员">구성원</label><select class="form-select" id="edu-member"><option value="" data-ko="선택" data-zh="选择">선택</option><option>지윤규</option><option>유재용</option><option>윤미령</option><option>차상호</option><option>Zhao Lijie</option><option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option></select></div>
   <div class="form-group"><label class="form-label" data-ko="교육 유형" data-zh="教育类型">교육 유형</label><select class="form-select" id="edu-type"><option value="" data-ko="선택" data-zh="选择">선택</option><option value="역량강화" data-ko="역량강화" data-zh="能力强化">역량강화</option><option value="직무교육" data-ko="직무교육" data-zh="职务教育">직무교육</option><option value="보수교육" data-ko="보수교육 (법정)" data-zh="进修教育 (法定)">보수교육 (법정)</option></select></div>
@@ -546,6 +602,7 @@ input[type=date]{color-scheme:dark}
 </div><div class="modal-footer"><button class="btn" onclick="closeModal('qual')"><span data-ko="닫기" data-zh="关闭">닫기</span></button></div></div></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- 로딩 순서: utils/api/store → modal → app → form-actions → views -->
     <script type="module">
@@ -565,6 +622,7 @@ input[type=date]{color-scheme:dark}
     <script type="module" src="./js/views/tasks.js"></script>
     <script type="module" src="./js/views/kpi.js"></script>
     <script type="module" src="./js/views/revenue.js"></script>
+    <script type="module" src="./js/views/report.js"></script>
 
   <!-- 로그인 전용 인라인 스크립트 (ES Module 로딩 전 즉시 실행) -->
   <script>

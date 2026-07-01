@@ -67,8 +67,11 @@ export function renderMedContract() {
     const data = (state.med || []).filter(x => {
         if (x.recordType !== 'contract') return false;
         if (x.status === '완료' || x.status === '취소') return false;
-        const contractYear = x.startdate ? parseInt(x.startdate.slice(0, 4)) : (x.year || 0);
-        return contractYear <= year;
+        // startdate(YYYY-MM-DD) → 연도 추출, 없으면 x.year, 둘 다 없으면 현재연도
+        const rawYear = x.startdate ? parseInt(x.startdate.toString().slice(0, 4))
+                      : x.year      ? parseInt(x.year)
+                      : year;
+        return !isNaN(rawYear) && rawYear <= year;
     });
 
     if (!data.length) {
@@ -191,10 +194,11 @@ export function renderCertContract() {
     const data = (state.cert || []).filter(x => {
         if (x.recordType !== 'contract') return false;
         if (x.stage === '완료') return false;
-        const contractYear = x.contractdate ? parseInt(x.contractdate.slice(0, 4))
-                           : x.startdate    ? parseInt(x.startdate.slice(0, 4))
-                           : (x.year || 0);
-        return contractYear <= year;
+        const rawYear = x.contractdate ? parseInt(x.contractdate.toString().slice(0, 4))
+                      : x.startdate    ? parseInt(x.startdate.toString().slice(0, 4))
+                      : x.year         ? parseInt(x.year)
+                      : year;
+        return !isNaN(rawYear) && rawYear <= year;
     });
 
     if (!data.length) {

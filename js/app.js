@@ -95,17 +95,19 @@ export async function doLogin() {
     const sb = document.getElementById('sidebarUser');
     if (sb) sb.textContent = user + ' 님 환영합니다';
 
-    // 연도 셀렉트 초기화
-    const ySel = document.getElementById('yearSelect');
-    if (ySel && !ySel.options.length) {
-        const y = new Date().getFullYear();
-        for (let i = y + 2; i >= 2020; i--) {
-            const o = document.createElement('option');
-            o.value = i; o.textContent = i + '년';
-            if (i === y) o.selected = true;
-            ySel.appendChild(o);
+    // 연도 셀렉트 초기화 (사이드바 + 보고서 모달)
+    const curY = new Date().getFullYear();
+    ['yearSelect', 'rep-year'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel && !sel.options.length) {
+            for (let i = curY + 2; i >= 2020; i--) {
+                const o = document.createElement('option');
+                o.value = i; o.textContent = i + '년';
+                if (i === curY) o.selected = true;
+                sel.appendChild(o);
+            }
         }
-    }
+    });
 
     // 환율 복원
     const savedRmb = localStorage.getItem('cirs_rmb_rate');
@@ -137,7 +139,9 @@ export function changeYear() {
     const y = parseInt(document.getElementById('yearSelect')?.value);
     setCurrentYear(y);
     ensureRevYear(y);
-    renderView(getCurrentView?.() || 'dashboard');
+    // window._currentView를 우선 사용 (nav()에서 확실히 세팅됨)
+    const v = window._currentView || getCurrentView?.() || 'dashboard';
+    renderView(v);
 }
 
 // ── 환율 변경 ─────────────────────────────────────────────────────
