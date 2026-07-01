@@ -193,6 +193,8 @@ input[type=date]{color-scheme:dark}
     <div class="nav-item" id="nav-item-certC" onclick="nav('certContract',this)"><span class="dot dot-cert"></span><span data-ko="계약업체" data-zh="签约企业">계약업체</span></div>
     <div class="nav-item" id="nav-item-certCons" onclick="nav('certConsult',this)"><span class="dot dot-cert"></span><span data-ko="상담" data-zh="咨询">상담</span></div>
     <div class="nav-item" id="nav-item-certDone" onclick="nav('certDone',this)"><span class="dot dot-cert"></span><span data-ko="완료대장" data-zh="完成台账">완료대장</span></div>
+    <div class="nav-label" data-ko="전략기획" data-zh="战略规划">전략기획</div>
+    <div class="nav-item" onclick="nav('strategy',this)"><span class="dot dot-all"></span><span>📊 3년 전략기획 (2027~2029)</span></div>
     <div class="nav-label" data-ko="평가" data-zh="绩效评估">평가</div>
     <div class="nav-item" onclick="nav('kpi',this)"><span class="dot dot-all"></span><span data-ko="KPI 현황" data-zh="KPI现状">KPI 현황</span></div>
     <div class="nav-label" id="nav-label-tasks" data-ko="업무" data-zh="工作">업무</div>
@@ -417,6 +419,8 @@ input[type=date]{color-scheme:dark}
 <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('certConsArch','client')">업체명</th><th data-ko="인증종류" data-zh="认证种类">인증종류</th><th data-ko="품목" data-zh="品目">품목</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('certConsArch','manager')">담당자</th><th data-ko="상담일" data-zh="咨询日期" onclick="handleSort('certConsArch','date')">상담일</th><th data-ko="진행상태" data-zh="进行状态">진행상태</th><th data-ko="보류사유" data-zh="保留原因">보류사유</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>  </table></div></div></div>
 </div>
 
+<div class="view" id="view-strategy"></div>
+
 <div class="view" id="view-kpi">
   <div style="display:flex;gap:12px;margin-bottom:24px;">
     <button class="team-tab active-cert" onclick="switchKpiTab('qual',this)"><span data-ko="🏅 자격·법정교육" data-zh="🏅 资格·法定教育">🏅 자격·법정교육</span></button>
@@ -623,6 +627,7 @@ input[type=date]{color-scheme:dark}
     <script type="module" src="./js/views/kpi.js"></script>
     <script type="module" src="./js/views/revenue.js"></script>
     <script type="module" src="./js/views/report.js"></script>
+    <script type="module" src="./js/views/strategy.js"></script>
 
   <!-- 로그인 전용 인라인 스크립트 (ES Module 로딩 전 즉시 실행) -->
   <script>

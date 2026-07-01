@@ -26,6 +26,7 @@ let state = {
     eduRecords: [],
     tasks: [],
     bottleneckReasons: {},
+    strategy: {},          // { med: {...}, cert: {...} } — 3년 전략기획 데이터
     pw: 'cirs2026!',
 };
 

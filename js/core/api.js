@@ -93,6 +93,7 @@ export async function saveRevenueState(state) {
                 _kpiEdu: state.kpiEdu, _qualData: state.qualData,
                 _eduRecords: state.eduRecords, _tasks: state.tasks,
                 _bottleneckReasons: state.bottleneckReasons || {},
+                _strategy: state.strategy || {},       // 3년 전략기획 데이터
             },
             updated_at: new Date().toISOString(),
         });
@@ -196,6 +197,7 @@ export async function loadAllData(state) {
             else if (k === '_eduRecords')        state.eduRecords = rd[k] || [];
             else if (k === '_tasks')             state.tasks = rd[k] || [];
             else if (k === '_bottleneckReasons') state.bottleneckReasons = rd[k] || {};
+            else if (k === '_strategy')          state.strategy = rd[k] || {};  // 3년 전략기획 복원
             else                                 state.revenue[k] = rd[k];
         });
 

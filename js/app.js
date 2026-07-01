@@ -229,7 +229,7 @@ export function nav(viewName, element = null) {
         medDone:'의료기기팀 · 완료대장',
         certContract:'제품환경인증팀 · 계약업체', certConsult:'제품환경인증팀 · 상담',
         certDone:'제품환경인증팀 · 완료대장',
-        kpi:'KPI 현황', tasks:'업무지시서',
+        strategy:'3년 전략기획 (2027~2029)', kpi:'KPI 현황', tasks:'업무지시서',
     };
     const tb = document.getElementById('topbarTitle');
     if (tb) tb.textContent = titles[viewName] || viewName;
@@ -255,6 +255,7 @@ export function renderView(v) {
     if (v === 'certContract' && window.renderCertContract) window.renderCertContract();
     if (v === 'certConsult'  && window.renderCertConsult)  window.renderCertConsult();
     if (v === 'certDone'     && window.renderCertDone)     window.renderCertDone();
+    if (v === 'strategy'     && window.renderStrategy)     window.renderStrategy();  // 3년 전략기획 뷰
     if (v === 'kpi'          && window.renderKpi)          window.renderKpi();
     if (v === 'tasks'        && window.renderTasks)        window.renderTasks();
 }
