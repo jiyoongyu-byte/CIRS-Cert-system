@@ -72,6 +72,101 @@ function applyRepRestrictions(viewName) {
     });
 }
 
+// ── 자동 로그아웃 (20분 비활동 시 경고 → 로그아웃) ─────────────────
+const IDLE_TIMEOUT = 20 * 60 * 1000; // 20분 (ms)
+const WARN_BEFORE  =  2 * 60 * 1000; // 로그아웃 2분 전 경고
+
+let _idleWarnTimer        = null;
+let _idleLogoutTimer      = null;
+let _idleCountdownIv      = null;
+let _idleWarningVisible   = false;
+
+// 경고 모달 DOM 생성 (최초 1회)
+function _createIdleModal() {
+    if (document.getElementById('idle-warning-overlay')) return;
+    const el = document.createElement('div');
+    el.id = 'idle-warning-overlay';
+    el.style.cssText = 'display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);align-items:center;justify-content:center';
+    el.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:36px 32px;max-width:380px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+            <div style="font-size:40px;margin-bottom:10px">⏱️</div>
+            <h3 style="margin:0 0 8px;font-size:18px;color:#1F3864">자동 로그아웃 예정</h3>
+            <p style="margin:0 0 4px;font-size:14px;color:#555">장시간 활동이 없어 곧 로그아웃됩니다.</p>
+            <div id="idle-countdown" style="font-size:32px;font-weight:700;color:#C00000;margin:16px 0">2:00</div>
+            <button onclick="window.resetAutoLogout()"
+                style="background:#1F3864;color:#fff;border:none;border-radius:8px;padding:11px 0;font-size:15px;font-weight:600;cursor:pointer;width:100%">
+                계속 사용하기
+            </button>
+        </div>`;
+    document.body.appendChild(el);
+}
+
+function _showIdleWarning() {
+    _idleWarningVisible = true;
+    const overlay = document.getElementById('idle-warning-overlay');
+    if (overlay) overlay.style.display = 'flex';
+
+    let remaining = WARN_BEFORE;
+    clearInterval(_idleCountdownIv);
+
+    const tick = () => {
+        remaining -= 1000;
+        const el = document.getElementById('idle-countdown');
+        if (el) {
+            const m = Math.floor(remaining / 60000);
+            const s = Math.floor((remaining % 60000) / 1000);
+            el.textContent = `${m}:${String(s).padStart(2, '0')}`;
+        }
+        if (remaining <= 0) clearInterval(_idleCountdownIv);
+    };
+    tick(); // 즉시 표시
+    _idleCountdownIv = setInterval(tick, 1000);
+}
+
+function _hideIdleWarning() {
+    _idleWarningVisible = false;
+    const overlay = document.getElementById('idle-warning-overlay');
+    if (overlay) overlay.style.display = 'none';
+    clearInterval(_idleCountdownIv);
+}
+
+function _startIdleTimers() {
+    clearTimeout(_idleWarnTimer);
+    clearTimeout(_idleLogoutTimer);
+    // 18분 후 경고 표시
+    _idleWarnTimer = setTimeout(_showIdleWarning, IDLE_TIMEOUT - WARN_BEFORE);
+    // 20분 후 자동 로그아웃
+    _idleLogoutTimer = setTimeout(() => {
+        _hideIdleWarning();
+        doLogout();
+        alert('⏱️ 장시간 비활동으로 자동 로그아웃되었습니다.');
+    }, IDLE_TIMEOUT);
+}
+
+export function resetAutoLogout() {
+    if (!getCurrentUser()) return; // 로그아웃 상태 무시
+    _hideIdleWarning();
+    _startIdleTimers();
+}
+
+function initAutoLogout() {
+    _createIdleModal();
+    ['mousemove', 'click', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+        document.addEventListener(evt, resetAutoLogout, { passive: true });
+    });
+    _startIdleTimers();
+}
+
+function stopAutoLogout() {
+    clearTimeout(_idleWarnTimer);
+    clearTimeout(_idleLogoutTimer);
+    clearInterval(_idleCountdownIv);
+    _hideIdleWarning();
+    ['mousemove', 'click', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+        document.removeEventListener(evt, resetAutoLogout);
+    });
+}
+
 // ── 로그인 ────────────────────────────────────────────────────────
 export async function doLogin() {
     const user = document.getElementById('loginUser')?.value;
@@ -130,10 +225,14 @@ export async function doLogin() {
     // 팀별 사이드바 표시 제어
     applyNavVisibility(user);
 
+    // 자동 로그아웃 타이머 시작
+    initAutoLogout();
+
     nav('dashboard');
 }
 
 export function doLogout() {
+    stopAutoLogout(); // 타이머 및 이벤트 리스너 정리
     setCurrentUser('');
     document.getElementById('appShell').style.display  = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
@@ -317,6 +416,7 @@ function clearSearchFilter() {
 window.doLogin          = doLogin;
 window._doLogin         = doLogin;
 window.doLogout         = doLogout;
+window.resetAutoLogout  = resetAutoLogout;
 window.nav              = nav;
 window.changeYear       = changeYear;
 window.onExchangeRateChange = onExchangeRateChange;
