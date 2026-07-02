@@ -35,6 +35,8 @@ export async function saveMedRecord(record) {
             contact_phone: record.contactPhone || '', contact_email: record.contactEmail || '',
             quote_date: record.quoteDate || null, quote_amount: record.quoteAmount || 0,
             quote_file: record.quoteFile || '',
+            exp_audit: record.expAudit || 0, exp_test: record.expTest || 0,
+            exp_trip: record.expTrip || 0, exp_extra: record.expExtra || [],
         });
         if (error) throw error;
     } catch (e) { console.error('saveMedRecord 오류:', e); }
@@ -69,6 +71,8 @@ export async function saveCertRecord(record) {
             contact_email: record.contactEmail || '', quote_date: record.quoteDate || null,
             quote_amount: record.quoteAmount || 0, quote_file: record.quoteFile || '',
             etc_memo: record.etcMemo || '',
+            exp_audit: record.expAudit || 0, exp_test: record.expTest || 0,
+            exp_trip: record.expTrip || 0, exp_extra: record.expExtra || [],
         });
         if (error) throw error;
     } catch (e) { console.error('saveCertRecord 오류:', e); }
@@ -169,6 +173,8 @@ export async function loadAllData(state) {
             contactPhone: r.contact_phone || '', contactEmail: r.contact_email || '',
             quoteDate: r.quote_date || '', quoteAmount: Number(r.quote_amount || 0),
             quoteFile: r.quote_file || '', q: r.q || 1,
+            expAudit: Number(r.exp_audit || 0), expTest: Number(r.exp_test || 0),
+            expTrip:  Number(r.exp_trip  || 0), expExtra: r.exp_extra || [],
         }));
 
         state.cert = (cR.data || []).map(r => ({
@@ -187,6 +193,8 @@ export async function loadAllData(state) {
             contactEmail: r.contact_email || '', quoteDate: r.quote_date || '',
             quoteAmount: Number(r.quote_amount || 0), quoteFile: r.quote_file || '',
             etcMemo: r.etc_memo || '', q: r.q || 1,
+            expAudit: Number(r.exp_audit || 0), expTest: Number(r.exp_test || 0),
+            expTrip:  Number(r.exp_trip  || 0), expExtra: r.exp_extra || [],
         }));
 
         const rd = rR.data?.data || {};

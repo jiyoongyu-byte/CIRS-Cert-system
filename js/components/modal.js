@@ -73,8 +73,11 @@ export function openMedModal(type) {
      'm-status','m-progress','m-amount','m-amount-currency','m-consult-status',
      'm-fail-reason','m-consult-etc','m-quote-date','m-quote-amount','m-quote-file',
      'm-contact-name','m-contact-phone','m-contact-email','m-note','m-renewcycle','m-expiredate',
-     'm-ref-audit','m-ref-fee','m-ref-memo']
+     'm-ref-audit','m-ref-fee','m-ref-memo',
+     'm-exp-audit','m-exp-test','m-exp-trip','m-expense']
         .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+    const dew = document.getElementById('m-dynamic-expense-wrap');
+    if (dew) dew.innerHTML = '';
     const sw = document.getElementById('m-stage-wrap');
     if (sw) sw.innerHTML = '';
     buildBillingGrid('medBillingGrid','medBillingTotal','m',[],[],[]);
@@ -123,6 +126,11 @@ export function editMed(id) {
         'm-note': r.note, 'm-quote-amount': r.quoteAmount || '',
         'm-renewcycle': r.renewcycle, 'm-expiredate': r.expiredate,
         'm-ref-audit': r.refAudit || '', 'm-ref-fee': r.refFee || '', 'm-ref-memo': r.refMemo || '',
+        // 누락 필드 — 업체별 고유 데이터 (stale 버그 수정)
+        'm-contact-name':  r.contactName  || '',
+        'm-contact-phone': r.contactPhone || '',
+        'm-contact-email': r.contactEmail || '',
+        'm-exp-audit': r.expAudit || '', 'm-exp-test': r.expTest || '', 'm-exp-trip': r.expTrip || '',
     };
     Object.entries(fields).forEach(([id, val]) => {
         const el = document.getElementById(id);
@@ -134,6 +142,8 @@ export function editMed(id) {
         if (cb) { cb.checked = true; cb.parentElement.style.background = 'var(--med-light)'; cb.parentElement.style.color = 'var(--med)'; }
     });
     buildBillingGrid('medBillingGrid','medBillingTotal','m', r.billing, r.billingDates, r.billingCurrencies);
+    // 동적 기타 비용 항목 복원
+    window.loadDynamicExpenses?.('med', r.expExtra || []);
     document.querySelectorAll('.contract-only-med').forEach(el => {
         el.style.display = r.recordType === 'contract' ? '' : 'none';
     });
@@ -149,8 +159,11 @@ export function openCertModal(type) {
      'c-contractdate','c-stage','c-issuedate','c-contracted','c-date','c-fail-reason',
      'c-quote-date','c-quote-amount','c-quote-file','c-contact-name','c-contact-phone',
      'c-contact-email','c-etc-memo','c-note','c-renewcycle','c-expiredate',
-     'c-ref-audit','c-ref-fee','c-ref-memo']
+     'c-ref-audit','c-ref-fee','c-ref-memo',
+     'c-exp-audit','c-exp-test','c-exp-trip','c-expense']
         .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+    const cdew = document.getElementById('c-dynamic-expense-wrap');
+    if (cdew) cdew.innerHTML = '';
     buildBillingGrid('certBillingGrid','certBillingTotal','c',[],[],[]);
     const cf = document.getElementById('certContractFields');
     const cs = document.getElementById('certConsultSection');
@@ -178,6 +191,11 @@ export function editCert(id) {
         'c-note': r.note, 'c-etc-memo': r.etcMemo, 'c-quote-amount': r.quoteAmount || '',
         'c-renewcycle': r.renewcycle, 'c-expiredate': r.expiredate,
         'c-ref-audit': r.refAudit || '', 'c-ref-fee': r.refFee || '', 'c-ref-memo': r.refMemo || '',
+        // 누락 필드 — 업체별 고유 데이터 (stale 버그 수정)
+        'c-contact-name':  r.contactName  || '',
+        'c-contact-phone': r.contactPhone || '',
+        'c-contact-email': r.contactEmail || '',
+        'c-exp-audit': r.expAudit || '', 'c-exp-test': r.expTest || '', 'c-exp-trip': r.expTrip || '',
     };
     Object.entries(fields).forEach(([id, val]) => {
         const el = document.getElementById(id);
@@ -185,6 +203,8 @@ export function editCert(id) {
     });
     toggleCertTypeEtc();
     buildBillingGrid('certBillingGrid','certBillingTotal','c', r.billing, r.billingDates, r.billingCurrencies);
+    // 동적 기타 비용 항목 복원
+    window.loadDynamicExpenses?.('cert', r.expExtra || []);
     const cf = document.getElementById('certContractFields');
     const cs = document.getElementById('certConsultSection');
     if (cf) cf.style.display = r.recordType === 'contract' ? 'contents' : 'none';

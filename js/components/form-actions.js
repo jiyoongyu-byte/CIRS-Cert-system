@@ -57,6 +57,11 @@ export async function saveMed() {
         refAudit:     Number(document.getElementById('m-ref-audit')?.value || 0),
         refFee:       Number(document.getElementById('m-ref-fee')?.value || 0),
         refMemo:      sanitize(document.getElementById('m-ref-memo')?.value || ''),
+        // 인증기관 지출 비용 상세 (업체별 고유 데이터)
+        expAudit:     Number(document.getElementById('m-exp-audit')?.value || 0),
+        expTest:      Number(document.getElementById('m-exp-test')?.value  || 0),
+        expTrip:      Number(document.getElementById('m-exp-trip')?.value  || 0),
+        expExtra:     getDynamicExpenses('m'),
         q: quarter(startdate) || 1,
     };
 
@@ -135,6 +140,11 @@ export async function saveCert() {
         refAudit:   Number(document.getElementById('c-ref-audit')?.value || 0),
         refFee:     Number(document.getElementById('c-ref-fee')?.value || 0),
         refMemo:    sanitize(document.getElementById('c-ref-memo')?.value || ''),
+        // 인증기관 지출 비용 상세 (업체별 고유 데이터)
+        expAudit:   Number(document.getElementById('c-exp-audit')?.value || 0),
+        expTest:    Number(document.getElementById('c-exp-test')?.value  || 0),
+        expTrip:    Number(document.getElementById('c-exp-trip')?.value  || 0),
+        expExtra:   getDynamicExpenses('c'),
         q: quarter(contractdate || consultdate) || 1,
     };
 
@@ -372,6 +382,38 @@ window.saveQualData     = saveQualData;
 window.updateQualRemark = updateQualRemark;
 window.updateTarget     = updateTarget;
 // ── 지출 비용 계산 ────────────────────────────────────────────────
+// ── 동적 기타 비용 항목 직렬화 ────────────────────────────────────
+export function getDynamicExpenses(p) {
+    const wrap = document.getElementById(`${p}-dynamic-expense-wrap`);
+    if (!wrap) return [];
+    return Array.from(wrap.children).map(div => {
+        const inputs = div.querySelectorAll('input');
+        return { label: inputs[0]?.value || '', amount: Number(inputs[1]?.value || 0) };
+    }).filter(x => x.label || x.amount);
+}
+
+// ── 동적 기타 비용 항목 복원 (편집 시) ───────────────────────────
+export function loadDynamicExpenses(team, extras) {
+    const p = team === 'med' ? 'm' : 'c';
+    const wrap = document.getElementById(`${p}-dynamic-expense-wrap`);
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    (extras || []).forEach(item => {
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;';
+        div.innerHTML = `
+            <input class="form-input" type="text" placeholder="항목명" style="flex:1;" value="${(item.label||'').replace(/"/g,'&quot;')}">
+            <input class="form-input" type="number" placeholder="금액" style="width:140px;" value="${item.amount||0}"
+                oninput="calcTotalExpense('${team}')">
+            <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();calcTotalExpense('${team}')">✕</button>
+        `;
+        wrap.appendChild(div);
+    });
+    calcTotalExpense(team);
+}
+window.getDynamicExpenses  = getDynamicExpenses;
+window.loadDynamicExpenses = loadDynamicExpenses;
+
 export function calcTotalExpense(team) {
     const p = team === 'med' ? 'm' : 'c';
     const audit = Number(document.getElementById(`${p}-exp-audit`)?.value || 0);
