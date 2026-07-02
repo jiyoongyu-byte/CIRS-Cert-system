@@ -2,7 +2,7 @@
 
 import { getState, setMedEditId, setCertEditId, getMedEditId,
          setMedIsContract, setCertIsContract } from '../core/store.js';
-import { toKRW, getRates, fmt, fmtM } from '../core/utils.js';
+import { getRates, fmt, fmtM } from '../core/utils.js';
 
 // ── 모달 내 환율 pre-fill (사이드바 → 모달, 빈 경우에만) ───────────
 function _prefillModalRates(p) {

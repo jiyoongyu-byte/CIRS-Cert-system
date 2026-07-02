@@ -402,7 +402,7 @@ export function loadRefExtras(team, extras) {
         div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;';
         div.innerHTML = `
             <input class="form-input" type="text" placeholder="항목명" style="flex:1;" value="${(item.label||'').replace(/"/g,'&quot;')}">
-            <input class="form-input text-mono" type="number" placeholder="금액" style="width:130px;" value="${item.amount||''}">
+            <input class="form-input text-mono" type="number" placeholder="금액 (원)" style="width:130px;" value="${item.amount||0}">
             <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
         `;
         wrap.appendChild(div);
