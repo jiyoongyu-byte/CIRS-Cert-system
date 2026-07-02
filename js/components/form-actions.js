@@ -57,6 +57,7 @@ export async function saveMed() {
         refAudit:     Number(document.getElementById('m-ref-audit')?.value || 0),
         refFee:       Number(document.getElementById('m-ref-fee')?.value || 0),
         refMemo:      sanitize(document.getElementById('m-ref-memo')?.value || ''),
+        refExtra:     getRefExtras('m'),
         // 인증기관 지출 비용 상세 (업체별 고유 데이터)
         expAudit:     Number(document.getElementById('m-exp-audit')?.value || 0),
         expTest:      Number(document.getElementById('m-exp-test')?.value  || 0),
@@ -140,6 +141,7 @@ export async function saveCert() {
         refAudit:   Number(document.getElementById('c-ref-audit')?.value || 0),
         refFee:     Number(document.getElementById('c-ref-fee')?.value || 0),
         refMemo:    sanitize(document.getElementById('c-ref-memo')?.value || ''),
+        refExtra:   getRefExtras('c'),
         // 인증기관 지출 비용 상세 (업체별 고유 데이터)
         expAudit:   Number(document.getElementById('c-exp-audit')?.value || 0),
         expTest:    Number(document.getElementById('c-exp-test')?.value  || 0),
@@ -381,6 +383,49 @@ window.removeQualItem   = removeQualItem;
 window.saveQualData     = saveQualData;
 window.updateQualRemark = updateQualRemark;
 window.updateTarget     = updateTarget;
+// ── 외부기관 참고 비용 — 동적 기타 항목 ────────────────────────────
+export function getRefExtras(p) {
+    const wrap = document.getElementById(`${p}-ref-extra-wrap`);
+    if (!wrap) return [];
+    return Array.from(wrap.children).map(div => {
+        const inputs = div.querySelectorAll('input');
+        return { label: inputs[0]?.value || '', amount: Number(inputs[1]?.value || 0) };
+    }).filter(x => x.label || x.amount);
+}
+export function loadRefExtras(team, extras) {
+    const p = team === 'med' ? 'm' : 'c';
+    const wrap = document.getElementById(`${p}-ref-extra-wrap`);
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    (extras || []).forEach(item => {
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;';
+        div.innerHTML = `
+            <input class="form-input" type="text" placeholder="항목명" style="flex:1;" value="${(item.label||'').replace(/"/g,'&quot;')}">
+            <input class="form-input text-mono" type="number" placeholder="금액" style="width:130px;" value="${item.amount||''}">
+            <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
+        `;
+        wrap.appendChild(div);
+    });
+}
+export function addRefExtra(team) {
+    const p = team === 'med' ? 'm' : 'c';
+    const wrap = document.getElementById(`${p}-ref-extra-wrap`);
+    if (!wrap) return;
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;';
+    div.innerHTML = `
+        <input class="form-input" type="text" placeholder="항목명 (예: 시험비, 인증서 발급비)">
+        <input class="form-input text-mono" type="number" placeholder="금액 (원)" style="width:130px;">
+        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
+    `;
+    wrap.appendChild(div);
+    wrap.lastElementChild.querySelector('input').focus();
+}
+window.getRefExtras   = getRefExtras;
+window.loadRefExtras  = loadRefExtras;
+window.addRefExtra    = addRefExtra;
+
 // ── 지출 비용 계산 ────────────────────────────────────────────────
 // ── 동적 기타 비용 항목 직렬화 ────────────────────────────────────
 export function getDynamicExpenses(p) {

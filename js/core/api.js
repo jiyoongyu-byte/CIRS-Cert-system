@@ -37,6 +37,8 @@ export async function saveMedRecord(record) {
             quote_file: record.quoteFile || '',
             exp_audit: record.expAudit || 0, exp_test: record.expTest || 0,
             exp_trip: record.expTrip || 0, exp_extra: record.expExtra || [],
+            ref_audit: record.refAudit || 0, ref_fee: record.refFee || 0,
+            ref_memo: record.refMemo || '', ref_extra: record.refExtra || [],
         });
         if (error) throw error;
     } catch (e) { console.error('saveMedRecord 오류:', e); }
@@ -73,6 +75,8 @@ export async function saveCertRecord(record) {
             etc_memo: record.etcMemo || '',
             exp_audit: record.expAudit || 0, exp_test: record.expTest || 0,
             exp_trip: record.expTrip || 0, exp_extra: record.expExtra || [],
+            ref_audit: record.refAudit || 0, ref_fee: record.refFee || 0,
+            ref_memo: record.refMemo || '', ref_extra: record.refExtra || [],
         });
         if (error) throw error;
     } catch (e) { console.error('saveCertRecord 오류:', e); }
@@ -175,6 +179,8 @@ export async function loadAllData(state) {
             quoteFile: r.quote_file || '', q: r.q || 1,
             expAudit: Number(r.exp_audit || 0), expTest: Number(r.exp_test || 0),
             expTrip:  Number(r.exp_trip  || 0), expExtra: r.exp_extra || [],
+            refAudit: Number(r.ref_audit || 0), refFee: Number(r.ref_fee || 0),
+            refMemo:  r.ref_memo || '', refExtra: r.ref_extra || [],
         }));
 
         state.cert = (cR.data || []).map(r => ({
@@ -195,6 +201,8 @@ export async function loadAllData(state) {
             etcMemo: r.etc_memo || '', q: r.q || 1,
             expAudit: Number(r.exp_audit || 0), expTest: Number(r.exp_test || 0),
             expTrip:  Number(r.exp_trip  || 0), expExtra: r.exp_extra || [],
+            refAudit: Number(r.ref_audit || 0), refFee: Number(r.ref_fee || 0),
+            refMemo:  r.ref_memo || '', refExtra: r.ref_extra || [],
         }));
 
         const rd = rR.data?.data || {};

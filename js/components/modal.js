@@ -144,6 +144,8 @@ export function openMedModal(type) {
         .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
     const dew = document.getElementById('m-dynamic-expense-wrap');
     if (dew) dew.innerHTML = '';
+    const rew = document.getElementById('m-ref-extra-wrap');
+    if (rew) rew.innerHTML = '';
     const sw = document.getElementById('m-stage-wrap');
     if (sw) sw.innerHTML = '';
     buildBillingGrid('medBillingGrid','medBillingTotal','m',[],[],[]);
@@ -210,6 +212,8 @@ export function editMed(id) {
     buildBillingGrid('medBillingGrid','medBillingTotal','m', r.billing, r.billingDates, r.billingCurrencies);
     // 동적 기타 비용 항목 복원
     window.loadDynamicExpenses?.('med', r.expExtra || []);
+    // 외부기관 참고 기타 비용 항목 복원
+    window.loadRefExtras?.('med', r.refExtra || []);
     document.querySelectorAll('.contract-only-med').forEach(el => {
         el.style.display = r.recordType === 'contract' ? '' : 'none';
     });
@@ -231,6 +235,8 @@ export function openCertModal(type) {
         .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
     const cdew = document.getElementById('c-dynamic-expense-wrap');
     if (cdew) cdew.innerHTML = '';
+    const crew = document.getElementById('c-ref-extra-wrap');
+    if (crew) crew.innerHTML = '';
     buildBillingGrid('certBillingGrid','certBillingTotal','c',[],[],[]);
     const cf = document.getElementById('certContractFields');
     const cs = document.getElementById('certConsultSection');
@@ -272,6 +278,8 @@ export function editCert(id) {
     buildBillingGrid('certBillingGrid','certBillingTotal','c', r.billing, r.billingDates, r.billingCurrencies);
     // 동적 기타 비용 항목 복원
     window.loadDynamicExpenses?.('cert', r.expExtra || []);
+    // 외부기관 참고 기타 비용 항목 복원
+    window.loadRefExtras?.('cert', r.refExtra || []);
     const cf = document.getElementById('certContractFields');
     const cs = document.getElementById('certConsultSection');
     if (cf) cf.style.display = r.recordType === 'contract' ? 'contents' : 'none';
