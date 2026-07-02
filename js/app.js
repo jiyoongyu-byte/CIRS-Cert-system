@@ -53,6 +53,12 @@ function applyNavVisibility(user) {
         const el = document.getElementById(id);
         if (el) el.style.display = showCert ? '' : 'none';
     });
+    // 지윤규 전용: 3년 전략기획 및 보고서 생성 메뉴
+    const isAdmin = user === SUPER_ADMIN;
+    ['nav-item-strategy', 'nav-item-report'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isAdmin ? '' : 'none';
+    });
 }
 
 // ── 대표이사: 현재 화면의 추가/수정 버튼 숨김 ─────────────────────

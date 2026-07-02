@@ -76,11 +76,9 @@ export function toggleRepPeriod() {
 }
 
 // ── 데이터 수집 ───────────────────────────────────────────────────
-function collectData(state, year, sm, em, teamFilter) {
+function collectData(state, year, sm, em) {
     const allMed  = (state.med  || []).filter(x => x.recordType === 'contract');
     const allCert = (state.cert || []).filter(x => x.recordType === 'contract');
-    const med     = teamFilter === 'cert' ? [] : allMed;
-    const cert    = teamFilter === 'med'  ? [] : allCert;
 
     // 기간 내 수입 실적 (청구 날짜 기준)
     function calcActual(records) {
@@ -100,6 +98,30 @@ function collectData(state, year, sm, em, teamFilter) {
         const teamRev = (state.revenue || {})[year]?.[team] || {};
         let total = 0;
         for (let m = sm; m <= em; m++) {
+            const qKey = ['q1','q2','q3','q4'][Math.floor((m - 1) / 3)];
+            total += Math.round(Number(teamRev[qKey] || 0) / 3);
+        }
+        return total;
+    }
+
+    // 누적 실적 (1월 ~ em월)
+    function calcCumActual(records) {
+        let total = 0;
+        records.forEach(r => {
+            (r.billing || []).forEach((amt, i) => {
+                const date = (r.billingDates || [])[i];
+                const cur  = (r.billingCurrencies || [])[i] || 'KRW';
+                if (inPeriod(date, year, 1, em)) total += toKRW(Number(amt || 0), cur);
+            });
+        });
+        return Math.round(total);
+    }
+
+    // 누적 계획 (1월 ~ em월)
+    function calcCumTarget(team) {
+        const teamRev = (state.revenue || {})[year]?.[team] || {};
+        let total = 0;
+        for (let m = 1; m <= em; m++) {
             const qKey = ['q1','q2','q3','q4'][Math.floor((m - 1) / 3)];
             total += Math.round(Number(teamRev[qKey] || 0) / 3);
         }
@@ -126,15 +148,15 @@ function collectData(state, year, sm, em, teamFilter) {
         return Math.round(Number(teamRev[qKey] || 0) / 3);
     }
 
-    // 월별 누적 데이터 계산
+    // 월별 누적 데이터 계산 (항상 양 팀 모두 표시)
     function buildMonthlyData() {
         const months = [];
         let cumMedAct = 0, cumCertAct = 0, cumMedTgt = 0, cumCertTgt = 0;
         for (let m = sm; m <= em; m++) {
-            const medAct  = (teamFilter !== 'cert') ? calcMonthActual(allMed, m)  : 0;
-            const certAct = (teamFilter !== 'med')  ? calcMonthActual(allCert, m) : 0;
-            const medTgt  = (teamFilter !== 'cert') ? calcMonthTarget('med', m)   : 0;
-            const certTgt = (teamFilter !== 'med')  ? calcMonthTarget('cert', m)  : 0;
+            const medAct  = calcMonthActual(allMed, m);
+            const certAct = calcMonthActual(allCert, m);
+            const medTgt  = calcMonthTarget('med', m);
+            const certTgt = calcMonthTarget('cert', m);
             cumMedAct  += medAct;  cumCertAct += certAct;
             cumMedTgt  += medTgt;  cumCertTgt += certTgt;
             months.push({
@@ -191,16 +213,17 @@ function collectData(state, year, sm, em, teamFilter) {
     const taskOverdue  = tasks.filter(t => !t.completedDate && t.duedate && new Date(t.duedate) < new Date()).length;
 
     return {
-        med:  { actual: calcActual(med),  target: calcTarget('med'),  prev: calcPrev(allMed),  stats: contractStats(med) },
-        cert: { actual: calcActual(cert), target: calcTarget('cert'), prev: calcPrev(allCert), stats: contractStats(cert) },
+        med:  { actual: calcActual(allMed),  target: calcTarget('med'),  prev: calcPrev(allMed),  stats: contractStats(allMed),
+                cumActual: calcCumActual(allMed),  cumTarget: calcCumTarget('med') },
+        cert: { actual: calcActual(allCert), target: calcTarget('cert'), prev: calcPrev(allCert), stats: contractStats(allCert),
+                cumActual: calcCumActual(allCert), cumTarget: calcCumTarget('cert') },
         tasks: { total: tasks.length, done: taskDone, inProgress: tasks.length - taskDone, overdue: taskOverdue },
         monthlyData: buildMonthlyData(),
-        teamFilter,
     };
 }
 
 // ── Word 문서 생성 ────────────────────────────────────────────────
-async function buildDocx(data, periodLabel, memo, currentUser, teamFilter) {
+async function buildDocx(data, periodLabel, memo, currentUser) {
     const D = window.docx;
     if (!D) throw new Error('docx 라이브러리 없음');
 
@@ -210,7 +233,6 @@ async function buildDocx(data, periodLabel, memo, currentUser, teamFilter) {
         ShadingType, TableLayoutType,
     } = D;
 
-    const teamLabel = teamFilter === 'med' ? '의료기기팀' : teamFilter === 'cert' ? '제품환경인증팀' : '전체';
     const dateStr   = new Date().toLocaleDateString('ko-KR');
 
     // ── 셀 헬퍼 ────────────────────────────────────────────────────
@@ -248,67 +270,80 @@ async function buildDocx(data, periodLabel, memo, currentUser, teamFilter) {
         });
     }
 
-    // ── 1. 수입 실적 테이블 ─────────────────────────────────────────
+    // ── 1. 수입 실적 테이블 (해당기간 + 누적 + 전년대비, 9열) ────────
     const revRows = [
-        new TableRow({ children: [hcell('구분'), hcell('목표'), hcell('실적'), hcell('달성률'), hcell('전년 동기'), hcell('전년 대비')], tableHeader: true }),
+        new TableRow({ children: [
+            hcell('구분'),
+            hcell('해당기간\n목표'), hcell('해당기간\n실적'), hcell('달성률'),
+            hcell('누적\n목표'),     hcell('누적\n실적'),     hcell('누적\n달성률'),
+            hcell('전년 동기'),      hcell('전년 대비'),
+        ], tableHeader: true }),
     ];
 
     function addRevRow(label, d) {
-        const achColor = d.actual >= d.target && d.target > 0 ? '0070C0' : 'C00000';
-        const yoyColor = d.actual >= d.prev && d.prev > 0 ? '0070C0' : 'C00000';
+        const achColor    = d.actual    >= d.target    && d.target    > 0 ? '0070C0' : 'C00000';
+        const cumAchColor = d.cumActual >= d.cumTarget && d.cumTarget > 0 ? '0070C0' : 'C00000';
+        const yoyColor    = d.actual    >= d.prev      && d.prev      > 0 ? '0070C0' : 'C00000';
         revRows.push(new TableRow({ children: [
             cell(label, { bold: true, align: AlignmentType.LEFT }),
             cell(fmtKRW(d.target)),
             cell(fmtKRW(d.actual)),
-            cell(pctStr(d.actual, d.target), { bold: true, color: achColor }),
+            cell(pctStr(d.actual, d.target),       { bold: true, color: achColor }),
+            cell(fmtKRW(d.cumTarget),              { bg: 'EBF0FA' }),
+            cell(fmtKRW(d.cumActual),              { bold: true, bg: 'EBF0FA' }),
+            cell(pctStr(d.cumActual, d.cumTarget), { bold: true, bg: 'EBF0FA', color: cumAchColor }),
             cell(fmtKRW(d.prev)),
-            cell(yoyStr(d.actual, d.prev), { color: yoyColor }),
+            cell(yoyStr(d.actual, d.prev),         { color: yoyColor }),
         ]}));
     }
 
-    if (teamFilter !== 'cert') addRevRow('의료기기팀',     data.med);
-    if (teamFilter !== 'med')  addRevRow('제품환경인증팀', data.cert);
-    if (teamFilter === 'all') {
-        const total      = data.med.actual + data.cert.actual;
-        const totalTgt   = data.med.target + data.cert.target;
-        const totalPrev  = data.med.prev   + data.cert.prev;
-        const achColor   = total >= totalTgt && totalTgt > 0 ? '0070C0' : 'C00000';
-        const yoyColor   = total >= totalPrev && totalPrev > 0 ? '0070C0' : 'C00000';
-        revRows.push(new TableRow({ children: [
-            cell('합 계', { bold: true, bg: 'D9E2F3', align: AlignmentType.LEFT }),
-            cell(fmtKRW(totalTgt),               { bold: true, bg: 'D9E2F3' }),
-            cell(fmtKRW(total),                  { bold: true, bg: 'D9E2F3' }),
-            cell(pctStr(total, totalTgt),         { bold: true, bg: 'D9E2F3', color: achColor }),
-            cell(fmtKRW(totalPrev),               { bg: 'D9E2F3' }),
-            cell(yoyStr(total, totalPrev),         { bold: true, bg: 'D9E2F3', color: yoyColor }),
-        ]}));
-    }
+    addRevRow('의료기기팀',     data.med);
+    addRevRow('제품환경인증팀', data.cert);
+    // 합계 행
+    const total       = data.med.actual    + data.cert.actual;
+    const totalTgt    = data.med.target    + data.cert.target;
+    const cumTotal    = data.med.cumActual + data.cert.cumActual;
+    const cumTotalTgt = data.med.cumTarget + data.cert.cumTarget;
+    const totalPrev   = data.med.prev      + data.cert.prev;
+    const tAchColor   = total    >= totalTgt    && totalTgt    > 0 ? '0070C0' : 'C00000';
+    const tCumColor   = cumTotal >= cumTotalTgt && cumTotalTgt > 0 ? '0070C0' : 'C00000';
+    const tYoyColor   = total    >= totalPrev   && totalPrev   > 0 ? '0070C0' : 'C00000';
+    revRows.push(new TableRow({ children: [
+        cell('합 계',                              { bold: true, bg: 'D9E2F3', align: AlignmentType.LEFT }),
+        cell(fmtKRW(totalTgt),                    { bold: true, bg: 'D9E2F3' }),
+        cell(fmtKRW(total),                       { bold: true, bg: 'D9E2F3' }),
+        cell(pctStr(total, totalTgt),              { bold: true, bg: 'D9E2F3', color: tAchColor }),
+        cell(fmtKRW(cumTotalTgt),                  { bold: true, bg: 'C5D0E8' }),
+        cell(fmtKRW(cumTotal),                     { bold: true, bg: 'C5D0E8' }),
+        cell(pctStr(cumTotal, cumTotalTgt),         { bold: true, bg: 'C5D0E8', color: tCumColor }),
+        cell(fmtKRW(totalPrev),                   { bg: 'D9E2F3' }),
+        cell(yoyStr(total, totalPrev),             { bold: true, bg: 'D9E2F3', color: tYoyColor }),
+    ]}));
     const revTable = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: revRows, layout: TableLayoutType.FIXED });
 
-    // ── 2. 월별 실적 및 누적 테이블 ────────────────────────────────
+    // ── 2. 월별 실적 및 누적 테이블 (항상 양 팀 표시) ───────────────
     const monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-    const showBothTeams = teamFilter === 'all';
 
-    // 헤더 열 구성 (팀 선택에 따라 동적)
-    const mthHeaders = [hcell('월')];
-    if (teamFilter !== 'cert') { mthHeaders.push(hcell('의료기기\n계획')); mthHeaders.push(hcell('의료기기\n실적')); }
-    if (teamFilter !== 'med')  { mthHeaders.push(hcell('인증팀\n계획')); mthHeaders.push(hcell('인증팀\n실적')); }
-    if (showBothTeams)          { mthHeaders.push(hcell('전체\n누적계획')); mthHeaders.push(hcell('전체\n누적실적')); mthHeaders.push(hcell('누적\n달성률')); }
-    else if (teamFilter === 'med')  { mthHeaders.push(hcell('누적계획')); mthHeaders.push(hcell('누적실적')); mthHeaders.push(hcell('달성률')); }
-    else                            { mthHeaders.push(hcell('누적계획')); mthHeaders.push(hcell('누적실적')); mthHeaders.push(hcell('달성률')); }
-
+    const mthHeaders = [
+        hcell('월'),
+        hcell('의료기기\n계획'), hcell('의료기기\n실적'),
+        hcell('인증팀\n계획'),   hcell('인증팀\n실적'),
+        hcell('전체\n누적계획'), hcell('전체\n누적실적'), hcell('누적\n달성률'),
+    ];
     const mthRows = [new TableRow({ children: mthHeaders, tableHeader: true })];
 
     (data.monthlyData || []).forEach(md => {
-        const cumAct = showBothTeams ? md.cumTotal : (teamFilter === 'med' ? md.cumMedActual : md.cumCertActual);
-        const cumTgt = showBothTeams ? md.cumTotalTarget : (teamFilter === 'med' ? md.cumMedTarget : md.cumCertTarget);
+        const cumAct   = md.cumTotal;
+        const cumTgt   = md.cumTotalTarget;
         const achColor = cumAct >= cumTgt && cumTgt > 0 ? '0070C0' : 'C00000';
-        const cells = [cell(monthNames[md.month - 1], { bold: true })];
-        if (teamFilter !== 'cert') { cells.push(cell(fmtKRW(md.medTarget))); cells.push(cell(fmtKRW(md.medActual))); }
-        if (teamFilter !== 'med')  { cells.push(cell(fmtKRW(md.certTarget))); cells.push(cell(fmtKRW(md.certActual))); }
-        cells.push(cell(fmtKRW(cumTgt), { bg: 'EBF0FA' }));
-        cells.push(cell(fmtKRW(cumAct), { bold: true, bg: 'EBF0FA' }));
-        cells.push(cell(pctStr(cumAct, cumTgt), { bold: true, bg: 'EBF0FA', color: achColor }));
+        const cells = [
+            cell(monthNames[md.month - 1], { bold: true }),
+            cell(fmtKRW(md.medTarget)),  cell(fmtKRW(md.medActual)),
+            cell(fmtKRW(md.certTarget)), cell(fmtKRW(md.certActual)),
+            cell(fmtKRW(cumTgt),  { bg: 'EBF0FA' }),
+            cell(fmtKRW(cumAct),  { bold: true, bg: 'EBF0FA' }),
+            cell(pctStr(cumAct, cumTgt), { bold: true, bg: 'EBF0FA', color: achColor }),
+        ];
         mthRows.push(new TableRow({ children: cells }));
     });
 
@@ -330,19 +365,17 @@ async function buildDocx(data, periodLabel, memo, currentUser, teamFilter) {
         ]}));
     }
 
-    if (teamFilter !== 'cert') addConRow('의료기기팀',     data.med.stats);
-    if (teamFilter !== 'med')  addConRow('제품환경인증팀', data.cert.stats);
-    if (teamFilter === 'all') {
-        const ms = data.med.stats, cs = data.cert.stats;
-        conRows.push(new TableRow({ children: [
-            cell('합 계', { bold: true, bg: 'D9E2F3', align: AlignmentType.LEFT }),
-            cell((ms.active + cs.active) + '건',                   { bold: true, bg: 'D9E2F3' }),
-            cell(fmtKRW(ms.activeKRW + cs.activeKRW),             { bold: true, bg: 'D9E2F3' }),
-            cell((ms.new    + cs.new)   + '건',                   { bg: 'D9E2F3' }),
-            cell((ms.done   + cs.done)  + '건',                   { bg: 'D9E2F3' }),
-            cell(fmtKRW(ms.remainKRW + cs.remainKRW),             { bold: true, bg: 'D9E2F3' }),
-        ]}));
-    }
+    addConRow('의료기기팀',     data.med.stats);
+    addConRow('제품환경인증팀', data.cert.stats);
+    const ms = data.med.stats, cs = data.cert.stats;
+    conRows.push(new TableRow({ children: [
+        cell('합 계', { bold: true, bg: 'D9E2F3', align: AlignmentType.LEFT }),
+        cell((ms.active + cs.active) + '건',               { bold: true, bg: 'D9E2F3' }),
+        cell(fmtKRW(ms.activeKRW + cs.activeKRW),          { bold: true, bg: 'D9E2F3' }),
+        cell((ms.new  + cs.new)   + '건',                  { bg: 'D9E2F3' }),
+        cell((ms.done + cs.done)  + '건',                  { bg: 'D9E2F3' }),
+        cell(fmtKRW(ms.remainKRW + cs.remainKRW),          { bold: true, bg: 'D9E2F3' }),
+    ]}));
     const conTable = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: conRows, layout: TableLayoutType.FIXED });
 
     // ── 3. 업무지시 현황 테이블 ────────────────────────────────────
@@ -386,7 +419,7 @@ async function buildDocx(data, periodLabel, memo, currentUser, teamFilter) {
                     spacing: { after: 80 },
                 }),
                 new Paragraph({
-                    children: [new TextRun({ text: `${teamLabel}  ${periodLabel}  업무 보고`, bold: true, size: 36, font: 'Malgun Gothic' })],
+                    children: [new TextRun({ text: `${periodLabel}  업무 보고`, bold: true, size: 36, font: 'Malgun Gothic' })],
                     alignment: AlignmentType.CENTER,
                     spacing: { after: 100 },
                 }),
@@ -447,7 +480,6 @@ export async function generateReport() {
     try {
         const type       = document.querySelector('input[name="rep-type"]:checked')?.value || 'month';
         const year       = parseInt(document.getElementById('rep-year')?.value) || getCurrentYear();
-        const teamFilter = document.getElementById('rep-team')?.value || 'all';
         const memo       = (document.getElementById('rep-memo')?.value || '').trim();
 
         let sm, em, periodLabel;
@@ -469,14 +501,13 @@ export async function generateReport() {
 
         const state       = getState();
         const currentUser = getCurrentUser();
-        const data        = collectData(state, year, sm, em, teamFilter);
-        const blob        = await buildDocx(data, periodLabel, memo, currentUser, teamFilter);
+        const data        = collectData(state, year, sm, em);
+        const blob        = await buildDocx(data, periodLabel, memo, currentUser);
 
         const url = URL.createObjectURL(blob);
         const a   = document.createElement('a');
         a.href    = url;
-        const teamLabel = teamFilter === 'med' ? '의료기기팀' : teamFilter === 'cert' ? '제품환경인증팀' : '전체';
-        a.download = `CIRS_${teamLabel}_${periodLabel}_업무보고.docx`;
+        a.download = `CIRS_전체_${periodLabel}_업무보고.docx`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

@@ -195,8 +195,8 @@ input[type=date]{color-scheme:dark}
     <div class="nav-item" id="nav-item-certDone" onclick="nav('certDone',this)"><span class="dot dot-cert"></span><span data-ko="완료대장" data-zh="完成台账">완료대장</span></div>
     <div class="nav-label" data-ko="평가" data-zh="绩效评估">평가</div>
     <div class="nav-item" onclick="nav('kpi',this)"><span class="dot dot-all"></span><span data-ko="KPI 현황" data-zh="KPI现状">KPI 현황</span></div>
-    <div class="nav-item" onclick="nav('strategy',this)"><span class="dot dot-all"></span><span>📊 3년 전략기획 (2027~2029)</span></div>
-    <div class="nav-item" onclick="openReportModal()"><span class="dot dot-all"></span><span data-ko="📄 월보/분기보 생성" data-zh="生成报告">📄 월보/분기보 생성</span></div>
+    <div class="nav-item" id="nav-item-strategy" onclick="nav('strategy',this)"><span class="dot dot-all"></span><span>📊 3년 전략기획 (2027~2029)</span></div>
+    <div class="nav-item" id="nav-item-report" onclick="openReportModal()"><span class="dot dot-all"></span><span data-ko="📄 월보/분기보 생성" data-zh="生成报告">📄 월보/분기보 생성</span></div>
     <div class="nav-label" id="nav-label-tasks" data-ko="업무" data-zh="工作">업무</div>
     <div class="nav-item" id="nav-item-tasks" onclick="nav('tasks',this)"><span class="dot dot-all"></span><span data-ko="업무지시서" data-zh="工作指示单">업무지시서</span></div>
   </div>
@@ -574,14 +574,7 @@ input[type=date]{color-scheme:dark}
         <option value="2">하반기 (7~12월)</option>
       </select>
     </div>
-    <div class="form-group full">
-      <label class="form-label">팀 선택</label>
-      <select class="form-select" id="rep-team">
-        <option value="all">전체 (의료기기팀 + 제품환경인증팀)</option>
-        <option value="med">의료기기팀</option>
-        <option value="cert">제품환경인증팀</option>
-      </select>
-    </div>
+    <!-- 팀 선택 제거: 보고서는 항상 전체(의료기기팀+제품환경인증팀) 출력 -->
     <div class="form-group full">
       <label class="form-label">특이사항 및 달성률 사유 <span style="font-size:11px;color:var(--text3);font-weight:400">(목표 대비, 전년 대비 달성 사유 등)</span></label>
       <textarea class="form-textarea" id="rep-memo" rows="5" placeholder="예) 2분기 목표 대비 85% 달성 — A업체 계약 지연으로 인한 수입 이월&#10;전년 동기 대비 ▲12% 성장 — 신규 의료기기 등록 수주 증가"></textarea>
