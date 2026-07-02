@@ -2,7 +2,16 @@
 
 import { getState, setMedEditId, setCertEditId, getMedEditId,
          setMedIsContract, setCertIsContract } from '../core/store.js';
-import { toKRW, fmt, fmtM } from '../core/utils.js';
+import { toKRW, getRates, fmt, fmtM } from '../core/utils.js';
+
+// ── 모달 내 환율 pre-fill (사이드바 → 모달, 빈 경우에만) ───────────
+function _prefillModalRates(p) {
+    const sr = getRates();
+    const usdEl = document.getElementById(`${p}-rate-usd`);
+    const rmbEl = document.getElementById(`${p}-rate-rmb`);
+    if (usdEl && !usdEl.value && sr.usd) usdEl.value = sr.usd;
+    if (rmbEl && !rmbEl.value && sr.rmb) rmbEl.value = sr.rmb;
+}
 
 const BILL_LABELS = ['1','2','3','4','5'];
 
@@ -29,28 +38,56 @@ export function buildBillingGrid(contId, totalId, prefix, bArr, bDates, bCur) {
             <input type="date" id="${prefix}-bd${i}" value="${(bDates||[])[i]||''}">
         </div>`;
     }).join('');
+    _prefillModalRates(prefix); // 사이드바 환율 자동 pre-fill
     calcBilling(prefix, totalId);
 }
 
 export function calcBilling(p, tId) {
     const amtEl = document.getElementById(p === 'm' ? 'm-amount' : 'c-amount');
     const curEl = document.getElementById(p === 'm' ? 'm-amount-currency' : 'c-amount-currency');
-    const tAmt = Number(amtEl?.value || 0);
-    const tCur = curEl?.value || 'KRW';
-    const tKRW = toKRW(tAmt, tCur);
+    const tAmt  = Number(amtEl?.value || 0);
+    const tCur  = curEl?.value || 'KRW';
+
+    // 환율: 모달 내 입력 우선 → 사이드바 fallback
+    const sr = getRates();
+    const usdRate = Number(document.getElementById(`${p}-rate-usd`)?.value) || sr.usd || 0;
+    const rmbRate = Number(document.getElementById(`${p}-rate-rmb`)?.value) || sr.rmb || 0;
+
+    // KRW 환산 (모달/사이드바 환율 사용)
+    function toKRWLocal(amt, cur) {
+        if (cur === 'USD') return usdRate ? Number(amt) * usdRate : 0;
+        if (cur === 'RMB') return rmbRate ? Number(amt) * rmbRate : 0;
+        return Number(amt);
+    }
+
+    const tKRW = toKRWLocal(tAmt, tCur);
     let bKRW = 0;
     for (let i = 0; i < 5; i++) {
-        bKRW += toKRW(
+        bKRW += toKRWLocal(
             Number(document.getElementById(`${p}-b${i}`)?.value || 0),
             document.getElementById(`${p}-bc${i}`)?.value || 'KRW'
         );
     }
+
+    // 환율 입력 패널: 계약 또는 수입 분할 중 비KRW 통화 존재 시 표시
+    const hasNonKRW = tCur !== 'KRW' ||
+        Array.from({length:5}, (_, i) => document.getElementById(`${p}-bc${i}`)?.value || 'KRW')
+             .some(c => c !== 'KRW');
+    const rw = document.getElementById(`${p}-rate-wrap`);
+    if (rw) rw.style.display = hasNonKRW ? 'flex' : 'none';
+
+    // 환율 미설정 시 경고 문구
+    const needsRate = (tCur === 'USD' && !usdRate) || (tCur === 'RMB' && !rmbRate);
+    const warnHtml  = needsRate && tAmt > 0
+        ? `<span style="color:var(--warn,#e67e22);font-size:12px">⚠️ 위에서 환율을 입력하면 KRW 환산됩니다</span>`
+        : '';
+
     const el = document.getElementById(tId);
     if (el) el.innerHTML =
         `<span>계약총액 <strong>${fmt(tAmt)} ${tCur}</strong></span>` +
         `<span>수입합계 <strong>${fmtM(Math.round(bKRW))}</strong></span>` +
-        `<span class="billing-remain ${tKRW-bKRW<=0&&tKRW>0?'ok':'none'}">` +
-        `잔액 ${fmtM(Math.round(tKRW - bKRW))}</span>`;
+        `<span class="billing-remain ${tKRW-bKRW<=0&&tKRW>0?'ok':'none'}">잔액 ${fmtM(Math.round(tKRW - bKRW))}</span>` +
+        warnHtml;
 }
 
 export function getBillingValues(p) {
@@ -74,7 +111,8 @@ export function openMedModal(type) {
      'm-fail-reason','m-consult-etc','m-quote-date','m-quote-amount','m-quote-file',
      'm-contact-name','m-contact-phone','m-contact-email','m-note','m-renewcycle','m-expiredate',
      'm-ref-audit','m-ref-fee','m-ref-memo',
-     'm-exp-audit','m-exp-test','m-exp-trip','m-expense']
+     'm-exp-audit','m-exp-test','m-exp-trip','m-expense',
+     'm-rate-usd','m-rate-rmb']  // 모달 환율 초기화
         .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
     const dew = document.getElementById('m-dynamic-expense-wrap');
     if (dew) dew.innerHTML = '';
@@ -160,7 +198,8 @@ export function openCertModal(type) {
      'c-quote-date','c-quote-amount','c-quote-file','c-contact-name','c-contact-phone',
      'c-contact-email','c-etc-memo','c-note','c-renewcycle','c-expiredate',
      'c-ref-audit','c-ref-fee','c-ref-memo',
-     'c-exp-audit','c-exp-test','c-exp-trip','c-expense']
+     'c-exp-audit','c-exp-test','c-exp-trip','c-expense',
+     'c-rate-usd','c-rate-rmb']  // 모달 환율 초기화
         .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
     const cdew = document.getElementById('c-dynamic-expense-wrap');
     if (cdew) cdew.innerHTML = '';

@@ -1,7 +1,7 @@
 // js/views/team-board.js — 팀별 계약/상담/완료대장 렌더링
 
 import { getState, getCurrentYear, getCurrentUser } from '../core/store.js';
-import { fmt, tt, sanitize, toKRW } from '../core/utils.js';
+import { fmt, tt, sanitize, toKRW, getRates } from '../core/utils.js';
 
 const getBody = id => {
     const t = document.getElementById(id);
@@ -15,7 +15,15 @@ function fmtAmt(amount, currency) {
 
 // ── 잔금 계산 (계약금액 - 수입실적), 우측 정렬 ────────────────────
 function fmtRemain(r) {
-    const total  = toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW');
+    const cur = r.amountCurrency || 'KRW';
+    const amt = Number(r.amount || 0);
+    // 환율 미설정 시 경고 표시 (KRW 환산 불가)
+    const { usd, rmb } = getRates();
+    const missingRate = (cur === 'USD' && !usd) || (cur === 'RMB' && !rmb);
+    if (missingRate && amt > 0) {
+        return `<td style="text-align:right;white-space:nowrap;color:var(--text3);font-size:12px" title="사이드바에서 환율을 설정하세요">환율 미설정</td>`;
+    }
+    const total  = toKRW(amt, cur);
     const paid   = (r.billing || []).reduce((s, v, i) =>
         s + toKRW(Number(v || 0), (r.billingCurrencies || [])[i] || 'KRW'), 0);
     const remain = Math.round(total - paid);
