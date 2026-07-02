@@ -53,40 +53,68 @@ export function calcBilling(p, tId) {
     const usdRate = Number(document.getElementById(`${p}-rate-usd`)?.value) || sr.usd || 0;
     const rmbRate = Number(document.getElementById(`${p}-rate-rmb`)?.value) || sr.rmb || 0;
 
-    // KRW 환산 (모달/사이드바 환율 사용)
+    // KRW 환산 함수
     function toKRWLocal(amt, cur) {
         if (cur === 'USD') return usdRate ? Number(amt) * usdRate : 0;
         if (cur === 'RMB') return rmbRate ? Number(amt) * rmbRate : 0;
         return Number(amt);
     }
+    // KRW → 계약통화 역환산 (수입합계·잔액을 계약 통화 단위로 표시하기 위해)
+    function fromKRW(krw) {
+        if (tCur === 'USD') return usdRate ? krw / usdRate : 0;
+        if (tCur === 'RMB') return rmbRate ? krw / rmbRate : 0;
+        return krw;
+    }
 
     const tKRW = toKRWLocal(tAmt, tCur);
     let bKRW = 0;
+    let bOrig = 0; // 계약 통화 기준 수입합계
     for (let i = 0; i < 5; i++) {
-        bKRW += toKRWLocal(
-            Number(document.getElementById(`${p}-b${i}`)?.value || 0),
-            document.getElementById(`${p}-bc${i}`)?.value || 'KRW'
-        );
+        const bAmt = Number(document.getElementById(`${p}-b${i}`)?.value || 0);
+        const bCur = document.getElementById(`${p}-bc${i}`)?.value || 'KRW';
+        const bKrw = toKRWLocal(bAmt, bCur);
+        bKRW  += bKrw;
+        // 같은 통화면 직접 합산, 다른 통화면 KRW 경유 역환산
+        bOrig += bCur === tCur ? bAmt : fromKRW(bKrw);
     }
 
-    // 환율 입력 패널: 계약 또는 수입 분할 중 비KRW 통화 존재 시 표시
+    // 환율 입력 패널: 비KRW 통화 존재 시 표시
     const hasNonKRW = tCur !== 'KRW' ||
         Array.from({length:5}, (_, i) => document.getElementById(`${p}-bc${i}`)?.value || 'KRW')
              .some(c => c !== 'KRW');
     const rw = document.getElementById(`${p}-rate-wrap`);
     if (rw) rw.style.display = hasNonKRW ? 'flex' : 'none';
 
-    // 환율 미설정 시 경고 문구
+    // 환율 미설정 경고
     const needsRate = (tCur === 'USD' && !usdRate) || (tCur === 'RMB' && !rmbRate);
     const warnHtml  = needsRate && tAmt > 0
         ? `<span style="color:var(--warn,#e67e22);font-size:12px">⚠️ 위에서 환율을 입력하면 KRW 환산됩니다</span>`
         : '';
 
+    // 표시 포맷: 외화 기준 주 표시 + KRW 괄호 병기
+    const sub = (krw) => `<span style="font-size:11px;color:var(--text3);font-weight:400"> (${fmtM(Math.round(krw))})</span>`;
+    let contractLabel, paidLabel, remainLabel;
+    if (tCur === 'KRW') {
+        contractLabel = `${fmt(tAmt)} KRW`;
+        paidLabel     = fmtM(Math.round(bKRW));
+        remainLabel   = fmtM(Math.round(tKRW - bKRW));
+    } else if (tKRW > 0) {
+        // 외화 금액 + KRW 괄호
+        contractLabel = `${fmt(tAmt)} ${tCur}${sub(tKRW)}`;
+        paidLabel     = `${fmt(Math.round(bOrig))} ${tCur}${sub(bKRW)}`;
+        remainLabel   = `${fmt(Math.round(tAmt - bOrig))} ${tCur}${sub(tKRW - bKRW)}`;
+    } else {
+        // 환율 미입력 — 원래 통화만 표시
+        contractLabel = `${fmt(tAmt)} ${tCur}`;
+        paidLabel     = `${fmt(Math.round(bOrig))} ${tCur}`;
+        remainLabel   = `${fmt(Math.round(tAmt - bOrig))} ${tCur}`;
+    }
+
     const el = document.getElementById(tId);
     if (el) el.innerHTML =
-        `<span>계약총액 <strong>${fmt(tAmt)} ${tCur}</strong></span>` +
-        `<span>수입합계 <strong>${fmtM(Math.round(bKRW))}</strong></span>` +
-        `<span class="billing-remain ${tKRW-bKRW<=0&&tKRW>0?'ok':'none'}">잔액 ${fmtM(Math.round(tKRW - bKRW))}</span>` +
+        `<span>계약총액 <strong>${contractLabel}</strong></span>` +
+        `<span>수입합계 <strong>${paidLabel}</strong></span>` +
+        `<span class="billing-remain ${tKRW-bKRW<=0&&tKRW>0?'ok':'none'}">잔액 ${remainLabel}</span>` +
         warnHtml;
 }
 
