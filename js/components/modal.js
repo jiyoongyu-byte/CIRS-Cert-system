@@ -91,8 +91,8 @@ export function calcBilling(p, tId) {
         ? `<span style="color:var(--warn,#e67e22);font-size:12px">⚠️ 위에서 환율을 입력하면 KRW 환산됩니다</span>`
         : '';
 
-    // 표시 포맷: 외화 기준 주 표시 + KRW 괄호 병기
-    const sub = (krw) => `<span style="font-size:11px;color:var(--text3);font-weight:400"> (${fmtM(Math.round(krw))})</span>`;
+    // 표시 포맷: 외화 기준 주 표시 + KRW 다음 줄에 괄호 병기
+    const sub = (krw) => `<br><span style="font-size:11px;color:var(--text3);font-weight:400">(${fmtM(Math.round(krw))})</span>`;
     let contractLabel, paidLabel, remainLabel;
     if (tCur === 'KRW') {
         contractLabel = `${fmt(tAmt)} KRW`;

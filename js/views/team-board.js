@@ -1,7 +1,7 @@
 // js/views/team-board.js — 팀별 계약/상담/완료대장 렌더링
 
 import { getState, getCurrentYear, getCurrentUser } from '../core/store.js';
-import { fmt, tt, sanitize, toKRW, getRates } from '../core/utils.js';
+import { fmt, fmtM, tt, sanitize, toKRW, getRates } from '../core/utils.js';
 
 const getBody = id => {
     const t = document.getElementById(id);
@@ -17,18 +17,30 @@ function fmtAmt(amount, currency) {
 function fmtRemain(r) {
     const cur = r.amountCurrency || 'KRW';
     const amt = Number(r.amount || 0);
-    // 환율 미설정 시 경고 표시 (KRW 환산 불가)
     const { usd, rmb } = getRates();
     const missingRate = (cur === 'USD' && !usd) || (cur === 'RMB' && !rmb);
     if (missingRate && amt > 0) {
         return `<td style="text-align:right;white-space:nowrap;color:var(--text3);font-size:12px" title="사이드바에서 환율을 설정하세요">환율 미설정</td>`;
     }
-    const total  = toKRW(amt, cur);
-    const paid   = (r.billing || []).reduce((s, v, i) =>
+    const total      = toKRW(amt, cur);
+    const paid       = (r.billing || []).reduce((s, v, i) =>
         s + toKRW(Number(v || 0), (r.billingCurrencies || [])[i] || 'KRW'), 0);
-    const remain = Math.round(total - paid);
-    const color  = remain > 0 ? 'var(--warn)' : 'var(--text3)';
-    return `<td style="text-align:right;white-space:nowrap;color:${color};font-weight:600">${fmt(remain)}</td>`;
+    const remainKRW  = Math.round(total - paid);
+
+    // KRW 계약: 숫자만 표시
+    if (cur === 'KRW') {
+        const color = remainKRW > 0 ? 'var(--warn)' : 'var(--text3)';
+        return `<td style="text-align:right;white-space:nowrap;color:${color};font-weight:600">${fmt(remainKRW)}</td>`;
+    }
+
+    // 외화 계약: 계약통화 잔금 + 다음 줄에 KRW 괄호 병기
+    const rate       = cur === 'USD' ? usd : rmb;
+    const remainOrig = rate ? Math.round(remainKRW / rate) : 0;
+    const color      = remainOrig > 0 ? 'var(--warn)' : 'var(--text3)';
+    return `<td style="text-align:right;white-space:nowrap;color:${color};font-weight:600">
+        ${fmt(remainOrig)} ${cur}<br>
+        <span style="font-size:11px;color:var(--text3);font-weight:400">(${fmtM(remainKRW)})</span>
+    </td>`;
 }
 
 // ── 상태 배지 ────────────────────────────────────────────────────
