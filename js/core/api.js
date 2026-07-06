@@ -41,7 +41,7 @@ export async function saveMedRecord(record) {
             ref_memo: record.refMemo || '', ref_extra: record.refExtra || [],
         });
         if (error) throw error;
-    } catch (e) { console.error('saveMedRecord 오류:', e); }
+    } catch (e) { console.error('saveMedRecord 오류:', e); throw e; } // 호출부 catch 가능하도록 re-throw
 }
 
 export async function deleteMedRecord(id) {
@@ -79,7 +79,7 @@ export async function saveCertRecord(record) {
             ref_memo: record.refMemo || '', ref_extra: record.refExtra || [],
         });
         if (error) throw error;
-    } catch (e) { console.error('saveCertRecord 오류:', e); }
+    } catch (e) { console.error('saveCertRecord 오류:', e); throw e; } // 호출부 catch 가능하도록 re-throw
 }
 
 export async function deleteCertRecord(id) {

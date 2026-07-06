@@ -66,6 +66,10 @@ export async function saveMed() {
         q: quarter(startdate) || 1,
     };
 
+    // 저장 실패 시 롤백을 위해 기존 레코드 보존
+    const prevMed = editId ? state.med.find(x => x.id === editId) : null;
+    const prevMedCopy = prevMed ? {...prevMed} : null;
+
     if (editId) {
         const i = state.med.findIndex(x => x.id === editId);
         if (i >= 0) state.med[i] = record; else state.med.push(record);
@@ -73,7 +77,22 @@ export async function saveMed() {
         state.med.push(record);
     }
 
-    await saveMedRecord(record);
+    try {
+        await saveMedRecord(record);
+    } catch (e) {
+        // DB 저장 실패 → 메모리 상태 롤백
+        if (editId && prevMedCopy) {
+            const i = state.med.findIndex(x => x.id === editId);
+            if (i >= 0) state.med[i] = prevMedCopy;
+        } else {
+            state.med.pop();
+        }
+        const msg = e?.message || String(e);
+        const hint = msg.includes('column') ? '\n\n💡 Supabase에 누락된 컬럼이 있습니다. SQL 마이그레이션을 실행해 주세요.' : '';
+        alert(`❌ 저장 실패\n\n${msg}${hint}`);
+        isContract ? window.renderMedContract?.() : window.renderMedConsult?.();
+        return;
+    }
     await logAudit(editId ? '수정' : '신규', `'${record.client}' 의료기기팀`, getCurrentUser());
     setMedEditId(null);
     window.closeModal?.('med');
@@ -150,6 +169,10 @@ export async function saveCert() {
         q: quarter(contractdate || consultdate) || 1,
     };
 
+    // 저장 실패 시 롤백을 위해 기존 레코드 보존
+    const prevCert = editId ? state.cert.find(x => x.id === editId) : null;
+    const prevCertCopy = prevCert ? {...prevCert} : null;
+
     if (editId) {
         const i = state.cert.findIndex(x => x.id === editId);
         if (i >= 0) state.cert[i] = record; else state.cert.push(record);
@@ -157,7 +180,22 @@ export async function saveCert() {
         state.cert.push(record);
     }
 
-    await saveCertRecord(record);
+    try {
+        await saveCertRecord(record);
+    } catch (e) {
+        // DB 저장 실패 → 메모리 상태 롤백
+        if (editId && prevCertCopy) {
+            const i = state.cert.findIndex(x => x.id === editId);
+            if (i >= 0) state.cert[i] = prevCertCopy;
+        } else {
+            state.cert.pop();
+        }
+        const msg = e?.message || String(e);
+        const hint = msg.includes('column') ? '\n\n💡 Supabase에 누락된 컬럼이 있습니다. SQL 마이그레이션을 실행해 주세요.' : '';
+        alert(`❌ 저장 실패\n\n${msg}${hint}`);
+        isContract ? window.renderCertContract?.() : window.renderCertConsult?.();
+        return;
+    }
     await logAudit(editId ? '수정' : '신규', `'${record.client}' 인증팀`, getCurrentUser());
     setCertEditId(null);
     window.closeModal?.('cert');
@@ -182,14 +220,21 @@ export async function convertToContract(team, id) {
     if (!record) return;
     record.recordType = 'contract';
     const today = new Date().toISOString().slice(0, 10);
-    if (team === 'med') {
-        record.status = '진행중'; record.startdate = today; record.consultStatus = '계약완료';
-        await saveMedRecord(record);
-        window.renderMedConsult?.(); window.renderMedContract?.();
-    } else {
-        record.contracted = '계약완료'; record.contractdate = today; record.stage = '신청서 작성';
-        await saveCertRecord(record);
-        window.renderCertConsult?.(); window.renderCertContract?.();
+    try {
+        if (team === 'med') {
+            record.status = '진행중'; record.startdate = today; record.consultStatus = '계약완료';
+            await saveMedRecord(record);
+            window.renderMedConsult?.(); window.renderMedContract?.();
+        } else {
+            record.contracted = '계약완료'; record.contractdate = today; record.stage = '신청서 작성';
+            await saveCertRecord(record);
+            window.renderCertConsult?.(); window.renderCertContract?.();
+        }
+    } catch (e) {
+        const msg = e?.message || String(e);
+        const hint = msg.includes('column') ? '\n\n💡 Supabase에 누락된 컬럼이 있습니다. SQL 마이그레이션을 실행해 주세요.' : '';
+        alert(`❌ 전환 저장 실패\n\n${msg}${hint}`);
+        return;
     }
     alert('✅ 계약으로 전환되었습니다.');
     await logAudit('전환', `'${record.client}' 상담→계약`, getCurrentUser());
