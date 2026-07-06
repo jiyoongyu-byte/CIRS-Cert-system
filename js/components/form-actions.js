@@ -90,13 +90,15 @@ export async function saveMed() {
         const msg = e?.message || String(e);
         const hint = msg.includes('column') ? '\n\n💡 Supabase에 누락된 컬럼이 있습니다. SQL 마이그레이션을 실행해 주세요.' : '';
         alert(`❌ 저장 실패\n\n${msg}${hint}`);
-        isContract ? window.renderMedContract?.() : window.renderMedConsult?.();
+        // 롤백 후 모든 뷰 갱신 (완료대장 포함)
+        window.renderMedContract?.(); window.renderMedConsult?.(); window.renderMedDone?.();
         return;
     }
     await logAudit(editId ? '수정' : '신규', `'${record.client}' 의료기기팀`, getCurrentUser());
     setMedEditId(null);
     window.closeModal?.('med');
-    isContract ? window.renderMedContract?.() : window.renderMedConsult?.();
+    // 저장 성공 후 모든 뷰 갱신 (완료대장 포함 — 완료대장에서 수정해도 반영됨)
+    window.renderMedContract?.(); window.renderMedConsult?.(); window.renderMedDone?.();
 }
 
 export async function deleteMed(id) {
@@ -105,8 +107,7 @@ export async function deleteMed(id) {
     state.med = state.med.filter(x => x.id !== id);
     await deleteMedRecord(id);
     await logAudit('삭제', `id:${id} 의료기기팀`, getCurrentUser());
-    window.renderMedContract?.();
-    window.renderMedConsult?.();
+    window.renderMedContract?.(); window.renderMedConsult?.(); window.renderMedDone?.();
 }
 
 // ── 인증팀 저장 ───────────────────────────────────────────────────
@@ -193,13 +194,15 @@ export async function saveCert() {
         const msg = e?.message || String(e);
         const hint = msg.includes('column') ? '\n\n💡 Supabase에 누락된 컬럼이 있습니다. SQL 마이그레이션을 실행해 주세요.' : '';
         alert(`❌ 저장 실패\n\n${msg}${hint}`);
-        isContract ? window.renderCertContract?.() : window.renderCertConsult?.();
+        // 롤백 후 모든 뷰 갱신 (완료대장 포함)
+        window.renderCertContract?.(); window.renderCertConsult?.(); window.renderCertDone?.();
         return;
     }
     await logAudit(editId ? '수정' : '신규', `'${record.client}' 인증팀`, getCurrentUser());
     setCertEditId(null);
     window.closeModal?.('cert');
-    isContract ? window.renderCertContract?.() : window.renderCertConsult?.();
+    // 저장 성공 후 모든 뷰 갱신 (완료대장 포함 — 완료대장에서 수정해도 반영됨)
+    window.renderCertContract?.(); window.renderCertConsult?.(); window.renderCertDone?.();
 }
 
 export async function deleteCert(id) {
@@ -208,8 +211,7 @@ export async function deleteCert(id) {
     state.cert = state.cert.filter(x => x.id !== id);
     await deleteCertRecord(id);
     await logAudit('삭제', `id:${id} 인증팀`, getCurrentUser());
-    window.renderCertContract?.();
-    window.renderCertConsult?.();
+    window.renderCertContract?.(); window.renderCertConsult?.(); window.renderCertDone?.();
 }
 
 // ── 상담 → 계약 전환 ─────────────────────────────────────────────
