@@ -203,22 +203,25 @@ function renderRevChart(actual, target, team, rows, y) {
     if (!ctx) return;
     if (chartRevMixed) { chartRevMixed.destroy(); chartRevMixed = null; }
 
-    const isCert    = team === 'cert';
-    const solidColor = isCert ? 'rgba(25,168,118,0.75)' : 'rgba(91,110,245,0.75)';
-    const planColor  = isCert ? 'rgba(25,168,118,0.25)' : 'rgba(91,110,245,0.25)';
-    const lineColor  = isCert ? '#19A876'                : '#5B6EF5';
-    const planLine   = isCert ? '#56d9a8'                : '#8B9CF9';
+    const isCert     = team === 'cert';
+    const greenSolid = 'rgba(25,168,118,0.82)';   // 실적 채워진 초록
+    const greenLine  = '#19A876';                  // 초록 테두리/선
+    const redSolid   = 'rgba(239,68,68,0.80)';    // 마이너스 빨강
+    const planLine   = isCert ? '#56d9a8' : '#8B9CF9'; // 누적 계획선
 
     let labels, datasets, chartType;
 
     if (revChartMode === 'quarter') {
-        // ── 분기별: 계획 bar + 실적 bar ──────────────────────────
-        labels    = ['1분기', '2분기', '3분기', '4분기'];
+        // ── 분기별: 계획=초록 윤곽선 bar, 실적=채워진(마이너스=빨강) bar ──
+        labels = ['1분기', '2분기', '3분기', '4분기'];
         const planArr   = ['q1','q2','q3','q4'].map(q => Math.round(Number(target[q] || 0)));
         const actualArr = ['q1','q2','q3','q4'].map(q => Math.round(actual[q] || 0));
-        datasets  = [
-            { type:'bar', label:'계획', data: planArr,   backgroundColor: planColor,  borderColor: lineColor, borderWidth:1.5, borderRadius:4 },
-            { type:'bar', label:'실적', data: actualArr, backgroundColor: solidColor, borderRadius:4 },
+        const actualBg  = actualArr.map((v, i) => v < planArr[i] ? redSolid : greenSolid);
+        datasets = [
+            { type:'bar', label:'계획', data: planArr,
+              backgroundColor: 'transparent', borderColor: greenLine, borderWidth:2, borderRadius:4 },
+            { type:'bar', label:'실적', data: actualArr,
+              backgroundColor: actualBg, borderRadius:4 },
         ];
         chartType = 'bar';
 
@@ -230,19 +233,27 @@ function renderRevChart(actual, target, team, rows, y) {
         const cActual = mActual.reduce((a, v, i) => { a.push((a[i-1]||0) + v); return a; }, []);
         const cTarget = mTarget.reduce((a, v, i) => { a.push((a[i-1]||0) + v); return a; }, []);
         datasets = [
-            { type:'line', label:'누적 계획', data: cTarget.map(v=>Math.round(v)), borderColor: planLine,   borderDash:[6,4], borderWidth:2, pointRadius:2, backgroundColor:'transparent', tension:0.3 },
-            { type:'line', label:'누적 실적', data: cActual.map(v=>Math.round(v)), borderColor: lineColor, borderWidth:2.5, pointRadius:3, backgroundColor:'transparent', tension:0.3 },
+            { type:'line', label:'누적 계획', data: cTarget.map(v=>Math.round(v)),
+              borderColor: planLine, borderDash:[6,4], borderWidth:2, pointRadius:2,
+              backgroundColor:'transparent', tension:0.3 },
+            { type:'line', label:'누적 실적', data: cActual.map(v=>Math.round(v)),
+              borderColor: greenLine, borderWidth:2.5, pointRadius:3,
+              backgroundColor:'transparent', tension:0.3 },
         ];
         chartType = 'line';
 
     } else {
-        // ── 월별 (기본): 계획 bar + 실적 bar ─────────────────────
+        // ── 월별 (기본): 계획=초록 윤곽선 bar, 실적=채워진(마이너스=빨강) bar ──
         labels = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
         const mActual = _getMonthlyActual(rows, y);
         const mTarget = _getMonthlyTarget(target);
+        // 실적이 계획 미달인 달은 빨강, 초과/달성은 초록
+        const actualBg = mActual.map((v, i) => v < mTarget[i] ? redSolid : greenSolid);
         datasets = [
-            { type:'bar', label:'계획', data: mTarget.map(v=>Math.round(v)), backgroundColor: planColor,  borderColor: lineColor, borderWidth:1.5, borderRadius:3 },
-            { type:'bar', label:'실적', data: mActual.map(v=>Math.round(v)), backgroundColor: solidColor, borderRadius:3 },
+            { type:'bar', label:'계획', data: mTarget.map(v=>Math.round(v)),
+              backgroundColor: 'transparent', borderColor: greenLine, borderWidth:2, borderRadius:3 },
+            { type:'bar', label:'실적', data: mActual.map(v=>Math.round(v)),
+              backgroundColor: actualBg, borderRadius:3 },
         ];
         chartType = 'bar';
     }
