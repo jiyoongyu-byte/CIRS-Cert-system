@@ -713,6 +713,24 @@ input[type=date]{color-scheme:dark}
     });
   </script>
 <script>
+// ── 모바일 사이드바 토글 ───────────────────────────────────────────
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+}
+// 모바일: nav-item 클릭 시 사이드바 자동 닫기
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.nav-item').forEach(function(el) {
+        el.addEventListener('click', function() {
+            if (window.innerWidth <= 768) closeSidebar();
+        });
+    });
+});
+
 // ── 검색 기능 ─────────────────────────────────────────────────────
 function selectSearchResult(clientName, viewName) {
     window._searchFilter = clientName.toLowerCase();
