@@ -8,38 +8,38 @@ const getBody = id => {
     return t?.tagName === 'TABLE' ? (t.querySelector('tbody') || t) : t;
 };
 
-// ── 금액 표기: 통화 + 콤마 포맷, 우측 정렬 ───────────────────────
+// ── 금액 표기: 통화 앞, 콤마 포맷, 좌측 정렬 ───────────────────────
 function fmtAmt(amount, currency) {
-    return `<td style="text-align:right;white-space:nowrap">${currency || 'KRW'} ${fmt(amount || 0)}</td>`;
+    return `<td style="text-align:left;white-space:nowrap">${currency || 'KRW'} ${fmt(amount || 0)}</td>`;
 }
 
-// ── 잔금 계산 (계약금액 - 수입실적), 우측 정렬 ────────────────────
+// ── 잔금 계산 (계약금액 - 수입실적), 좌측 정렬 ────────────────────
 function fmtRemain(r) {
     const cur = r.amountCurrency || 'KRW';
     const amt = Number(r.amount || 0);
     const { usd, rmb } = getRates();
     const missingRate = (cur === 'USD' && !usd) || (cur === 'RMB' && !rmb);
     if (missingRate && amt > 0) {
-        return `<td style="text-align:right;white-space:nowrap;color:var(--text3);font-size:12px" title="사이드바에서 환율을 설정하세요">환율 미설정</td>`;
+        return `<td style="text-align:left;white-space:nowrap;color:var(--text3);font-size:12px" title="사이드바에서 환율을 설정하세요">환율 미설정</td>`;
     }
     const total      = toKRW(amt, cur);
     const paid       = (r.billing || []).reduce((s, v, i) =>
         s + toKRW(Number(v || 0), (r.billingCurrencies || [])[i] || 'KRW'), 0);
     const remainKRW  = Math.round(total - paid);
 
-    // KRW 계약: 숫자만 표시
+    // KRW 계약: KRW + 숫자 표시
     if (cur === 'KRW') {
         const color = remainKRW > 0 ? 'var(--warn)' : 'var(--text3)';
-        return `<td style="text-align:right;white-space:nowrap;color:${color};font-weight:600">${fmt(remainKRW)}</td>`;
+        return `<td style="text-align:left;white-space:nowrap;color:${color};font-weight:600">KRW ${fmt(remainKRW)}</td>`;
     }
 
     // 외화 계약: 계약통화 잔금 + 다음 줄에 KRW 괄호 병기
     const rate       = cur === 'USD' ? usd : rmb;
     const remainOrig = rate ? Math.round(remainKRW / rate) : 0;
     const color      = remainOrig > 0 ? 'var(--warn)' : 'var(--text3)';
-    return `<td style="text-align:right;white-space:nowrap;color:${color};font-weight:600">
-        ${fmt(remainOrig)} ${cur}<br>
-        <span style="font-size:11px;color:var(--text3);font-weight:400">(${fmtM(remainKRW)})</span>
+    return `<td style="text-align:left;white-space:nowrap;color:${color};font-weight:600">
+        ${cur} ${fmt(remainOrig)}<br>
+        <span style="font-size:11px;color:var(--text3);font-weight:400">(KRW ${fmtM(remainKRW)})</span>
     </td>`;
 }
 
@@ -127,6 +127,22 @@ export function renderMedConsult() {
     const data    = (state.med || []).filter(x => x.year === year && x.recordType === 'consult' && x.consultStatus !== '계약보류');
     const archive = (state.med || []).filter(x => x.year === year && x.recordType === 'consult' && x.consultStatus === '계약보류');
     const isRep   = isRepUser();
+
+    // 계약전환율: 해당 연도 계약 건수 / (계약 + 상담) 전체 × 100%
+    const allMedYear = (state.med || []).filter(x => x.year === year);
+    const cntContract = allMedYear.filter(x => x.recordType === 'contract').length;
+    const cntConsult  = allMedYear.filter(x => x.recordType === 'consult').length;
+    const total = cntContract + cntConsult;
+    const rateEl = document.getElementById('medConsultRate');
+    if (rateEl) {
+        if (total > 0) {
+            const rate = Math.round(cntContract / total * 100);
+            rateEl.textContent = `계약전환율 ${rate}% (${cntContract}/${total})`;
+            rateEl.style.display = '';
+        } else {
+            rateEl.style.display = 'none';
+        }
+    }
 
     if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
@@ -254,6 +270,22 @@ export function renderCertConsult() {
     const data    = (state.cert || []).filter(x => x.year === year && x.recordType === 'consult' && x.contracted !== '계약보류');
     const archive = (state.cert || []).filter(x => x.year === year && x.recordType === 'consult' && x.contracted === '계약보류');
     const isRep   = isRepUser();
+
+    // 계약전환율: 해당 연도 계약 건수 / (계약 + 상담) 전체 × 100%
+    const allCertYear = (state.cert || []).filter(x => x.year === year);
+    const cntContract = allCertYear.filter(x => x.recordType === 'contract').length;
+    const cntConsult  = allCertYear.filter(x => x.recordType === 'consult').length;
+    const total = cntContract + cntConsult;
+    const rateEl = document.getElementById('certConsultRate');
+    if (rateEl) {
+        if (total > 0) {
+            const rate = Math.round(cntContract / total * 100);
+            rateEl.textContent = `계약전환율 ${rate}% (${cntContract}/${total})`;
+            rateEl.style.display = '';
+        } else {
+            rateEl.style.display = 'none';
+        }
+    }
 
     if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;

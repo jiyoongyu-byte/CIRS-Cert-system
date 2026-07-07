@@ -159,6 +159,9 @@ input[type=date]{color-scheme:dark}
 .logo-img { max-width: 180px; height: auto; display: block; margin: 0 auto; }
 
 /* ── 모바일 반응형 (열람 최적화) ─────────────────────────────────── */
+th[onclick]{cursor:pointer;user-select:none}
+th[onclick]:hover{color:var(--cert)}
+.sort-arrow{font-size:10px;color:var(--cert);margin-left:2px}
 .hamburger{display:none;background:none;border:none;color:var(--text1);font-size:22px;cursor:pointer;padding:4px 8px;line-height:1;flex-shrink:0}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:149}
 @media(max-width:768px){
@@ -421,12 +424,12 @@ input[type=date]{color-scheme:dark}
 <div class="view" id="view-medContract">
   <div class="section-head"><span class="section-title" id="mcTitle">의료기기팀 · 계약업체</span><button class="btn btn-med" onclick="openMedModal('contract')"><span data-ko="+ 계약업체 추가" data-zh="+ 添加签约企业">+ 계약업체 추가</span></button></div>
   <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medContractTable">
-    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('medC','client')">업체명</th><th data-ko="제품명/업무유형" data-zh="产品名称/业务类型">제품명/업무유형</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('medC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('medC','date')">계약일</th><th data-ko="완료목표" data-zh="目标日期" onclick="handleSort('medC','duedate')">완료목표</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('medC','amount')">계약금액</th><th data-ko="잔금" data-zh="余额">잔금</th><th data-ko="진행단계" data-zh="进行阶段">진행단계</th><th data-ko="상태" data-zh="状态">상태</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('medC','client')">업체명</th><th data-ko="제품명/업무유형" data-zh="产品名称/业务类型">제품명/업무유형</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('medC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('medC','startdate')">계약일</th><th data-ko="완료목표" data-zh="目标日期" onclick="handleSort('medC','duedate')">완료목표</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('medC','amount')">계약금액</th><th data-ko="잔금" data-zh="余额">잔금</th><th data-ko="진행단계" data-zh="进行阶段">진행단계</th><th data-ko="상태" data-zh="状态">상태</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
   </table></div></div></div>
 </div>
 
 <div class="view" id="view-medConsult">
-  <div class="section-head"><span class="section-title" id="msTitle">의료기기팀 · 상담</span><button class="btn btn-med" onclick="openMedModal('consult')"><span data-ko="+ 상담 추가" data-zh="+ 添加咨询">+ 상담 추가</span></button></div>
+  <div class="section-head"><span class="section-title" id="msTitle">의료기기팀 · 상담</span><span id="medConsultRate" style="margin-left:12px;font-size:12px;font-weight:600;color:var(--cert);background:var(--cert-light);padding:3px 10px;border-radius:12px;display:none"></span><button class="btn btn-med" onclick="openMedModal('consult')"><span data-ko="+ 상담 추가" data-zh="+ 添加咨询">+ 상담 추가</span></button></div>
   <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medConsultTable">
     <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('medCons','client')">업체명</th><th data-ko="등급/분류" data-zh="等级/分类" onclick="handleSort('medCons','grade')">등급/분류</th><th data-ko="제품명" data-zh="产品名称">제품명</th><th data-ko="업무유형" data-zh="业务类型">업무유형</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('medCons','manager')">담당자</th><th data-ko="상담일" data-zh="咨询日期" onclick="handleSort('medCons','startdate')">상담일</th><th data-ko="진행상태" data-zh="进行状态">진행상태</th><th data-ko="견적발송일" data-zh="报价日期">견적발송일</th><th data-ko="특이사항" data-zh="特例事项">특이사항</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
   </table></div></div></div>
@@ -439,12 +442,12 @@ input[type=date]{color-scheme:dark}
 <div class="view" id="view-certContract">
   <div class="section-head"><span class="section-title" id="ccTitle">제품환경인증팀 · 계약업체</span><button class="btn btn-med" onclick="openCertModal('contract')"><span data-ko="+ 계약업체 추가" data-zh="+ 添加签约企业">+ 계약업체 추가</span></button></div>
   <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certContractTable">
-    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('certC','client')">업체명</th><th data-ko="인증종류/품목" data-zh="认证种类/品目">인증종류/품목</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('certC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('certC','date')">계약일</th><th data-ko="완료목표" data-zh="目标日期" onclick="handleSort('certC','issuedate')">완료목표</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('certC','amount')">계약금액</th><th data-ko="잔금" data-zh="余额">잔금</th><th data-ko="진행단계" data-zh="进行阶段" onclick="handleSort('certC','stage')">진행단계</th><th data-ko="상태" data-zh="状态">상태</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('certC','client')">업체명</th><th data-ko="인증종류/품목" data-zh="认证种类/品目">인증종류/품목</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('certC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('certC','contractdate')">계약일</th><th data-ko="완료목표" data-zh="目标日期" onclick="handleSort('certC','issuedate')">완료목표</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('certC','amount')">계약금액</th><th data-ko="잔금" data-zh="余额">잔금</th><th data-ko="진행단계" data-zh="进行阶段" onclick="handleSort('certC','stage')">진행단계</th><th data-ko="상태" data-zh="状态">상태</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
   </table></div></div></div>
 </div>
 
 <div class="view" id="view-certConsult">
-  <div class="section-head"><span class="section-title" id="csTitle">제품환경인증팀 · 상담</span><button class="btn btn-med" onclick="openCertModal('consult')"><span data-ko="+ 상담 추가" data-zh="+ 添加咨询">+ 상담 추가</span></button></div>
+  <div class="section-head"><span class="section-title" id="csTitle">제품환경인증팀 · 상담</span><span id="certConsultRate" style="margin-left:12px;font-size:12px;font-weight:600;color:var(--cert);background:var(--cert-light);padding:3px 10px;border-radius:12px;display:none"></span><button class="btn btn-med" onclick="openCertModal('consult')"><span data-ko="+ 상담 추가" data-zh="+ 添加咨询">+ 상담 추가</span></button></div>
   <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certConsultTable">
     <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('certCons','client')">업체명</th><th data-ko="인증종류" data-zh="认证种类">인증종류</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('certCons','manager')">담당자</th><th data-ko="상담일" data-zh="咨询日期" onclick="handleSort('certCons','date')">상담일</th><th data-ko="진행상태" data-zh="进行状态">진행상태</th><th data-ko="견적발송일" data-zh="报价日期">견적발송일</th><th data-ko="상담내용/비고" data-zh="咨询内容/备注">상담내용/비고</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
   </table></div></div></div>
@@ -471,8 +474,8 @@ input[type=date]{color-scheme:dark}
   <div class="section-head"><span class="section-title">의료기기팀 · 완료대장</span></div>
   <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medDoneTable">
     <thead><tr>
-      <th>순번</th><th>업체명</th><th>업무유형</th><th>제품명</th>
-      <th>담당자</th><th>계약일</th><th>완료일</th><th>계약금액</th><th>관리</th>
+      <th>순번</th><th onclick="handleSort('medDone','client')">업체명</th><th>업무유형</th><th>제품명</th>
+      <th onclick="handleSort('medDone','manager')">담당자</th><th onclick="handleSort('medDone','startdate')">계약일</th><th onclick="handleSort('medDone','duedate')">완료일</th><th onclick="handleSort('medDone','amount')">계약금액</th><th>관리</th>
     </tr></thead><tbody></tbody>
   </table></div></div></div>
 </div>
@@ -481,8 +484,8 @@ input[type=date]{color-scheme:dark}
   <div class="section-head"><span class="section-title">제품환경인증팀 · 완료대장</span></div>
   <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certDoneTable">
     <thead><tr>
-      <th>순번</th><th>업체명</th><th>인증종류</th><th>품목명</th>
-      <th>담당자</th><th>계약일</th><th>완료일</th><th>계약금액</th><th>관리</th>
+      <th>순번</th><th onclick="handleSort('certDone','client')">업체명</th><th>인증종류</th><th>품목명</th>
+      <th onclick="handleSort('certDone','manager')">담당자</th><th onclick="handleSort('certDone','contractdate')">계약일</th><th onclick="handleSort('certDone','issuedate')">완료일</th><th onclick="handleSort('certDone','amount')">계약금액</th><th>관리</th>
     </tr></thead><tbody></tbody>
   </table></div></div></div>
 </div>
@@ -888,6 +891,12 @@ function openPersonKpi(name) {
 
 // ── 정렬 기능 ─────────────────────────────────────────────────────
 var _sortState = {};
+var _sortTableMap = {
+    medC:'medContractTable', medCons:'medConsultTable',
+    certC:'certContractTable', certCons:'certConsultTable',
+    certConsArch:'certConsultArchiveTable',
+    medDone:'medDoneTable', certDone:'certDoneTable'
+};
 function handleSort(tableKey, field) {
     if (!_sortState[tableKey]) _sortState[tableKey] = { field: field, asc: true };
     else if (_sortState[tableKey].field === field) _sortState[tableKey].asc = !_sortState[tableKey].asc;
@@ -897,14 +906,33 @@ function handleSort(tableKey, field) {
     function sort(arr) {
         return arr.slice().sort(function(a,b) {
             var av = a[field]||'', bv = b[field]||'';
-            if (typeof av === 'number') return asc ? av-bv : bv-av;
+            if (typeof av === 'number' || typeof bv === 'number') return asc ? Number(av)-Number(bv) : Number(bv)-Number(av);
             return asc ? String(av).localeCompare(String(bv),'ko') : String(bv).localeCompare(String(av),'ko');
         });
     }
     if (tableKey === 'medC')    { state.med  = sort(state.med||[]);  window.renderMedContract?.(); }
     if (tableKey === 'medCons') { state.med  = sort(state.med||[]);  window.renderMedConsult?.(); }
+    if (tableKey === 'medDone') { state.med  = sort(state.med||[]);  window.renderMedDone?.(); }
     if (tableKey === 'certC')   { state.cert = sort(state.cert||[]); window.renderCertContract?.(); }
+    if (tableKey === 'certDone'){ state.cert = sort(state.cert||[]); window.renderCertDone?.(); }
     if (tableKey === 'certCons' || tableKey === 'certConsArch') { state.cert = sort(state.cert||[]); window.renderCertConsult?.(); }
+
+    // 정렬 아이콘 업데이트
+    var tblId = _sortTableMap[tableKey];
+    var tblEl = tblId ? document.getElementById(tblId) : null;
+    if (tblEl) {
+        tblEl.querySelectorAll('th[onclick]').forEach(function(th) {
+            // 기존 아이콘 제거
+            th.querySelectorAll('.sort-arrow').forEach(function(s){ s.remove(); });
+            // 현재 정렬 컬럼 아이콘 추가
+            if (th.getAttribute('onclick').indexOf("'"+field+"'") >= 0) {
+                var sp = document.createElement('span');
+                sp.className = 'sort-arrow';
+                sp.textContent = asc ? ' ▲' : ' ▼';
+                th.appendChild(sp);
+            }
+        });
+    }
 }
 </script>
 </body>

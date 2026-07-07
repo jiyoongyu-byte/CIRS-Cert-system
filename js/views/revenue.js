@@ -204,26 +204,31 @@ function renderRevChart(actual, target, team, rows, y) {
     if (chartRevMixed) { chartRevMixed.destroy(); chartRevMixed = null; }
 
     const isCert     = team === 'cert';
-    const greenSolid = 'rgba(25,168,118,0.82)';   // 실적 채워진 초록
+    const greenSolid = 'rgba(25,168,118,0.82)';   // 달성 초록
     const greenLine  = '#19A876';                  // 초록 테두리/선
-    const redSolid   = 'rgba(239,68,68,0.80)';    // 마이너스 빨강
+    const redSolid   = 'rgba(239,68,68,0.80)';    // 미달 빨강
+    const blueSolid  = 'rgba(79,195,247,0.82)';   // 초과달성 파랑
     const planLine   = isCert ? '#56d9a8' : '#8B9CF9'; // 누적 계획선
 
-    let labels, datasets, chartType;
+    let labels, datasets, chartType, useStack = false;
 
     if (revChartMode === 'quarter') {
-        // ── 분기별: 계획=초록 윤곽선 bar, 실적=채워진(마이너스=빨강) bar ──
+        // ── 분기별: 계획=윤곽선, 달성=초록/미달=빨강, 초과=파랑 스택 ──
         labels = ['1분기', '2분기', '3분기', '4분기'];
-        const planArr   = ['q1','q2','q3','q4'].map(q => Math.round(Number(target[q] || 0)));
-        const actualArr = ['q1','q2','q3','q4'].map(q => Math.round(actual[q] || 0));
-        const actualBg  = actualArr.map((v, i) => v < planArr[i] ? redSolid : greenSolid);
+        const planArr    = ['q1','q2','q3','q4'].map(q => Math.round(Number(target[q] || 0)));
+        const actualArr  = ['q1','q2','q3','q4'].map(q => Math.round(actual[q] || 0));
+        const achieveArr = actualArr.map((v, i) => Math.min(v, planArr[i]));
+        const achieveClr = actualArr.map((v, i) => v >= planArr[i] ? greenSolid : redSolid);
+        const excessArr  = actualArr.map((v, i) => Math.max(0, v - planArr[i]));
         datasets = [
             { type:'bar', label:'계획', data: planArr,
-              backgroundColor: 'transparent', borderColor: greenLine, borderWidth:2, borderRadius:4 },
-            { type:'bar', label:'실적', data: actualArr,
-              backgroundColor: actualBg, borderRadius:4 },
+              backgroundColor: 'transparent', borderColor: greenLine, borderWidth:2, borderRadius:4, stack:'plan' },
+            { type:'bar', label:'달성', data: achieveArr,
+              backgroundColor: achieveClr, borderRadius:0, stack:'actual' },
+            { type:'bar', label:'초과달성', data: excessArr,
+              backgroundColor: blueSolid, borderRadius:4, stack:'actual' },
         ];
-        chartType = 'bar';
+        chartType = 'bar'; useStack = true;
 
     } else if (revChartMode === 'cumul') {
         // ── 누적: 누적계획 점선 + 누적실적 실선 ─────────────────
@@ -243,20 +248,34 @@ function renderRevChart(actual, target, team, rows, y) {
         chartType = 'line';
 
     } else {
-        // ── 월별 (기본): 계획=초록 윤곽선 bar, 실적=채워진(마이너스=빨강) bar ──
+        // ── 월별 (기본): 계획=윤곽선, 달성=초록/미달=빨강, 초과=파랑 스택 ──
         labels = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-        const mActual = _getMonthlyActual(rows, y);
-        const mTarget = _getMonthlyTarget(target);
-        // 실적이 계획 미달인 달은 빨강, 초과/달성은 초록
-        const actualBg = mActual.map((v, i) => v < mTarget[i] ? redSolid : greenSolid);
+        const mActual    = _getMonthlyActual(rows, y);
+        const mTarget    = _getMonthlyTarget(target);
+        const achieveData = mActual.map((v, i) => Math.min(Math.round(v), Math.round(mTarget[i])));
+        const achieveClr  = mActual.map((v, i) => v >= mTarget[i] ? greenSolid : redSolid);
+        const excessData  = mActual.map((v, i) => Math.max(0, Math.round(v) - Math.round(mTarget[i])));
         datasets = [
             { type:'bar', label:'계획', data: mTarget.map(v=>Math.round(v)),
-              backgroundColor: 'transparent', borderColor: greenLine, borderWidth:2, borderRadius:3 },
-            { type:'bar', label:'실적', data: mActual.map(v=>Math.round(v)),
-              backgroundColor: actualBg, borderRadius:3 },
+              backgroundColor: 'transparent', borderColor: greenLine, borderWidth:2, borderRadius:3, stack:'plan' },
+            { type:'bar', label:'달성', data: achieveData,
+              backgroundColor: achieveClr, borderRadius:0, stack:'actual' },
+            { type:'bar', label:'초과달성', data: excessData,
+              backgroundColor: blueSolid, borderRadius:3, stack:'actual' },
         ];
-        chartType = 'bar';
+        chartType = 'bar'; useStack = true;
     }
+
+    // 커스텀 범례 라벨 (스택 바 모드에서만 사용)
+    const customLegendLabels = useStack ? {
+        color:'#BAC0CB', font:{ size:11 },
+        generateLabels: () => [
+            { text:'계획',     fillStyle:'transparent', strokeStyle: greenLine, lineWidth:2, hidden:false, datasetIndex:0 },
+            { text:'달성',     fillStyle: greenSolid,  strokeStyle:'transparent', lineWidth:0, hidden:false, datasetIndex:1 },
+            { text:'초과달성', fillStyle: blueSolid,   strokeStyle:'transparent', lineWidth:0, hidden:false, datasetIndex:2 },
+            { text:'미달',     fillStyle: redSolid,    strokeStyle:'transparent', lineWidth:0, hidden:false, datasetIndex:-1 },
+        ]
+    } : { color:'#BAC0CB', font:{ size:11 } };
 
     chartRevMixed = new Chart(ctx, {
         type: chartType,
@@ -264,8 +283,9 @@ function renderRevChart(actual, target, team, rows, y) {
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color:'#BAC0CB', font:{ size:11 } } },
+                legend: { labels: customLegendLabels },
                 tooltip: {
+                    filter: item => item.raw > 0,  // 0값 툴팁 숨김
                     callbacks: {
                         label: ctx => ` ${ctx.dataset.label}: ${fmtMil(ctx.raw)}`
                     }
@@ -273,10 +293,11 @@ function renderRevChart(actual, target, team, rows, y) {
             },
             scales: {
                 y: {
+                    stacked: useStack,
                     ticks: { color:'#BAC0CB', callback: v => fmtMil(v) },
                     grid:  { color:'rgba(255,255,255,0.05)' }
                 },
-                x: { ticks: { color:'#BAC0CB' }, grid: { display:false } }
+                x: { stacked: useStack, ticks: { color:'#BAC0CB' }, grid: { display:false } }
             }
         }
     });
