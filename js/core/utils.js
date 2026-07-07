@@ -111,6 +111,7 @@ export function getBilledActual(teamRows, y) {
     const qsRMB = { q1:0, q2:0, q3:0, q4:0 };
     const qsUSD = { q1:0, q2:0, q3:0, q4:0 };
 
+    const today = new Date().toISOString().slice(0, 10); // 오늘 날짜 YYYY-MM-DD
     teamRows.filter(r => r.recordType !== 'consult' && isRowVisibleInYear(r, y))
         .forEach(r => {
             (r.billing || []).forEach((amt, i) => {
@@ -120,6 +121,7 @@ export function getBilledActual(teamRows, y) {
                 const krw = toKRW(Number(amt), cur);
                 let qn = 'q1';
                 if (ds) {
+                    if (ds > today) return;           // 미래 수입 예정은 실적에서 제외
                     if (new Date(ds).getFullYear() !== y) return;
                     const m = new Date(ds).getMonth();
                     qn = m <= 2 ? 'q1' : m <= 5 ? 'q2' : m <= 8 ? 'q3' : 'q4';

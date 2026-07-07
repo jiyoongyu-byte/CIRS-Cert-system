@@ -35,7 +35,7 @@ export function buildBillingGrid(contId, totalId, prefix, bArr, bDates, bCur) {
             </select>
             <input type="number" value="${(bArr||[])[i]||''}" id="${prefix}-b${i}"
                 oninput="calcBilling('${prefix}','${totalId}')">
-            <input type="date" id="${prefix}-bd${i}" value="${(bDates||[])[i]||''}">
+            <input type="date" id="${prefix}-bd${i}" value="${(bDates||[])[i]||''}" onchange="calcBilling('${prefix}','${totalId}')">
         </div>`;
     }).join('');
     _prefillModalRates(prefix); // 사이드바 환율 자동 pre-fill
@@ -66,12 +66,15 @@ export function calcBilling(p, tId) {
         return krw;
     }
 
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
     const tKRW = toKRWLocal(tAmt, tCur);
     let bKRW = 0;
-    let bOrig = 0; // 계약 통화 기준 수입합계
+    let bOrig = 0; // 계약 통화 기준 수입합계 (오늘까지 수령분)
     for (let i = 0; i < 5; i++) {
         const bAmt = Number(document.getElementById(`${p}-b${i}`)?.value || 0);
         const bCur = document.getElementById(`${p}-bc${i}`)?.value || 'KRW';
+        const bDate = document.getElementById(`${p}-bd${i}`)?.value || '';
+        if (bDate && bDate > today) continue; // 미래 수입 예정 제외
         const bKrw = toKRWLocal(bAmt, bCur);
         bKRW  += bKrw;
         // 같은 통화면 직접 합산, 다른 통화면 KRW 경유 역환산

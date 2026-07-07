@@ -22,9 +22,13 @@ function fmtRemain(r) {
     if (missingRate && amt > 0) {
         return `<td style="text-align:left;white-space:nowrap;color:var(--text3);font-size:12px" title="사이드바에서 환율을 설정하세요">환율 미설정</td>`;
     }
+    const today2 = new Date().toISOString().slice(0, 10);
     const total      = toKRW(amt, cur);
-    const paid       = (r.billing || []).reduce((s, v, i) =>
-        s + toKRW(Number(v || 0), (r.billingCurrencies || [])[i] || 'KRW'), 0);
+    const paid       = (r.billing || []).reduce((s, v, i) => {
+        const bd = (r.billingDates || [])[i] || '';
+        if (bd && bd > today2) return s; // 미래 수입 예정 제외
+        return s + toKRW(Number(v || 0), (r.billingCurrencies || [])[i] || 'KRW');
+    }, 0);
     const remainKRW  = Math.round(total - paid);
 
     // KRW 계약: KRW + 숫자 표시
