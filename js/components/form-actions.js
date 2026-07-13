@@ -256,7 +256,8 @@ export async function saveTask() {
             t.team     = document.getElementById('task-team')?.value || '공통';
             t.priority = document.getElementById('task-priority')?.value || '일반';
             t.to = to; t.due = document.getElementById('task-due')?.value || '';
-            t.content = sanitize(content);
+            t.content  = sanitize(content);
+            t.project  = document.getElementById('task-project')?.value || '';
         }
     } else {
         if (!state.tasks) state.tasks = [];
@@ -269,6 +270,7 @@ export async function saveTask() {
             to, date: document.getElementById('task-date')?.value || new Date().toISOString().slice(0,10),
             due:      document.getElementById('task-due')?.value || '',
             content:  sanitize(content),
+            project:  document.getElementById('task-project')?.value || '',
             completedDate: '', completeNote: '', confirmedDate: '',
         });
     }

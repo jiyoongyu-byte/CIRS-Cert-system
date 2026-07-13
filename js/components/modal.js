@@ -300,6 +300,24 @@ export function openEduAddModal(id) {
     document.getElementById('modal-edu-add')?.classList.add('open');
 }
 export function openTaskModal(type) {
+    // task-project 드롭다운: CIRS Group Korea(내부) + 기존 계약/상담 업체 목록
+    const sel = document.getElementById('task-project');
+    if (sel) {
+        const state = getState();
+        const clients = new Set();
+        (state.med  || []).forEach(r => r.client && clients.add(r.client));
+        (state.cert || []).forEach(r => r.client && clients.add(r.client));
+        sel.innerHTML =
+            '<option value="">관련 업체 선택 (없음)</option>' +
+            '<option value="CIRS Group Korea">🏢 CIRS Group Korea (내부업무)</option>' +
+            Array.from(clients).sort((a, b) => a.localeCompare(b, 'ko'))
+                .map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+    // type 저장 및 타이틀 갱신
+    const typeEl = document.getElementById('task-type-hidden');
+    if (typeEl) typeEl.value = type || 'order';
+    const titleEl = document.getElementById('taskModalTitle');
+    if (titleEl) titleEl.textContent = type === 'order' ? '📋 업무지시 작성' : '🤝 협조요청 작성';
     document.getElementById('modal-task')?.classList.add('open');
 }
 

@@ -154,6 +154,20 @@ export function openTaskEdit(id) {
     if (document.getElementById('task-to'))       document.getElementById('task-to').value = t.to || '';
     if (document.getElementById('task-priority')) document.getElementById('task-priority').value = t.priority || '일반';
     if (document.getElementById('task-content'))  document.getElementById('task-content').value = t.content || '';
+    // task-project 드롭다운 채우기 + 기존 선택값 복원
+    const projSel = document.getElementById('task-project');
+    if (projSel) {
+        const state2 = getState();
+        const clients = new Set();
+        (state2.med  || []).forEach(r => r.client && clients.add(r.client));
+        (state2.cert || []).forEach(r => r.client && clients.add(r.client));
+        projSel.innerHTML =
+            '<option value="">관련 업체 선택 (없음)</option>' +
+            '<option value="CIRS Group Korea">🏢 CIRS Group Korea (내부업무)</option>' +
+            Array.from(clients).sort((a, b) => a.localeCompare(b, 'ko'))
+                .map(c => `<option value="${c}">${c}</option>`).join('');
+        projSel.value = t.project || '';
+    }
 }
 
 // ── 완료 보고 모달 열기 ───────────────────────────────────────────
