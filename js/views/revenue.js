@@ -8,7 +8,7 @@ let chartTopServices = null;
 let revChartMode     = 'month';  // 'month' | 'quarter' | 'cumul'
 let svcChartMode     = 'cert';   // 'cert'  | 'manager'
 
-// ── 팀 탭 전환 ───────────────────────────────────────────────────
+// ── 팀 탭 전환 ────────────────────────────────────────────────
 export function switchRevTeam(team, el) {
     setRevTeam(team);
     document.querySelectorAll('#revTeamSelector .team-tab').forEach(b => b.className = 'team-tab');
@@ -16,7 +16,7 @@ export function switchRevTeam(team, el) {
     renderRevenue();
 }
 
-// ── 차트 모드 전환 (월별/분기별/누적) ─────────────────────────────
+// ── 차트 모드 전환 (월별/분기별/누적) ────────────────────────────
 export function switchRevChartMode(mode, el) {
     revChartMode = mode;
     document.querySelectorAll('.rev-chart-btn').forEach(b => b.classList.remove('active'));
@@ -25,7 +25,7 @@ export function switchRevChartMode(mode, el) {
     renderRevChart(actual, target, getRevTeam() || 'med', rows, getCurrentYear());
 }
 
-// ── 수입기여도 모드 전환 (인증마크별/담당자별) ─────────────────────
+// ── 수입기여도 모드 전환 (인증마크별/담당자별) ────────────────────
 export function switchServiceChartMode(mode, el) {
     svcChartMode = mode;
     document.querySelectorAll('.svc-chart-btn').forEach(b => b.classList.remove('active'));
@@ -108,7 +108,7 @@ function categorizeMed(r) {
 
 // ══════════════════════════════════════════════════════════════════
 // ── 메인 렌더 ─────────────────────────────────────────────────────
-// ══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 export function renderRevenue() {
     const state = getState();
     const y     = getCurrentYear();
@@ -194,7 +194,7 @@ export function renderRevenue() {
     renderSvcChart(rows, team, y);
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 // ── 차트 1: 월별/분기별/누적 실적 & 계획 (단일 y축) ────────────────
 // ══════════════════════════════════════════════════════════════════
 function renderRevChart(actual, target, team, rows, y) {
@@ -211,24 +211,21 @@ function renderRevChart(actual, target, team, rows, y) {
     const planLine   = isCert ? '#56d9a8' : '#8B9CF9'; // 누적 계획선
 
     let labels, datasets, chartType, useStack = false;
+    let pctPlanArr = null, pctActualArr = null; // 달성률(%) 텍스트 플러그인용
 
     if (revChartMode === 'quarter') {
-        // ── 분기별: 계획=윤곽선, 달성=초록/미달=빨강, 초과=파랑 스택 ──
+        // ── 분기별: 계획=윤곽선, 실적=초록 채움 (달성률은 막대 위 텍스트로 표시) ──
         labels = ['1분기', '2분기', '3분기', '4분기'];
-        const planArr    = ['q1','q2','q3','q4'].map(q => Math.round(Number(target[q] || 0)));
-        const actualArr  = ['q1','q2','q3','q4'].map(q => Math.round(actual[q] || 0));
-        const achieveArr = actualArr.map((v, i) => Math.min(v, planArr[i]));
-        const achieveClr = actualArr.map((v, i) => v >= planArr[i] ? greenSolid : redSolid);
-        const excessArr  = actualArr.map((v, i) => Math.max(0, v - planArr[i]));
+        const planArr   = ['q1','q2','q3','q4'].map(q => Math.round(Number(target[q] || 0)));
+        const actualArr = ['q1','q2','q3','q4'].map(q => Math.round(actual[q] || 0));
         datasets = [
             { type:'bar', label:'계획', data: planArr,
               backgroundColor: 'transparent', borderColor: greenLine, borderWidth:2, borderRadius:4, stack:'plan' },
-            { type:'bar', label:'달성', data: achieveArr,
-              backgroundColor: achieveClr, borderRadius:0, stack:'actual' },
-            { type:'bar', label:'초과달성', data: excessArr,
-              backgroundColor: blueSolid, borderRadius:4, stack:'actual' },
+            { type:'bar', label:'실적', data: actualArr,
+              backgroundColor: greenSolid, borderRadius:4, stack:'actual' },
         ];
         chartType = 'bar'; useStack = true;
+        pctPlanArr = planArr; pctActualArr = actualArr;
 
     } else if (revChartMode === 'cumul') {
         // ── 누적: 누적계획 점선 + 누적실적 실선 ─────────────────
@@ -248,38 +245,58 @@ function renderRevChart(actual, target, team, rows, y) {
         chartType = 'line';
 
     } else {
-        // ── 월별 (기본): 계획=윤곽선, 달성=초록/미달=빨강, 초과=파랑 스택 ──
+        // ── 월별 (기본): 계획=윤곽선, 실적=초록 채움 (달성률은 막대 위 텍스트로 표시) ──
         labels = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-        const mActual    = _getMonthlyActual(rows, y);
-        const mTarget    = _getMonthlyTarget(target);
-        const achieveData = mActual.map((v, i) => Math.min(Math.round(v), Math.round(mTarget[i])));
-        const achieveClr  = mActual.map((v, i) => v >= mTarget[i] ? greenSolid : redSolid);
-        const excessData  = mActual.map((v, i) => Math.max(0, Math.round(v) - Math.round(mTarget[i])));
+        const mActual = _getMonthlyActual(rows, y);
+        const mTarget = _getMonthlyTarget(target);
+        const targetRounded = mTarget.map(v => Math.round(v));
+        const actualRounded = mActual.map(v => Math.round(v));
         datasets = [
-            { type:'bar', label:'계획', data: mTarget.map(v=>Math.round(v)),
+            { type:'bar', label:'계획', data: targetRounded,
               backgroundColor: 'transparent', borderColor: greenLine, borderWidth:2, borderRadius:3, stack:'plan' },
-            { type:'bar', label:'달성', data: achieveData,
-              backgroundColor: achieveClr, borderRadius:0, stack:'actual' },
-            { type:'bar', label:'초과달성', data: excessData,
-              backgroundColor: blueSolid, borderRadius:3, stack:'actual' },
+            { type:'bar', label:'실적', data: actualRounded,
+              backgroundColor: greenSolid, borderRadius:3, stack:'actual' },
         ];
         chartType = 'bar'; useStack = true;
+        pctPlanArr = targetRounded; pctActualArr = actualRounded;
     }
 
-    // 커스텀 범례 라벨 (스택 바 모드에서만 사용)
+    // 커스텀 범례 라벨 (계획/실적 2종, 흰색 텍스트로 가독성 개선)
     const customLegendLabels = useStack ? {
-        color:'#BAC0CB', font:{ size:11 },
+        color:'#FFFFFF', font:{ size:11 },
         generateLabels: () => [
-            { text:'계획',     fillStyle:'transparent', strokeStyle: greenLine, lineWidth:2, hidden:false, datasetIndex:0 },
-            { text:'달성',     fillStyle: greenSolid,  strokeStyle:'transparent', lineWidth:0, hidden:false, datasetIndex:1 },
-            { text:'초과달성', fillStyle: blueSolid,   strokeStyle:'transparent', lineWidth:0, hidden:false, datasetIndex:2 },
-            { text:'미달',     fillStyle: redSolid,    strokeStyle:'transparent', lineWidth:0, hidden:false, datasetIndex:-1 },
+            { text:'계획', fillStyle:'transparent', strokeStyle: greenLine, lineWidth:2, hidden:false, datasetIndex:0 },
+            { text:'실적', fillStyle: greenSolid,   strokeStyle:'transparent', lineWidth:0, hidden:false, datasetIndex:1 },
         ]
-    } : { color:'#BAC0CB', font:{ size:11 } };
+    } : { color:'#FFFFFF', font:{ size:11 } };
+
+    // 달성률(%) 텍스트 플러그인: 실적 막대 위에 초과달성=파랑 '+00.0%' / 미달=빨강 '-00.0%' 표시
+    const pctLabelPlugin = {
+        id: 'pctLabelPlugin',
+        afterDatasetsDraw(chart) {
+            if (!useStack || !pctActualArr) return;
+            const meta = chart.getDatasetMeta(1); // 실적 데이터셋
+            const { ctx: c } = chart;
+            c.save();
+            c.font = '11px sans-serif';
+            c.textAlign = 'center';
+            meta.data.forEach((bar, i) => {
+                const tgt = pctPlanArr[i];
+                if (!tgt) return; // 목표 0이면 달성률 표시 안함
+                const act = pctActualArr[i];
+                const pct = (act - tgt) / tgt * 100;
+                const sign = pct >= 0 ? '+' : '-';
+                c.fillStyle = pct >= 0 ? '#4FC3F7' : '#EF4444';
+                c.fillText(`${sign} ${Math.abs(pct).toFixed(1)}%`, bar.x, bar.y - 6);
+            });
+            c.restore();
+        }
+    };
 
     chartRevMixed = new Chart(ctx, {
         type: chartType,
         data: { labels, datasets },
+        plugins: [pctLabelPlugin],
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: {
@@ -304,7 +321,7 @@ function renderRevChart(actual, target, team, rows, y) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// ── 차트 2: 수입기여도 도넛 (인증마크별 / 담당자별) ─────────────────
+// ── 차트 2: 수입기여도 도넛 (인증마크별 / 담당자별) ────────────────
 // ══════════════════════════════════════════════════════════════════
 function renderSvcChart(rows, team, y) {
     if (typeof Chart === 'undefined') return;
@@ -368,8 +385,59 @@ function renderSvcChart(rows, team, y) {
     });
 }
 
+// ══════════════════════════════════════════════════════════════════
+// ── 엑셀 다운로드: 월별 목표/실적/달성률 + 계약별 수입 결산 내역 ──────
+// ══════════════════════════════════════════════════════════════════
+export function exportRevenueExcel() {
+    if (typeof XLSX === 'undefined') { alert('엑셀 라이브러리를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'); return; }
+
+    const y    = getCurrentYear();
+    const team = getRevTeam() || 'med';
+    const { target, rows, medRows, certRows } = _getActualTarget();
+
+    // 시트1: 월별 목표/실적/달성률
+    const MONTHS  = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    const mActual = _getMonthlyActual(rows, y);
+    const mTarget = _getMonthlyTarget(target);
+    const sheet1 = MONTHS.map((m, i) => {
+        const tgt  = Math.round(mTarget[i]);
+        const act  = Math.round(mActual[i]);
+        const rate = tgt ? Math.round(act / tgt * 1000) / 10 : 0;
+        return { '월': m, '목표(원)': tgt, '실적(원)': act, '달성률(%)': rate };
+    });
+
+    // 시트2: 계약별 수입 결산 내역
+    const tableRows = team === 'med'
+        ? medRows.filter(r => r.year === y).map(r => ({ ...r, _team:'의료기기팀', _item: r.biztype || r.product || '' }))
+        : team === 'cert'
+        ? certRows.filter(r => r.year === y).map(r => ({ ...r, _team:'제품환경인증팀', _item: r.certtype || '' }))
+        : [
+            ...medRows.filter(r => r.year === y).map(r => ({ ...r, _team:'의료기기팀', _item: r.biztype || r.product || '' })),
+            ...certRows.filter(r => r.year === y).map(r => ({ ...r, _team:'제품환경인증팀', _item: r.certtype || '' })),
+          ];
+    const sheet2 = tableRows.map((r, i) => {
+        const paid  = (r.billing || []).reduce((s, v, bi) => s + toKRW(Number(v || 0), (r.billingCurrencies || [])[bi] || 'KRW'), 0);
+        const total = toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW');
+        return {
+            '순번': i + 1, '팀': r._team, '업체명': r.client || '', '항목': r._item,
+            '발생월': r.startdate || r.contractdate || '',
+            '계약금액': `${fmtM(r.amount || 0)} ${r.amountCurrency || 'KRW'}`,
+            '수입실적(현재까지)': fmtM(Math.round(paid)),
+            '잔액': fmtM(Math.round(total - paid)),
+            '담당자': r.manager || ''
+        };
+    });
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet1), '월별목표달성현황');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet2), '계약별수입결산내역');
+    const teamLabel = team === 'med' ? '의료기기팀' : team === 'cert' ? '제품환경인증팀' : '전체합산';
+    XLSX.writeFile(wb, `수입계획실적_${teamLabel}_${y}.xlsx`);
+}
+
 // ── window 전역 등록 ─────────────────────────────────────────────
 window.renderRevenue          = renderRevenue;
 window.switchRevTeam          = switchRevTeam;
 window.switchRevChartMode     = switchRevChartMode;
 window.switchServiceChartMode = switchServiceChartMode;
+window.exportRevenueExcel     = exportRevenueExcel;
