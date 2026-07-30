@@ -265,8 +265,8 @@ function renderRevChart(actual, target, team, rows, y) {
     const customLegendLabels = useStack ? {
         color:'#FFFFFF', font:{ size:11 },
         generateLabels: () => [
-            { text:'계획', fillStyle:'transparent', strokeStyle: greenLine, lineWidth:2, hidden:false, datasetIndex:0 },
-            { text:'실적', fillStyle: greenSolid,   strokeStyle:'transparent', lineWidth:0, hidden:false, datasetIndex:1 },
+            { text:'계획', fillStyle:'transparent', strokeStyle: greenLine, lineWidth:2, hidden:false, datasetIndex:0, fontColor:'#FFFFFF' },
+            { text:'실적', fillStyle: greenSolid,   strokeStyle:'transparent', lineWidth:0, hidden:false, datasetIndex:1, fontColor:'#FFFFFF' },
         ]
     } : { color:'#FFFFFF', font:{ size:11 } };
 
