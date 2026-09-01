@@ -14,6 +14,22 @@ function fmtAmt(amount, currency) {
 }
 
 // ── 잔금 계산 (계약금액 - 수입실적), 좌측 정렬 ────────────────────
+// 해당 건에 환율이 필요한데 분기 환율이 비어 있는지 검사
+function hasMissingRate(r, contractDate) {
+    const need = (cur, d) => {
+        if (!cur || cur === 'KRW') return false;
+        const rt = getRatesFor(d) || {};
+        return !Number(rt[cur.toLowerCase()] || 0);
+    };
+    if (Number(r.amount || 0) && need(r.amountCurrency, contractDate)) return true;
+    const today = new Date().toISOString().slice(0, 10);
+    return (r.billing || []).some((v, i) => {
+        const bd = (r.billingDates || [])[i] || '';
+        if (!Number(v || 0) || (bd && bd > today)) return false;
+        return need((r.billingCurrencies || [])[i], bd);
+    });
+}
+
 // 수금액을 계약 통화 기준 금액으로 환산해 합산 (미래 예정 제외)
 // 통화가 같으면 그대로, 다르면 수금일 분기 환율로 계약 통화로 변환
 function paidInContractCurrency(r) {
@@ -38,13 +54,14 @@ function paidInContractCurrency(r) {
     return { paid: sum, unconvertible };
 }
 
-function fmtRemain(r) {
+function fmtRemain(r, contractDate) {
     const cur = r.amountCurrency || 'KRW';
-    const { paid, unconvertible } = paidInContractCurrency(r);
+    const { paid } = paidInContractCurrency(r);
     const remain = Number(r.amount || 0) - paid;
     const color  = remain > 0 ? 'var(--warn)' : 'var(--text3)';
-    const mark   = unconvertible ? ' <span style="color:var(--danger)" title="환율이 없어 일부 수입 내역을 환산하지 못했습니다. 해당 분기 환율을 입력해 주세요.">※</span>' : '';
-    return `<td style="text-align:right;white-space:nowrap;color:${color};font-weight:600">${fmt(Math.round(remain))} ${cur}${mark}</td>`;
+    const warn   = hasMissingRate(r, contractDate)
+        ? '<br><span style="font-size:11px;color:var(--danger);font-weight:600" title="상단 환율 표시를 눌러 해당 분기 환율을 입력하세요">⚠ 환율 미설정</span>' : '';
+    return `<td style="text-align:right;white-space:nowrap;color:${color};font-weight:600">${fmt(Math.round(remain))} ${cur}${warn}</td>`;
 }
 
 // ── 상태 배지 ────────────────────────────────────────────────────
@@ -115,7 +132,7 @@ export function renderMedContract() {
             <td>${sanitize(r.startdate || '')}</td>
             <td>${sanitize(r.duedate || '')}</td>
             ${fmtAmt(r.amount, r.amountCurrency)}
-            ${fmtRemain(r)}
+            ${fmtRemain(r, r.startdate || r.contractdate || '')}
             <td>${sanitize(r.stage || '')}</td>
             <td>${statusBadge(r.status, 'badge-med')}</td>
             ${manageBtns(`editMed('${r.id}')`, `deleteMed('${r.id}')`)}
@@ -261,7 +278,7 @@ export function renderCertContract() {
             <td>${sanitize(r.contractdate || '')}</td>
             <td>${sanitize(r.issuedate || '')}</td>
             ${fmtAmt(r.amount, r.amountCurrency)}
-            ${fmtRemain(r)}
+            ${fmtRemain(r, r.startdate || r.contractdate || '')}
             <td>${sanitize(r.stage || '')}</td>
             <td>${statusBadge(r.contracted, 'badge-cert')}</td>
             ${manageBtns(`editCert('${r.id}')`, `deleteCert('${r.id}')`)}
@@ -380,22 +397,41 @@ function renderContractTotal(tableId, rows, labelSpan = 6, dateKey = 'startdate'
     if (!tfoot) { tfoot = document.createElement('tfoot'); table.appendChild(tfoot); }
     if (!rows.length) { tfoot.innerHTML = ''; return; }
 
-    let total = 0;
-    const remainByCur = {};                              // 잔금은 통화별로 집계 (환산 없음)
+    // 담당자별 집계 + 전체 합계
+    const byMgr = {};
+    let total = 0, missAny = false;
+    const remainAll = {};
     rows.forEach(r => {
-        const k = calcKRW(r, r[dateKey] || '');
+        const d = r[dateKey] || '';
+        const k = calcKRW(r, d);
+        const m = r.manager || '미지정';
+        const a = byMgr[m] || (byMgr[m] = { cnt: 0, total: 0, remain: {}, miss: false });
+        a.cnt++; a.total += k.total;
+        a.remain[k.cur] = (a.remain[k.cur] || 0) + k.remainOrig;
+        if (hasMissingRate(r, d)) { a.miss = true; missAny = true; }
         total += k.total;
-        remainByCur[k.cur] = (remainByCur[k.cur] || 0) + k.remainOrig;
+        remainAll[k.cur] = (remainAll[k.cur] || 0) + k.remainOrig;
     });
-    const remainTxt = Object.entries(remainByCur)
-        .filter(([, v]) => Math.round(v) !== 0)
-        .map(([c, v]) => `${fmt(Math.round(v))} ${c}`)
-        .join('<br>') || '0';
 
-    tfoot.innerHTML = `<tr style="background:var(--surface);font-weight:700">
-        <td colspan="${labelSpan}" style="text-align:right">합계 · ${rows.length}건</td>
+    const curTxt = obj => Object.entries(obj)
+        .filter(([, v]) => Math.round(v) !== 0)
+        .map(([c, v]) => `${fmt(Math.round(v))} ${c}`).join('<br>') || '0';
+
+    const mgrRows = Object.entries(byMgr)
+        .sort((a, b) => b[1].total - a[1].total)
+        .map(([name, a]) => `<tr style="background:var(--bg2, rgba(255,255,255,.03));font-size:12px">
+            <td colspan="${labelSpan}" style="text-align:right;color:var(--text2)">${sanitize(name)} · ${a.cnt}건${
+                a.miss ? ' <span style="color:var(--danger);font-size:11px">⚠</span>' : ''}</td>
+            <td style="text-align:right;white-space:nowrap;color:var(--text2)">${fmt(a.total)} KRW</td>
+            <td style="text-align:right;white-space:nowrap;color:var(--text2)">${curTxt(a.remain)}</td>
+            <td colspan="3"></td>
+        </tr>`).join('');
+
+    tfoot.innerHTML = mgrRows + `<tr style="background:var(--surface);font-weight:700">
+        <td colspan="${labelSpan}" style="text-align:right">합계 · ${rows.length}건${
+            missAny ? ' <span style="color:var(--danger);font-size:11px">⚠ 환율 미설정 포함</span>' : ''}</td>
         <td style="text-align:right;white-space:nowrap">${fmt(total)} KRW</td>
-        <td style="text-align:right;white-space:nowrap;color:var(--warn)">${remainTxt}</td>
+        <td style="text-align:right;white-space:nowrap;color:var(--warn)">${curTxt(remainAll)}</td>
         <td colspan="3"></td>
     </tr>`;
 }
@@ -479,7 +515,33 @@ export function exportContractExcel(team) {
         };
     });
 
+    // 담당자별요약 시트
+    const agg = {};
+    rows.forEach(r => {
+        const d = (isMed ? r.startdate : r.contractdate) || '';
+        const k = calcKRW(r, d);
+        const m = r.manager || '미지정';
+        const a = agg[m] || (agg[m] = { cnt: 0, total: 0, remain: {}, miss: 0 });
+        a.cnt++; a.total += k.total;
+        a.remain[k.cur] = (a.remain[k.cur] || 0) + k.remainOrig;
+        if (hasMissingRate(r, d)) a.miss++;
+    });
+    const grand = Object.values(agg).reduce((s, a) => s + a.total, 0);
+    const summary = Object.entries(agg)
+        .sort((a, b) => b[1].total - a[1].total)
+        .map(([name, a]) => ({
+            '담당자': name,
+            '계약건수': a.cnt,
+            '계약금액(KRW)': a.total,
+            '비중(%)': grand ? Math.round(a.total / grand * 1000) / 10 : 0,
+            '잔금(통화별)': Object.entries(a.remain)
+                .filter(([, v]) => Math.round(v) !== 0)
+                .map(([c, v]) => `${Math.round(v).toLocaleString()} ${c}`).join(' / ') || '0',
+            '비고': a.miss ? `환율 미설정 ${a.miss}건` : '',
+        }));
+
     const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), '담당자별요약');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet), '계약업체');
     XLSX.writeFile(wb, `${label}_계약업체_${year}.xlsx`);
 }
