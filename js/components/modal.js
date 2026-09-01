@@ -228,7 +228,7 @@ export function openCertModal(type) {
     setCertIsContract(type === 'contract');
     const isContract = type === 'contract';
     document.getElementById('modal-cert')?.classList.add('open');
-    ['c-client','c-certtype','c-certtype-etc','c-manager','c-amount','c-amount-currency',
+    ['c-client','c-certtype','c-certtype-etc','c-certtype-etcname','c-manager','c-amount','c-amount-currency',
      'c-contractdate','c-stage','c-issuedate','c-contracted','c-date','c-fail-reason',
      'c-quote-date','c-quote-amount','c-quote-file','c-contact-name','c-contact-phone',
      'c-contact-email','c-etc-memo','c-note','c-renewcycle','c-expiredate',
@@ -261,6 +261,7 @@ export function editCert(id) {
     document.getElementById('modal-cert')?.classList.add('open');
     const fields = {
         'c-client': r.client, 'c-certtype': r.certtype, 'c-manager': r.manager,
+        'c-certtype-etc': r.etcMemo || '', 'c-certtype-etcname': r.certtypeRaw || '',
         'c-amount': r.amount || '', 'c-amount-currency': r.amountCurrency || 'KRW',
         'c-contractdate': r.contractdate, 'c-stage': r.stage, 'c-issuedate': r.issuedate,
         'c-contracted': r.contracted, 'c-date': r.date, 'c-fail-reason': r.failReason,

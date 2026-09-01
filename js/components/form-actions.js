@@ -123,9 +123,10 @@ export async function saveCert() {
         ? (state.cert.find(x => x.id === editId)?.year || getCurrentYear())
         : getCurrentYear();
     const certtype = document.getElementById('c-certtype')?.value || '';
-    // 품목명은 항상 저장 (기타 인증 시 인증명+품목명 함께 입력)
-    const certtypeRaw = document.getElementById('c-certtype-etc')?.value || certtype;
-    // etcMemo도 품목명으로 통일 저장
+    // 기타 인증명칭 (인증 종류가 '기타'일 때만 사용)
+    const certtypeRaw = certtype === '기타'
+        ? sanitize(document.getElementById('c-certtype-etcname')?.value || '') : '';
+    // 품목명
     const itemName = sanitize(document.getElementById('c-certtype-etc')?.value || '');
     const contractdate = document.getElementById('c-contractdate')?.value || '';
     const consultdate  = document.getElementById('c-date')?.value || '';

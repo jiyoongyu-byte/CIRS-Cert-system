@@ -251,7 +251,7 @@ export function renderCertContract() {
     }
 
     tbody.innerHTML = data.map((r, i) => {
-        const itemCol = [r.certtype, r.etcMemo].filter(Boolean).join(' / ');
+        const itemCol = [certLabel(r), r.etcMemo].filter(Boolean).join(' / ');
         return `<tr>
             <td>${i + 1}</td>
             <td class="client-name" style="white-space:normal;word-break:break-word;max-width:160px">${sanitize(r.client)}</td>
@@ -303,7 +303,7 @@ export function renderCertConsult() {
         tbody.innerHTML = data.map((r, i) => `<tr>
             <td>${i + 1}</td>
             <td class="client-name">${sanitize(r.client)}</td>
-            <td>${sanitize(r.certtype || '')}</td>
+            <td>${sanitize(certLabel(r))}</td>
             <td>${sanitize(r.manager || '')}</td>
             <td>${sanitize(r.date || '')}</td>
             <td>${statusBadge(r.contracted, 'badge-cert')}</td>
@@ -323,7 +323,7 @@ export function renderCertConsult() {
             : archive.map((r, i) => `<tr>
                 <td>${i + 1}</td>
                 <td class="client-name">${sanitize(r.client)}</td>
-                <td>${sanitize(r.certtype || '')}</td>
+                <td>${sanitize(certLabel(r))}</td>
                 <td>${sanitize(r.manager || '')}</td>
                 <td>${sanitize(r.date || '')}</td>
                 <td>${statusBadge(r.contracted, 'badge-cert')}</td>
@@ -354,7 +354,7 @@ export function renderCertDone() {
     tbody.innerHTML = data.map((r, i) => `<tr>
         <td>${i + 1}</td>
         <td class="client-name" style="white-space:normal;word-break:break-word;max-width:160px">${sanitize(r.client)}</td>
-        <td>${sanitize(r.certtype || '')}</td>
+        <td>${sanitize(certLabel(r))}</td>
         <td>${sanitize(r.etcMemo || '')}</td>
         <td>${sanitize(r.manager || '')}</td>
         <td>${sanitize(r.contractdate || '')}</td>
@@ -365,6 +365,12 @@ export function renderCertDone() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// 인증 종류 표기 — '기타'는 인증명칭을 괄호로 병기 (예: 기타(KCs))
+function certLabel(r) {
+    const t = r.certtype || '';
+    return (t === '기타' && r.certtypeRaw) ? `기타(${r.certtypeRaw})` : t;
+}
+
 // ── 표 하단 합계 행 (진행 건수 / 계약금액 / 잔금 — 모두 KRW 환산) ──────
 function renderContractTotal(tableId, rows) {
     const table = document.getElementById(tableId);
@@ -445,7 +451,7 @@ export function exportContractExcel(team) {
             '순번': i + 1,
             '업체명': r.client || '',
             [isMed ? '제품명/업무유형' : '인증종류/품목']:
-                (isMed ? [r.product, r.biztype] : [r.certtype, r.etcMemo]).filter(Boolean).join(' / '),
+                (isMed ? [r.product, r.biztype] : [certLabel(r), r.etcMemo]).filter(Boolean).join(' / '),
             '담당자': r.manager || '',
             '계약일': (isMed ? r.startdate : r.contractdate) || '',
             '완료목표': (isMed ? r.duedate : r.issuedate) || '',
