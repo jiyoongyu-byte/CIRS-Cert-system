@@ -20,7 +20,7 @@ function fmtRemain(r) {
     const { usd, rmb } = getRates();
     const missingRate = (cur === 'USD' && !usd) || (cur === 'RMB' && !rmb);
     if (missingRate && amt > 0) {
-        return `<td style="text-align:left;white-space:nowrap;color:var(--text3);font-size:12px" title="사이드바에서 환율을 설정하세요">환율 미설정</td>`;
+        return `<td style="text-align:left;white-space:nowrap;color:var(--danger);font-weight:700;font-size:12px" title="사이드바에서 환율을 설정하세요">${cur} 0 (환율 미설정)</td>`;
     }
     const today2 = new Date().toISOString().slice(0, 10);
     const total      = toKRW(amt, cur);
@@ -100,6 +100,7 @@ export function renderMedContract() {
 
     if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
+        renderContractTotal('medContractTable', []);
         return;
     }
 
@@ -119,6 +120,8 @@ export function renderMedContract() {
             ${manageBtns(`editMed('${r.id}')`, `deleteMed('${r.id}')`)}
         </tr>`;
     }).join('');
+
+    renderContractTotal('medContractTable', data);
 }
 
 // ── 의료기기팀 상담 ───────────────────────────────────────────────
@@ -243,6 +246,7 @@ export function renderCertContract() {
 
     if (!data.length) {
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
+        renderContractTotal('certContractTable', []);
         return;
     }
 
@@ -262,6 +266,8 @@ export function renderCertContract() {
             ${manageBtns(`editCert('${r.id}')`, `deleteCert('${r.id}')`)}
         </tr>`;
     }).join('');
+
+    renderContractTotal('certContractTable', data);
 }
 
 // ── 제품환경인증팀 상담 ───────────────────────────────────────────
@@ -358,7 +364,107 @@ export function renderCertDone() {
     </tr>`).join('');
 }
 
+// ═══════════════════════════════════════════════════════════════
+// ── 표 하단 합계 행 (진행 건수 / 계약금액 / 잔금 — 모두 KRW 환산) ──────
+function renderContractTotal(tableId, rows) {
+    const table = document.getElementById(tableId);
+    if (!table || table.tagName !== 'TABLE') return;
+    let tfoot = table.querySelector('tfoot');
+    if (!tfoot) { tfoot = document.createElement('tfoot'); table.appendChild(tfoot); }
+    if (!rows.length) { tfoot.innerHTML = ''; return; }
+
+    let total = 0, remain = 0, miss = 0;
+    rows.forEach(r => {
+        const k = calcKRW(r);
+        if (k.ok) { total += k.total; remain += k.remain; } else miss++;
+    });
+
+    tfoot.innerHTML = `<tr style="background:var(--surface);font-weight:700">
+        <td colspan="6" style="text-align:right">합계 · ${rows.length}건${
+            miss ? ` <span style="color:var(--danger);font-weight:600;font-size:11px">(환율 미설정 ${miss}건 제외)</span>` : ''}</td>
+        <td style="white-space:nowrap">KRW ${fmt(total)}</td>
+        <td style="white-space:nowrap;color:${remain > 0 ? 'var(--warn)' : 'var(--text3)'}">KRW ${fmt(remain)}</td>
+        <td colspan="3"></td>
+    </tr>`;
+}
+
+// ── 계약업체 엑셀 다운로드 (화면 표 그대로 1시트) ────────────────
+// ═══════════════════════════════════════════════════════════════
+
+// 화면 목록과 동일한 필터 (renderMedContract / renderCertContract 기준)
+function pickContractRows(team, state, year) {
+    if (team === 'med') {
+        return (state.med || []).filter(x => {
+            if (x.recordType !== 'contract') return false;
+            if (x.status === '완료' || x.status === '취소') return false;
+            const y = x.startdate ? parseInt(x.startdate.toString().slice(0, 4))
+                    : x.year      ? parseInt(x.year) : year;
+            return !isNaN(y) && y <= year;
+        });
+    }
+    return (state.cert || []).filter(x => {
+        if (x.recordType !== 'contract') return false;
+        if (x.stage === '완료') return false;
+        const y = x.contractdate ? parseInt(x.contractdate.toString().slice(0, 4))
+                : x.startdate    ? parseInt(x.startdate.toString().slice(0, 4))
+                : x.year         ? parseInt(x.year) : year;
+        return !isNaN(y) && y <= year;
+    });
+}
+
+// 계약금액 / 수입실적 / 잔금 KRW 환산. 환율 미설정이면 ok=false
+function calcKRW(r) {
+    const cur = r.amountCurrency || 'KRW';
+    const { usd, rmb } = getRates();
+    if ((cur === 'USD' && !usd) || (cur === 'RMB' && !rmb)) {
+        return { ok: false, cur, total: 0, paid: 0, remain: 0 };
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    const total = toKRW(Number(r.amount || 0), cur);
+    const paid  = (r.billing || []).reduce((s, v, i) => {
+        const bd = (r.billingDates || [])[i] || '';
+        if (bd && bd > today) return s;   // 미래 수입 예정 제외 (화면 잔금과 동일)
+        return s + toKRW(Number(v || 0), (r.billingCurrencies || [])[i] || 'KRW');
+    }, 0);
+    return { ok: true, cur, total: Math.round(total), paid: Math.round(paid), remain: Math.round(total - paid) };
+}
+
+export function exportContractExcel(team) {
+    if (typeof XLSX === 'undefined') { alert('엑셀 라이브러리를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'); return; }
+
+    const year  = getCurrentYear();
+    const rows  = pickContractRows(team, getState(), year);
+    const isMed = team === 'med';
+    const label = isMed ? '의료기기팀' : '제품환경인증팀';
+    if (!rows.length) { alert(`${label} 계약업체 목록이 없습니다.`); return; }
+
+    // 화면 표와 동일한 열 구성 (관리 버튼 열은 제외, 금액은 원화폐 + KRW 환산 병기)
+    const sheet = rows.map((r, i) => {
+        const k = calcKRW(r);
+        return {
+            '순번': i + 1,
+            '업체명': r.client || '',
+            [isMed ? '제품명/업무유형' : '인증종류/품목']:
+                (isMed ? [r.product, r.biztype] : [r.certtype, r.etcMemo]).filter(Boolean).join(' / '),
+            '담당자': r.manager || '',
+            '계약일': (isMed ? r.startdate : r.contractdate) || '',
+            '완료목표': (isMed ? r.duedate : r.issuedate) || '',
+            '통화': k.cur,
+            '계약금액(원화폐)': Number(r.amount || 0),
+            '계약금액(KRW)': k.ok ? k.total : '환율 미설정',
+            '잔금(KRW)': k.ok ? k.remain : '환율 미설정',
+            '진행단계': r.stage || '',
+            '상태': (isMed ? r.status : r.contracted) || '',
+        };
+    });
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet), '계약업체');
+    XLSX.writeFile(wb, `${label}_계약업체_${year}.xlsx`);
+}
+
 // ── window 전역 등록 ─────────────────────────────────────────────
+window.exportContractExcel = exportContractExcel;
 window.renderMedContract  = renderMedContract;
 window.renderMedConsult   = renderMedConsult;
 window.renderMedDone      = renderMedDone;
