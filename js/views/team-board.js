@@ -99,17 +99,18 @@ export function renderMedContract() {
     });
 
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
-        renderContractTotal('medContractTable', []);
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
+        renderContractTotal('medContractTable', [], 8);
         return;
     }
 
     tbody.innerHTML = data.map((r, i) => {
-        const itemCol = [r.product, r.biztype].filter(Boolean).join(' / ');
         return `<tr>
             <td>${i + 1}</td>
             <td class="client-name" style="white-space:normal;word-break:break-word;max-width:160px">${sanitize(r.client)}</td>
-            <td style="white-space:normal;word-break:break-word;max-width:160px">${sanitize(itemCol)}</td>
+            <td style="white-space:normal;word-break:break-word;max-width:110px">${sanitize(r.grade || '')}</td>
+            <td>${sanitize(r.biztype || '')}</td>
+            <td style="white-space:normal;word-break:break-word;max-width:180px">${sanitize(r.product || '')}</td>
             <td>${sanitize(r.manager || '')}</td>
             <td>${sanitize(r.startdate || '')}</td>
             <td>${sanitize(r.duedate || '')}</td>
@@ -121,7 +122,7 @@ export function renderMedContract() {
         </tr>`;
     }).join('');
 
-    renderContractTotal('medContractTable', data);
+    renderContractTotal('medContractTable', data, 8);
 }
 
 // ── 의료기기팀 상담 ───────────────────────────────────────────────
@@ -372,7 +373,7 @@ function certLabel(r) {
 }
 
 // ── 표 하단 합계 행 (진행 건수 / 계약금액 / 잔금 — 모두 KRW 환산) ──────
-function renderContractTotal(tableId, rows) {
+function renderContractTotal(tableId, rows, labelSpan = 6) {
     const table = document.getElementById(tableId);
     if (!table || table.tagName !== 'TABLE') return;
     let tfoot = table.querySelector('tfoot');
@@ -386,7 +387,7 @@ function renderContractTotal(tableId, rows) {
     });
 
     tfoot.innerHTML = `<tr style="background:var(--surface);font-weight:700">
-        <td colspan="6" style="text-align:right">합계 · ${rows.length}건${
+        <td colspan="${labelSpan}" style="text-align:right">합계 · ${rows.length}건${
             miss ? ` <span style="color:var(--danger);font-weight:600;font-size:11px">(환율 미설정 ${miss}건 제외)</span>` : ''}</td>
         <td style="white-space:nowrap">KRW ${fmt(total)}</td>
         <td style="white-space:nowrap;color:${remain > 0 ? 'var(--warn)' : 'var(--text3)'}">KRW ${fmt(remain)}</td>
@@ -450,8 +451,9 @@ export function exportContractExcel(team) {
         return {
             '순번': i + 1,
             '업체명': r.client || '',
-            [isMed ? '제품명/업무유형' : '인증종류/품목']:
-                (isMed ? [r.product, r.biztype] : [certLabel(r), r.etcMemo]).filter(Boolean).join(' / '),
+            ...(isMed
+                ? { '등급/분류': r.grade || '', '업무유형': r.biztype || '', '제품명/모델': r.product || '' }
+                : { '인증종류/품목': [certLabel(r), r.etcMemo].filter(Boolean).join(' / ') }),
             '담당자': r.manager || '',
             '계약일': (isMed ? r.startdate : r.contractdate) || '',
             '완료목표': (isMed ? r.duedate : r.issuedate) || '',
