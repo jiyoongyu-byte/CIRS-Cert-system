@@ -87,7 +87,7 @@ function collectData(state, year, sm, em) {
             (r.billing || []).forEach((amt, i) => {
                 const date = (r.billingDates || [])[i];
                 const cur  = (r.billingCurrencies || [])[i] || 'KRW';
-                if (inPeriod(date, year, sm, em)) total += toKRW(Number(amt || 0), cur);
+                if (inPeriod(date, year, sm, em)) total += toKRW(Number(amt || 0), cur, date);
             });
         });
         return Math.round(total);
@@ -111,7 +111,7 @@ function collectData(state, year, sm, em) {
             (r.billing || []).forEach((amt, i) => {
                 const date = (r.billingDates || [])[i];
                 const cur  = (r.billingCurrencies || [])[i] || 'KRW';
-                if (inPeriod(date, year, 1, em)) total += toKRW(Number(amt || 0), cur);
+                if (inPeriod(date, year, 1, em)) total += toKRW(Number(amt || 0), cur, date);
             });
         });
         return Math.round(total);
@@ -135,7 +135,7 @@ function collectData(state, year, sm, em) {
             (r.billing || []).forEach((amt, i) => {
                 const date = (r.billingDates || [])[i];
                 const cur  = (r.billingCurrencies || [])[i] || 'KRW';
-                if (inPeriod(date, year, m, m)) total += toKRW(Number(amt || 0), cur);
+                if (inPeriod(date, year, m, m)) total += toKRW(Number(amt || 0), cur, date);
             });
         });
         return Math.round(total);
@@ -179,7 +179,7 @@ function collectData(state, year, sm, em) {
             (r.billing || []).forEach((amt, i) => {
                 const date = (r.billingDates || [])[i];
                 const cur  = (r.billingCurrencies || [])[i] || 'KRW';
-                if (inPeriod(date, year - 1, sm, em)) total += toKRW(Number(amt || 0), cur);
+                if (inPeriod(date, year - 1, sm, em)) total += toKRW(Number(amt || 0), cur, date);
             });
         });
         return Math.round(total);
@@ -190,11 +190,11 @@ function collectData(state, year, sm, em) {
         const active   = records.filter(x => x.status !== '완료' && x.status !== '취소');
         const newOnes  = records.filter(x => inPeriod(x.startdate, year, sm, em));
         const doneAll  = records.filter(x => x.status === '완료');
-        const activeKRW = active.reduce((s, x) => s + toKRW(Number(x.amount || 0), x.amountCurrency || 'KRW'), 0);
+        const activeKRW = active.reduce((s, x) => s + toKRW(Number(x.amount || 0), x.amountCurrency || 'KRW', x.startdate || x.contractdate || ''), 0);
         const remainKRW = active.reduce((s, x) => {
-            const total = toKRW(Number(x.amount || 0), x.amountCurrency || 'KRW');
+            const total = toKRW(Number(x.amount || 0), x.amountCurrency || 'KRW', x.startdate || x.contractdate || '');
             const paid  = (x.billing || []).reduce((ps, v, i) =>
-                ps + toKRW(Number(v || 0), (x.billingCurrencies || [])[i] || 'KRW'), 0);
+                ps + toKRW(Number(v || 0), (x.billingCurrencies || [])[i] || 'KRW', (x.billingDates || [])[i] || ''), 0);
             return s + Math.max(0, total - paid);
         }, 0);
         return {

@@ -122,7 +122,7 @@ export function getBilledActual(teamRows, y) {
                 if (!amt) return;
                 const cur = (r.billingCurrencies || [])[i] || 'KRW';
                 const ds = (r.billingDates || [])[i];
-                const krw = toKRW(Number(amt), cur);
+                const krw = toKRW(Number(amt), cur, ds);
                 let qn = 'q1';
                 if (ds) {
                     if (ds > today) return;           // 미래 수입 예정은 실적에서 제외

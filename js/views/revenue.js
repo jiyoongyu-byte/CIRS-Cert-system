@@ -81,7 +81,7 @@ function _getMonthlyActual(rows, y) {
             const d = (r.billingDates || [])[i];
             if (!d || new Date(d).getFullYear() !== y) return;
             const m = new Date(d).getMonth();
-            monthly[m] += toKRW(Number(amt || 0), (r.billingCurrencies || [])[i] || 'KRW');
+            monthly[m] += toKRW(Number(amt || 0), (r.billingCurrencies || [])[i] || 'KRW', d);
         });
     });
     return monthly;
@@ -173,8 +173,8 @@ export function renderRevenue() {
         tbody.innerHTML = !tableRows.length
             ? `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text3)">데이터가 없습니다.</td></tr>`
             : tableRows.map((r, i) => {
-                const paid   = (r.billing || []).reduce((s, v, bi) => s + toKRW(Number(v || 0), (r.billingCurrencies || [])[bi] || 'KRW'), 0);
-                const total  = toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW');
+                const paid   = (r.billing || []).reduce((s, v, bi) => s + toKRW(Number(v || 0), (r.billingCurrencies || [])[bi] || 'KRW', (r.billingDates || [])[bi] || ''), 0);
+                const total  = toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW', r.startdate || r.contractdate || '');
                 const remain = total - paid;
                 return `<tr>
                     <td>${i + 1}</td>
@@ -337,7 +337,7 @@ function renderSvcChart(rows, team, y) {
         // ── 담당자별 ─────────────────────────────────────────────
         targetRows.forEach(r => {
             const key = r.manager || '미지정';
-            map[key] = (map[key] || 0) + toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW');
+            map[key] = (map[key] || 0) + toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW', r.startdate || r.contractdate || '');
         });
     } else {
         // ── 인증마크/서비스별 ─────────────────────────────────────
@@ -350,7 +350,7 @@ function renderSvcChart(rows, team, y) {
                 // 제품환경인증팀 레코드
                 key = r.certtype || '기타';
             }
-            map[key] = (map[key] || 0) + toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW');
+            map[key] = (map[key] || 0) + toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW', r.startdate || r.contractdate || '');
         });
     }
 
@@ -416,8 +416,8 @@ export function exportRevenueExcel() {
             ...certRows.filter(r => r.year === y).map(r => ({ ...r, _team:'제품환경인증팀', _item: r.certtype || '' })),
           ];
     const sheet2 = tableRows.map((r, i) => {
-        const paid  = (r.billing || []).reduce((s, v, bi) => s + toKRW(Number(v || 0), (r.billingCurrencies || [])[bi] || 'KRW'), 0);
-        const total = toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW');
+        const paid  = (r.billing || []).reduce((s, v, bi) => s + toKRW(Number(v || 0), (r.billingCurrencies || [])[bi] || 'KRW', (r.billingDates || [])[bi] || ''), 0);
+        const total = toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW', r.startdate || r.contractdate || '');
         return {
             '순번': i + 1, '팀': r._team, '업체명': r.client || '', '항목': r._item,
             '발생월': r.startdate || r.contractdate || '',

@@ -159,8 +159,8 @@ export function renderKpiProfit() {
         const m = r.manager || '미지정';
         if (!stats[m]) stats[m] = { count:0, amt:0, exp:0 };
         stats[m].count++;
-        stats[m].amt += toKRW(r.amount, r.amountCurrency);
-        stats[m].exp += toKRW(r.expense||0, r.expenseCurrency||'KRW');
+        stats[m].amt += toKRW(r.amount, r.amountCurrency, r.startdate || r.contractdate || '');
+        stats[m].exp += toKRW(r.expense||0, r.expenseCurrency||'KRW', r.startdate || r.contractdate || '');
     });
     let arr = Object.keys(stats).map(m => ({ name:m, ...stats[m], profit: stats[m].amt-stats[m].exp, margin: stats[m].amt>0?Math.round((stats[m].amt-stats[m].exp)/stats[m].amt*100):0 }));
     if (!isAdmin) arr = arr.filter(s => s.name === cur);

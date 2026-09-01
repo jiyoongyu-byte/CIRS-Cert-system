@@ -41,12 +41,12 @@ export function renderDashboard() {
     // 수입 실적 합계
     const calcBilled = rows => rows.reduce((s, r) =>
         s + (r.billing || []).reduce((bs, amt, i) =>
-            bs + toKRW(Number(amt || 0), (r.billingCurrencies || [])[i] || 'KRW'), 0), 0);
+            bs + toKRW(Number(amt || 0), (r.billingCurrencies || [])[i] || 'KRW', (r.billingDates || [])[i] || ''), 0), 0);
     const totalBilled = calcBilled(allContracts);
 
     // 계약 금액 합계
     const totalContractAmt = allContracts.reduce((s, r) =>
-        s + toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW'), 0);
+        s + toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW', r.startdate || r.contractdate || ''), 0);
 
     // 금액 표시 여부 (EXECS 또는 팀원 = 자기 팀 금액은 표시)
     const showMoney = isExec || (userTeam !== '열람전용');
@@ -179,9 +179,9 @@ function renderActiveProjects(allContracts, showMoney) {
         const overdue   = dueDate && dueDate < today;
         const isCert    = r.certtype !== undefined;
         const teamColor = isCert ? 'var(--cert)' : 'var(--med)';
-        const remain    = toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW')
+        const remain    = toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW', r.startdate || r.contractdate || '')
             - (r.billing || []).reduce((s, v, i) =>
-                s + toKRW(Number(v || 0), (r.billingCurrencies || [])[i] || 'KRW'), 0);
+                s + toKRW(Number(v || 0), (r.billingCurrencies || [])[i] || 'KRW', (r.billingDates || [])[i] || ''), 0);
         const typeLabel = r.certtype || r.biztype || '';
 
         return `<div class="ws-item" style="border-left:3px solid ${teamColor}; cursor:default">
@@ -273,7 +273,7 @@ function renderBillingAlerts(allContracts, showMoney) {
         // 수금 예정일 알림
         (r.billingDates || []).forEach((d, i) => {
             if (!d || d < todayStr || d > soonStr) return;
-            const amt = toKRW(Number((r.billing || [])[i] || 0), (r.billingCurrencies || [])[i] || 'KRW');
+            const amt = toKRW(Number((r.billing || [])[i] || 0), (r.billingCurrencies || [])[i] || 'KRW', (r.billingDates || [])[i] || '');
             if (amt > 0) {
                 alerts.push({ type:'수금', date:d, client:r.client, label:`${i+1}차 수금`, amount:amt, color:'var(--med)' });
             }
@@ -324,7 +324,7 @@ function renderDashChart(state, year, contracts, showMoney) {
             const dt = new Date(d);
             if (dt.getFullYear() !== year) return;
             const m   = dt.getMonth();
-            const amt = toKRW(Number((r.billing || [])[i] || 0), (r.billingCurrencies || [])[i] || 'KRW');
+            const amt = toKRW(Number((r.billing || [])[i] || 0), (r.billingCurrencies || [])[i] || 'KRW', (r.billingDates || [])[i] || '');
             monthlyActual[m] += amt;
         });
     });

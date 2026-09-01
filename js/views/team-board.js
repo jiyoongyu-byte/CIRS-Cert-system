@@ -17,34 +17,22 @@ function fmtAmt(amount, currency) {
 function fmtRemain(r) {
     const cur = r.amountCurrency || 'KRW';
     const amt = Number(r.amount || 0);
-    const { usd, rmb } = getRates();
-    const missingRate = (cur === 'USD' && !usd) || (cur === 'RMB' && !rmb);
-    if (missingRate && amt > 0) {
-        return `<td style="text-align:left;white-space:nowrap;color:var(--danger);font-weight:700;font-size:12px" title="사이드바에서 환율을 설정하세요">${cur} 0 (환율 미설정)</td>`;
-    }
-    const today2 = new Date().toISOString().slice(0, 10);
-    const total      = toKRW(amt, cur);
-    const paid       = (r.billing || []).reduce((s, v, i) => {
+    const today = new Date().toISOString().slice(0, 10);
+
+    // 잔금은 환산하지 않음 — 계약 통화 기준으로 직접 차감
+    let paidSame = 0, mixed = false;
+    (r.billing || []).forEach((v, i) => {
         const bd = (r.billingDates || [])[i] || '';
-        if (bd && bd > today2) return s; // 미래 수입 예정 제외
-        return s + toKRW(Number(v || 0), (r.billingCurrencies || [])[i] || 'KRW');
-    }, 0);
-    const remainKRW  = Math.round(total - paid);
-
-    // KRW 계약: KRW + 숫자 표시
-    if (cur === 'KRW') {
-        const color = remainKRW > 0 ? 'var(--warn)' : 'var(--text3)';
-        return `<td style="text-align:left;white-space:nowrap;color:${color};font-weight:600">KRW ${fmt(remainKRW)}</td>`;
-    }
-
-    // 외화 계약: 계약통화 잔금 + 다음 줄에 KRW 괄호 병기
-    const rate       = cur === 'USD' ? usd : rmb;
-    const remainOrig = rate ? Math.round(remainKRW / rate) : 0;
-    const color      = remainOrig > 0 ? 'var(--warn)' : 'var(--text3)';
-    return `<td style="text-align:left;white-space:nowrap;color:${color};font-weight:600">
-        ${cur} ${fmt(remainOrig)}<br>
-        <span style="font-size:11px;color:var(--text3);font-weight:400">(KRW ${fmtM(remainKRW)})</span>
-    </td>`;
+        if (bd && bd > today) return;                    // 미래 수입 예정 제외
+        const bc = (r.billingCurrencies || [])[i] || 'KRW';
+        if (!Number(v || 0)) return;
+        if (bc === cur) paidSame += Number(v);
+        else mixed = true;                               // 계약 통화와 다른 수금 존재
+    });
+    const remain = amt - paidSame;
+    const color  = remain > 0 ? 'var(--warn)' : 'var(--text3)';
+    const mark   = mixed ? ' <span style="color:var(--danger)" title="계약 통화와 다른 통화의 수입 내역이 있어 잔금이 부정확할 수 있습니다">※</span>' : '';
+    return `<td style="text-align:right;white-space:nowrap;color:${color};font-weight:600">${fmt(remain)} ${cur}${mark}</td>`;
 }
 
 // ── 상태 배지 ────────────────────────────────────────────────────
@@ -122,7 +110,7 @@ export function renderMedContract() {
         </tr>`;
     }).join('');
 
-    renderContractTotal('medContractTable', data, 8);
+    renderContractTotal('medContractTable', data, 8, 'startdate');
 }
 
 // ── 의료기기팀 상담 ───────────────────────────────────────────────
@@ -268,7 +256,7 @@ export function renderCertContract() {
         </tr>`;
     }).join('');
 
-    renderContractTotal('certContractTable', data);
+    renderContractTotal('certContractTable', data, 6, 'contractdate');
 }
 
 // ── 제품환경인증팀 상담 ───────────────────────────────────────────
@@ -373,24 +361,29 @@ function certLabel(r) {
 }
 
 // ── 표 하단 합계 행 (진행 건수 / 계약금액 / 잔금 — 모두 KRW 환산) ──────
-function renderContractTotal(tableId, rows, labelSpan = 6) {
+function renderContractTotal(tableId, rows, labelSpan = 6, dateKey = 'startdate') {
     const table = document.getElementById(tableId);
     if (!table || table.tagName !== 'TABLE') return;
     let tfoot = table.querySelector('tfoot');
     if (!tfoot) { tfoot = document.createElement('tfoot'); table.appendChild(tfoot); }
     if (!rows.length) { tfoot.innerHTML = ''; return; }
 
-    let total = 0, remain = 0, miss = 0;
+    let total = 0;
+    const remainByCur = {};                              // 잔금은 통화별로 집계 (환산 없음)
     rows.forEach(r => {
-        const k = calcKRW(r);
-        if (k.ok) { total += k.total; remain += k.remain; } else miss++;
+        const k = calcKRW(r, r[dateKey] || '');
+        total += k.total;
+        remainByCur[k.cur] = (remainByCur[k.cur] || 0) + k.remainOrig;
     });
+    const remainTxt = Object.entries(remainByCur)
+        .filter(([, v]) => Math.round(v) !== 0)
+        .map(([c, v]) => `${fmt(Math.round(v))} ${c}`)
+        .join('<br>') || '0';
 
     tfoot.innerHTML = `<tr style="background:var(--surface);font-weight:700">
-        <td colspan="${labelSpan}" style="text-align:right">합계 · ${rows.length}건${
-            miss ? ` <span style="color:var(--danger);font-weight:600;font-size:11px">(환율 미설정 ${miss}건 제외)</span>` : ''}</td>
-        <td style="white-space:nowrap">KRW ${fmt(total)}</td>
-        <td style="white-space:nowrap;color:${remain > 0 ? 'var(--warn)' : 'var(--text3)'}">KRW ${fmt(remain)}</td>
+        <td colspan="${labelSpan}" style="text-align:right">합계 · ${rows.length}건</td>
+        <td style="text-align:right;white-space:nowrap">${fmt(total)} KRW</td>
+        <td style="text-align:right;white-space:nowrap;color:var(--warn)">${remainTxt}</td>
         <td colspan="3"></td>
     </tr>`;
 }
@@ -419,21 +412,31 @@ function pickContractRows(team, state, year) {
     });
 }
 
-// 계약금액 / 수입실적 / 잔금 KRW 환산. 환율 미설정이면 ok=false
-function calcKRW(r) {
+// 계약금액=계약일 분기 환율, 수금액=수금일 분기 환율, 잔금=원화폐(환산 없음)
+function calcKRW(r, contractDate) {
     const cur = r.amountCurrency || 'KRW';
-    const { usd, rmb } = getRates();
-    if ((cur === 'USD' && !usd) || (cur === 'RMB' && !rmb)) {
-        return { ok: false, cur, total: 0, paid: 0, remain: 0 };
-    }
     const today = new Date().toISOString().slice(0, 10);
-    const total = toKRW(Number(r.amount || 0), cur);
-    const paid  = (r.billing || []).reduce((s, v, i) => {
+
+    // 계약금액 → 계약일 분기 환율 (참고치)
+    const total = Math.round(toKRW(Number(r.amount || 0), cur, contractDate));
+
+    // 수금액 → 각 수금일 분기 환율 (확정치)
+    let paid = 0, paidSame = 0;
+    (r.billing || []).forEach((v, i) => {
         const bd = (r.billingDates || [])[i] || '';
-        if (bd && bd > today) return s;   // 미래 수입 예정 제외 (화면 잔금과 동일)
-        return s + toKRW(Number(v || 0), (r.billingCurrencies || [])[i] || 'KRW');
-    }, 0);
-    return { ok: true, cur, total: Math.round(total), paid: Math.round(paid), remain: Math.round(total - paid) };
+        if (bd && bd > today) return;                    // 미래 수입 예정 제외
+        const bc = (r.billingCurrencies || [])[i] || 'KRW';
+        const n  = Number(v || 0);
+        if (!n) return;
+        paid += toKRW(n, bc, bd);
+        if (bc === cur) paidSame += n;
+    });
+    return {
+        cur,
+        total,
+        paid: Math.round(paid),
+        remainOrig: Number(r.amount || 0) - paidSame,    // 원화폐 잔금 (환산 없음)
+    };
 }
 
 export function exportContractExcel(team) {
@@ -447,7 +450,7 @@ export function exportContractExcel(team) {
 
     // 화면 표와 동일한 열 구성 (관리 버튼 열은 제외, 금액은 원화폐 + KRW 환산 병기)
     const sheet = rows.map((r, i) => {
-        const k = calcKRW(r);
+        const k = calcKRW(r, (isMed ? r.startdate : r.contractdate) || '');
         return {
             '순번': i + 1,
             '업체명': r.client || '',
@@ -459,8 +462,8 @@ export function exportContractExcel(team) {
             '완료목표': (isMed ? r.duedate : r.issuedate) || '',
             '통화': k.cur,
             '계약금액(원화폐)': Number(r.amount || 0),
-            '계약금액(KRW)': k.ok ? k.total : '환율 미설정',
-            '잔금(KRW)': k.ok ? k.remain : '환율 미설정',
+            '계약금액(KRW)': k.total,
+            '잔금(원화폐)': k.remainOrig,
             '진행단계': r.stage || '',
             '상태': (isMed ? r.status : r.contracted) || '',
         };
