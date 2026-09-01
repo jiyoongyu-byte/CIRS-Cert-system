@@ -212,9 +212,11 @@ input[type=date]{color-scheme:dark}
   <div class="topbar-actions">
     <button class="btn" id="langSwitchBtn" onclick="toggleLang()" style="border-color:var(--med); color:var(--med); font-weight:700;">🌐 中文</button>
     <div id="rateWarning" style="display:none;background:var(--danger-light);color:var(--danger);font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--danger);"></div>
-    <div id="rateInputBox" style="display:none;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 12px">
-      <span style="font-size:11px;color:#F5A623;font-weight:700">1 RMB</span><input type="number" id="rmbRateInput" style="width:60px;border:none;background:transparent;color:var(--text1);outline:none;font-weight:600" oninput="onExchangeRateChange()"><span style="font-size:11px;color:var(--text3)" data-ko="원" data-zh="韩元">원</span>
-      <span style="font-size:11px;color:#4FC3F7;font-weight:700">1 USD</span><input type="number" id="usdRateInput" style="width:60px;border:none;background:transparent;color:var(--text1);outline:none;font-weight:600" oninput="onExchangeRateChange()"><span style="font-size:11px;color:var(--text3)" data-ko="원" data-zh="韩元">원</span>
+    <div id="rateInputBox" onclick="openRateModal()" title="분기별 환율 관리" style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer">
+      <span id="rateBoxQuarter" style="font-size:11px;color:var(--text3);font-weight:700"></span>
+      <span style="font-size:11px;color:#F5A623;font-weight:700">RMB</span><span id="rateBoxRmb" style="font-size:12px;color:var(--text1);font-weight:600">-</span>
+      <span style="font-size:11px;color:#4FC3F7;font-weight:700">USD</span><span id="rateBoxUsd" style="font-size:12px;color:var(--text1);font-weight:600">-</span>
+      <span style="font-size:11px;color:var(--text3)">&#9654;</span>
     </div>
     <button class="btn" onclick="exportData()" data-ko="백업" data-zh="备份">백업</button>
   </div>
@@ -385,7 +387,7 @@ input[type=date]{color-scheme:dark}
 <div class="view" id="view-medContract">
   <div class="section-head"><span class="section-title" id="mcTitle">의료기기팀 · 계약업체</span><div style="display:flex;gap:8px"><button class="btn btn-med" onclick="openMedModal('contract')"><span data-ko="+ 계약업체 추가" data-zh="+ 添加签约企业">+ 계약업체 추가</span></button><button class="btn" onclick="exportContractExcel('med')">📊 <span data-ko="엑셀 다운로드" data-zh="下载Excel">엑셀 다운로드</span></button></div></div>
   <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="medContractTable">
-    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('medC','client')">업체명</th><th data-ko="등급/분류" data-zh="等级/分类" onclick="handleSort('medC','grade')">등급/분류</th><th data-ko="업무유형" data-zh="业务类型">업무유형</th><th data-ko="제품명/모델" data-zh="产品名称/型号">제품명/모델</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('medC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('medC','date')">계약일</th><th data-ko="완료목표" data-zh="目标日期" onclick="handleSort('medC','duedate')">완료목표</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('medC','amount')">계약금액</th><th data-ko="잔금" data-zh="余额">잔금</th><th data-ko="진행단계" data-zh="进行阶段">진행단계</th><th data-ko="상태" data-zh="状态">상태</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('medC','client')">업체명</th><th data-ko="등급/분류" data-zh="等级/分类" onclick="handleSort('medC','grade')">등급/분류</th><th data-ko="업무유형" data-zh="业务类型">업무유형</th><th data-ko="제품명/모델" data-zh="产品名称/型号">제품명/모델</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('medC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('medC','startdate')">계약일</th><th data-ko="완료목표" data-zh="目标日期" onclick="handleSort('medC','duedate')">완료목표</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('medC','amount')">계약금액</th><th data-ko="잔금" data-zh="余额">잔금</th><th data-ko="진행단계" data-zh="进行阶段">진행단계</th><th data-ko="상태" data-zh="状态">상태</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
   </table></div></div></div>
 </div>
 
@@ -403,7 +405,7 @@ input[type=date]{color-scheme:dark}
 <div class="view" id="view-certContract">
   <div class="section-head"><span class="section-title" id="ccTitle">제품환경인증팀 · 계약업체</span><div style="display:flex;gap:8px"><button class="btn btn-med" onclick="openCertModal('contract')"><span data-ko="+ 계약업체 추가" data-zh="+ 添加签约企业">+ 계약업체 추가</span></button><button class="btn" onclick="exportContractExcel('cert')">📊 <span data-ko="엑셀 다운로드" data-zh="下载Excel">엑셀 다운로드</span></button></div></div>
   <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certContractTable">
-    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('certC','client')">업체명</th><th data-ko="인증종류/품목" data-zh="认证种类/品目">인증종류/품목</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('certC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('certC','date')">계약일</th><th data-ko="완료목표" data-zh="目标日期" onclick="handleSort('certC','issuedate')">완료목표</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('certC','amount')">계약금액</th><th data-ko="잔금" data-zh="余额">잔금</th><th data-ko="진행단계" data-zh="进行阶段" onclick="handleSort('certC','stage')">진행단계</th><th data-ko="상태" data-zh="状态">상태</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
+    <thead><tr><th data-ko="순번" data-zh="序号">순번</th><th data-ko="업체명" data-zh="企业名称" onclick="handleSort('certC','client')">업체명</th><th data-ko="인증종류/품목" data-zh="认证种类/品目">인증종류/품목</th><th data-ko="담당자" data-zh="负责人" onclick="handleSort('certC','manager')">담당자</th><th data-ko="계약일" data-zh="合同日期" onclick="handleSort('certC','contractdate')">계약일</th><th data-ko="완료목표" data-zh="目标日期" onclick="handleSort('certC','issuedate')">완료목표</th><th data-ko="계약금액" data-zh="合同金额" onclick="handleSort('certC','amount')">계약금액</th><th data-ko="잔금" data-zh="余额">잔금</th><th data-ko="진행단계" data-zh="进行阶段" onclick="handleSort('certC','stage')">진행단계</th><th data-ko="상태" data-zh="状态">상태</th><th data-ko="관리" data-zh="管理">관리</th></tr></thead><tbody></tbody>
   </table></div></div></div>
   <div class="section-head"><span class="section-title" style="color:var(--success)" id="ccDoneTitle">✅ 완료된 계약</span></div>
   <div class="card"><div class="card-body" style="padding:0"><div class="table-wrap"><table id="certContractDoneTable">
@@ -481,6 +483,18 @@ input[type=date]{color-scheme:dark}
   <div class="form-group"><label class="form-label" data-ko="담당자명" data-zh="联系人姓名">담당자명</label><input class="form-input" id="m-contact-name"></div><div class="form-group"><label class="form-label" data-ko="핸드폰" data-zh="手机号">핸드폰</label><input class="form-input" id="m-contact-phone"></div><div class="form-group full"><label class="form-label" data-ko="이메일" data-zh="电子邮箱">이메일</label><input class="form-input" id="m-contact-email"></div><div class="form-group full"><label class="form-label" data-ko="이슈 / 비고" data-zh="问题 / 备注">이슈 / 비고</label><textarea class="form-textarea" id="m-note"></textarea></div>
 </div></div><div class="modal-footer"><button class="btn" onclick="closeModal('med')"><span data-ko="닫기/취소" data-zh="关闭/取消">닫기/취소</span></button><button class="btn btn-med" id="medSaveBtn" onclick="saveMed()"><span data-ko="저장" data-zh="保存">저장</span></button></div></div></div></div>
 
+<div class="modal-overlay" id="modal-rate"><div class="modal-wrapper"><div class="modal"><div class="modal-header"><span class="modal-title" data-ko="분기별 환율 관리" data-zh="季度汇率管理">분기별 환율 관리</span><button class="modal-close" onclick="closeModal('rate')">×</button></div><div class="modal-body">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+    <label class="form-label" style="margin:0" data-ko="기준 연도" data-zh="基准年度">기준 연도</label>
+    <select class="form-select" id="rate-year" style="width:120px" onchange="renderRateRows()"></select>
+    <span id="rate-perm-msg" style="font-size:12px;color:var(--danger)"></span>
+  </div>
+  <div class="table-wrap"><table id="rateTable">
+    <thead><tr><th data-ko="분기" data-zh="季度">분기</th><th>1 RMB (KRW)</th><th>1 USD (KRW)</th><th data-ko="최종 수정" data-zh="最后修改">최종 수정</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <p style="font-size:11px;color:var(--text3);margin-top:10px">수금일이 속한 분기의 환율이 적용됩니다. 미수금 잔금은 환산하지 않고 원화폐로 표시됩니다.</p>
+</div><div class="modal-footer"><button class="btn" onclick="closeModal('rate')" data-ko="닫기" data-zh="关闭">닫기</button><button class="btn btn-primary" id="rate-save-btn" onclick="saveRateRows()" data-ko="저장" data-zh="保存">저장</button></div></div></div></div>
 <div class="modal-overlay" id="modal-cert"><div class="modal-wrapper"><div class="modal"><div class="modal-header"><span class="modal-title" id="certModalTitle"></span><button class="modal-close" onclick="closeModal('cert')">×</button></div><div class="modal-body"><div class="form-grid">
   <div class="form-group"><label class="form-label" data-ko="업체명 *" data-zh="企业名称 *">업체명 *</label><input class="form-input" id="c-client"></div>
 <div class="form-group"><label class="form-label" data-ko="인증 종류" data-zh="认证种类">인증 종류</label><select class="form-select" id="c-certtype" onchange="toggleCertTypeEtc()"><option value="" data-ko="선택" data-zh="선택">선택</option><option>KS</option><option>JIS</option><option>KC</option><option value="환경마크" data-ko="환경마크" data-zh="环保标志">환경마크</option><option value="탄소업무" data-ko="탄소업무" data-zh="碳业务">탄소업무</option><option value="기타" data-ko="기타" data-zh="其他">기타</option></select></div>

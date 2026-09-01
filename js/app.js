@@ -4,6 +4,8 @@ import { setCurrentUser, setCurrentYear, setCurrentView, getCurrentYear, getCurr
          loadFromSupabase, saveState, getState, ensureRevYear } from './core/store.js';
 import { savePw, initSb, loadPw, resetPw } from './core/api.js';
 import { tt } from './core/utils.js';
+import * as rates from './core/rates.js';
+window._rates = rates;   // utils.getRates()가 참조
 
 const DEFAULT_PW   = 'cirs2026!';
 const SUPER_ADMIN  = '지윤규';
@@ -210,11 +212,10 @@ export async function doLogin() {
         }
     });
 
-    // 환율 복원
-    const savedRmb = localStorage.getItem('cirs_rmb_rate');
-    const savedUsd = localStorage.getItem('cirs_usd_rate');
-    if (savedRmb) { const e = document.getElementById('rmbRateInput'); if (e) e.value = savedRmb; }
-    if (savedUsd) { const e = document.getElementById('usdRateInput'); if (e) e.value = savedUsd; }
+    // 분기별 환율 로드 (Supabase 공유)
+    await rates.loadRates();
+    await migrateLocalRate();
+    renderRateBox();
 
     const ok = await loadFromSupabase();
     if (!ok) console.warn('Supabase 연결 실패 — 로컬 모드로 진행');
@@ -249,14 +250,83 @@ export function changeYear() {
     renderView(v);
 }
 
-// ── 환율 변경 ─────────────────────────────────────────────────────
-export function onExchangeRateChange() {
-    const r = document.getElementById('rmbRateInput')?.value;
-    const u = document.getElementById('usdRateInput')?.value;
-    if (r) localStorage.setItem('cirs_rmb_rate', r);
-    if (u) localStorage.setItem('cirs_usd_rate', u);
-    const view = window._currentView || 'dashboard';
-    if (['dashboard','revenue'].includes(view)) renderView(view);
+// ══════════════════════════════════════════════════════════════
+// ── 분기별 환율 관리 ───────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+
+// 기존 localStorage 환율 → 현재 분기로 1회 이관 (해당 분기가 비어 있을 때만)
+async function migrateLocalRate() {
+    const r = Number(localStorage.getItem('cirs_rmb_rate') || 0);
+    const u = Number(localStorage.getItem('cirs_usd_rate') || 0);
+    if (!r && !u) return;
+    const y = new Date().getFullYear(), q = rates.quarterOf(null);
+    const cur = rates.getQuarterRates(y, q);
+    if (cur.rmb || cur.usd) return;                    // 이미 값이 있으면 건너뜀
+    if (!rates.canEditRate(getCurrentUser())) return;  // 권한자만 이관
+    await rates.saveRate(y, q, r, u, getCurrentUser());
+}
+
+// 상단 바 표시 갱신
+export function renderRateBox() {
+    const y = new Date().getFullYear(), q = rates.quarterOf(null);
+    const cur = rates.getCurrentRates();
+    const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    set('rateBoxQuarter', `${y} ${q}Q`);
+    set('rateBoxRmb', cur.rmb ? Number(cur.rmb).toLocaleString() : '미설정');
+    set('rateBoxUsd', cur.usd ? Number(cur.usd).toLocaleString() : '미설정');
+}
+
+export function openRateModal() {
+    const sel = document.getElementById('rate-year');
+    if (sel && !sel.options.length) {
+        const now = new Date().getFullYear();
+        for (let y = now + 1; y >= now - 4; y--) sel.add(new Option(`${y}년`, y));
+    }
+    if (sel) sel.value = getCurrentYear();
+    const editable = rates.canEditRate(getCurrentUser());
+    const msg = document.getElementById('rate-perm-msg');
+    if (msg) msg.textContent = editable ? '' : '열람 전용 (수정 권한 없음)';
+    const btn = document.getElementById('rate-save-btn');
+    if (btn) btn.style.display = editable ? '' : 'none';
+    renderRateRows();
+    document.getElementById('modal-rate')?.classList.add('open');
+}
+
+export function renderRateRows() {
+    const y = Number(document.getElementById('rate-year')?.value || getCurrentYear());
+    const tbody = document.querySelector('#rateTable tbody');
+    if (!tbody) return;
+    const editable = rates.canEditRate(getCurrentUser());
+    const ro = editable ? '' : 'disabled';
+    tbody.innerHTML = [1,2,3,4].map(q => {
+        const r = rates.getQuarterRates(y, q);
+        const when = r.updatedAt ? String(r.updatedAt).slice(0,10) : '';
+        const meta = r.updatedBy ? `${when} ${r.updatedBy}` : '-';
+        return `<tr>
+            <td style="font-weight:700">${q}Q</td>
+            <td><input class="form-input" type="number" id="rate-rmb-${q}" value="${r.rmb || ''}" placeholder="0" ${ro}></td>
+            <td><input class="form-input" type="number" id="rate-usd-${q}" value="${r.usd || ''}" placeholder="0" ${ro}></td>
+            <td style="font-size:11px;color:var(--text3)">${meta}</td>
+        </tr>`;
+    }).join('');
+}
+
+export async function saveRateRows() {
+    const user = getCurrentUser();
+    if (!rates.canEditRate(user)) { alert('환율 수정 권한이 없습니다.'); return; }
+    const y = Number(document.getElementById('rate-year')?.value || getCurrentYear());
+    for (const q of [1,2,3,4]) {
+        const rmb = Number(document.getElementById(`rate-rmb-${q}`)?.value || 0);
+        const usd = Number(document.getElementById(`rate-usd-${q}`)?.value || 0);
+        const prev = rates.getQuarterRates(y, q);
+        if (rmb === prev.rmb && usd === prev.usd) continue;   // 변경분만 저장
+        const res = await rates.saveRate(y, q, rmb, usd, user);
+        if (!res.ok) { alert(`${y}년 ${q}Q 저장 실패: ${res.msg}`); return; }
+    }
+    renderRateRows();
+    renderRateBox();
+    alert('환율이 저장되었습니다.');
+    renderView(window._currentView || 'dashboard');
 }
 
 // ── 비밀번호 변경 ─────────────────────────────────────────────────
@@ -340,7 +410,7 @@ export function nav(viewName, element = null) {
     if (tb) tb.textContent = titles[viewName] || viewName;
 
     const rateBox = document.getElementById('rateInputBox');
-    if (rateBox) rateBox.style.display = ['dashboard','revenue'].includes(viewName) ? 'flex' : 'none';
+    if (rateBox) rateBox.style.display = 'flex';
 
     renderView(viewName);
 
@@ -419,7 +489,10 @@ window.doLogout         = doLogout;
 window.resetAutoLogout  = resetAutoLogout;
 window.nav              = nav;
 window.changeYear       = changeYear;
-window.onExchangeRateChange = onExchangeRateChange;
+window.openRateModal    = openRateModal;
+window.renderRateRows   = renderRateRows;
+window.saveRateRows     = saveRateRows;
+window.renderRateBox    = renderRateBox;
 window.changePw         = changePw;
 window.exportData       = exportData;
 window.resetUserPw      = resetUserPw;

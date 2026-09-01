@@ -48,15 +48,19 @@ export const normalizeDate = (d) => d ? d.replace(/\./g, '-') : '';
 
 // ── 환율 가져오기 ────────────────────────────────────────────────
 export function getRates() {
-    return {
-        rmb: Number(document.getElementById('rmbRateInput')?.value) || 0,
-        usd: Number(document.getElementById('usdRateInput')?.value) || 0,
-    };
+    const r = (window._rates?.getCurrentRates?.()) || { rmb: 0, usd: 0 };
+    return { rmb: Number(r.rmb) || 0, usd: Number(r.usd) || 0 };
+}
+
+// 수금일이 속한 분기의 환율 (날짜 없으면 현재 분기)
+export function getRatesFor(dateStr) {
+    const r = (window._rates?.getRatesForDate?.(dateStr)) || { rmb: 0, usd: 0 };
+    return { rmb: Number(r.rmb) || 0, usd: Number(r.usd) || 0 };
 }
 
 // ── 금액 → KRW 환산 ──────────────────────────────────────────────
-export function toKRW(amt, cur) {
-    const { rmb, usd } = getRates();
+export function toKRW(amt, cur, dateStr) {
+    const { rmb, usd } = dateStr ? getRatesFor(dateStr) : getRates();
     if (cur === 'RMB') return rmb ? Number(amt) * rmb : 0;
     if (cur === 'USD') return usd ? Number(amt) * usd : 0;
     return Number(amt);
