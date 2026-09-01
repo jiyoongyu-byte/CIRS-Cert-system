@@ -7,6 +7,7 @@ let chartRevMixed    = null;
 let chartTopServices = null;
 let revChartMode     = 'month';  // 'month' | 'quarter' | 'cumul'
 let svcChartMode     = 'cert';   // 'cert'  | 'manager'
+let svcChartBasis    = 'amount'; // 'amount'(계약총액) | 'billed'(수금실적)
 
 // ── 팀 탭 전환 ────────────────────────────────────────────────
 export function switchRevTeam(team, el) {
@@ -25,11 +26,16 @@ export function switchRevChartMode(mode, el) {
     renderRevChart(actual, target, getRevTeam() || 'med', rows, getCurrentYear());
 }
 
-// ── 수입기여도 모드 전환 (인증마크별/담당자별) ────────────────────
-export function switchServiceChartMode(mode, el) {
-    svcChartMode = mode;
-    document.querySelectorAll('.svc-chart-btn').forEach(b => b.classList.remove('active'));
+// ── 수입기여도 산정 기준 전환 (계약총액/수금실적) ─────────────────
+export function switchServiceChartBasis(basis, el) {
+    svcChartBasis = basis;
+    document.querySelectorAll('.svc-basis-btn').forEach(b => b.classList.remove('active'));
     if (el) el.classList.add('active');
+    _redrawSvc();
+}
+
+// ── 현재 팀/연도 기준으로 도넛+표 다시 그리기 ─────────────────────
+function _redrawSvc() {
     const state = getState();
     const y     = getCurrentYear();
     const team  = getRevTeam() || 'med';
@@ -37,6 +43,14 @@ export function switchServiceChartMode(mode, el) {
     const certRows = (state.cert || []).filter(r => r.recordType === 'contract');
     const rows = team === 'med' ? medRows : team === 'cert' ? certRows : [...medRows, ...certRows];
     renderSvcChart(rows, team, y);
+}
+
+// ── 수입기여도 모드 전환 (인증마크별/담당자별) ────────────────────
+export function switchServiceChartMode(mode, el) {
+    svcChartMode = mode;
+    document.querySelectorAll('.svc-chart-btn').forEach(b => b.classList.remove('active'));
+    if (el) el.classList.add('active');
+    _redrawSvc();
 }
 
 // ── 내부 헬퍼: 현재 팀/연도에 맞는 actual/target/rows ────────────
@@ -344,31 +358,50 @@ function renderSvcChart(rows, team, y) {
     if (chartTopServices) { chartTopServices.destroy(); chartTopServices = null; }
 
     const COLORS = ['#5B6EF5','#19A876','#F5A623','#E8652A','#4FC3F7','#AB47BC','#26A69A','#EF5350','#78909C','#D4E157'];
-    const targetRows = rows.filter(r => r.year === y);
-    const map = {};
+    const today  = new Date().toISOString().slice(0, 10);
+    const isBill = svcChartBasis === 'billed';
 
-    if (svcChartMode === 'manager') {
-        // ── 담당자별 ─────────────────────────────────────────────
-        targetRows.forEach(r => {
-            const key = r.manager || '미지정';
-            map[key] = (map[key] || 0) + toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW', r.startdate || r.contractdate || '');
+    // 분류 키
+    const keyOf = r => {
+        if (svcChartMode === 'manager') return r.manager || '미지정';
+        return (r.biztype || r.product) ? categorizeMed(r) : (r.certtype || '기타');
+    };
+    const cDate = r => r.startdate || r.contractdate || '';
+    const dDate = r => r.duedate || r.issuedate || '';
+
+    // 집계: 금액 / 건수 / 최장 완료목표일
+    const map = {};
+    const put = (k, amt, r) => {
+        const m = map[k] || (map[k] = { amt: 0, cnt: 0, ids: new Set(), due: '' });
+        m.amt += amt;
+        if (!m.ids.has(r.id)) { m.ids.add(r.id); m.cnt++; }
+        const d = dDate(r);
+        if (d && d > m.due) m.due = d;
+    };
+
+    if (isBill) {
+        // 수금실적 기준 — 수금일이 선택 연도에 속한 건만, 미래 예정 제외
+        rows.forEach(r => {
+            (r.billing || []).forEach((v, i) => {
+                const bd = (r.billingDates || [])[i] || '';
+                const n  = Number(v || 0);
+                if (!n || !bd || bd > today) return;
+                if (new Date(bd).getFullYear() !== y) return;
+                put(keyOf(r), toKRW(n, (r.billingCurrencies || [])[i] || 'KRW', bd), r);
+            });
         });
     } else {
-        // ── 인증마크/서비스별 ─────────────────────────────────────
-        targetRows.forEach(r => {
-            let key;
-            if (r.biztype || r.product) {
-                // 의료기기팀 레코드 → 카테고리 분류
-                key = categorizeMed(r);
-            } else {
-                // 제품환경인증팀 레코드
-                key = r.certtype || '기타';
-            }
-            map[key] = (map[key] || 0) + toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW', r.startdate || r.contractdate || '');
+        // 계약총액 기준 — 계약일 연도가 선택 연도 이하인 진행 건
+        rows.forEach(r => {
+            const cd = cDate(r);
+            const yy = cd ? new Date(cd).getFullYear() : (r.year || y);
+            if (!(yy <= y)) return;
+            put(keyOf(r), toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW', cd), r);
         });
     }
 
-    const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const sorted = Object.entries(map).sort((a, b) => b[1].amt - a[1].amt).slice(0, 10);
+    renderSvcTable(sorted, isBill);
     if (!sorted.length) return;
 
     chartTopServices = new Chart(ctx, {
@@ -376,7 +409,7 @@ function renderSvcChart(rows, team, y) {
         data: {
             labels: sorted.map(([k]) => k),
             datasets: [{
-                data: sorted.map(([, v]) => Math.round(v)),
+                data: sorted.map(([, v]) => Math.round(v.amt)),
                 backgroundColor: COLORS.slice(0, sorted.length),
                 borderWidth: 0,
             }]
@@ -387,16 +420,47 @@ function renderSvcChart(rows, team, y) {
                 legend: { position:'bottom', labels:{ color:'#BAC0CB', font:{ size:11 }, boxWidth:12 } },
                 tooltip: {
                     callbacks: {
-                        label: ctx => {
-                            const total = ctx.dataset.data.reduce((s, v) => s + v, 0);
-                            const pct   = total ? Math.round(ctx.raw / total * 100) : 0;
-                            return ` ${ctx.label}: ${fmtM(ctx.raw)} (${pct}%)`;
+                        label: c => {
+                            // 범례에서 숨긴 항목은 분모에서 제외 (표시 비율과 일치)
+                            const total = c.dataset.data.reduce(
+                                (s, v, i) => (c.chart.getDataVisibility(i) ? s + v : s), 0);
+                            const pct = total ? Math.round(c.raw / total * 100) : 0;
+                            return ` ${c.label}: ${fmtM(c.raw)} (${pct}%)`;
                         }
                     }
                 }
             }
         }
     });
+}
+
+// ── 수입 기여도 표 (도넛 우측) ────────────────────────────────────
+function renderSvcTable(sorted, isBill) {
+    const tbody = document.querySelector('#svcTable tbody');
+    if (!tbody) return;
+    const thKey = document.getElementById('svcThKey');
+    const thDue = document.getElementById('svcThDue');
+    if (thKey) thKey.textContent = svcChartMode === 'manager' ? '담당자' : '인증마크';
+    if (thDue) thDue.textContent = svcChartMode === 'manager' ? '완료예상기간' : '';
+
+    if (!sorted.length) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text3)">데이터가 없습니다.</td></tr>`;
+        return;
+    }
+    const totalAmt = sorted.reduce((s, [, v]) => s + v.amt, 0);
+    const mil = n => (n / 1000000).toFixed(1);
+
+    tbody.innerHTML = sorted.map(([k, v]) => `<tr>
+        <td style="text-align:left">${k}</td>
+        <td style="text-align:right">${v.cnt}</td>
+        <td style="text-align:right">${mil(v.amt)}</td>
+        <td style="text-align:left;color:var(--text3)">${svcChartMode === 'manager' ? (v.due || '-') : ''}</td>
+    </tr>`).join('') + `<tr style="background:var(--surface);font-weight:700">
+        <td style="text-align:left">합계</td>
+        <td style="text-align:right">${sorted.reduce((s, [, v]) => s + v.cnt, 0)}</td>
+        <td style="text-align:right">${mil(totalAmt)}</td>
+        <td></td>
+    </tr>`;
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -466,5 +530,6 @@ export function exportRevenueExcel() {
 window.renderRevenue          = renderRevenue;
 window.switchRevTeam          = switchRevTeam;
 window.switchRevChartMode     = switchRevChartMode;
-window.switchServiceChartMode = switchServiceChartMode;
+window.switchServiceChartMode  = switchServiceChartMode;
+window.switchServiceChartBasis = switchServiceChartBasis;
 window.exportRevenueExcel     = exportRevenueExcel;

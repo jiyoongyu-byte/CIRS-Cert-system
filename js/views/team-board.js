@@ -1,7 +1,7 @@
 // js/views/team-board.js — 팀별 계약/상담/완료대장 렌더링
 
 import { getState, getCurrentYear, getCurrentUser } from '../core/store.js';
-import { fmt, fmtM, tt, sanitize, toKRW, getRates } from '../core/utils.js';
+import { fmt, fmtM, tt, sanitize, toKRW, getRates, getRatesFor } from '../core/utils.js';
 
 const getBody = id => {
     const t = document.getElementById(id);
@@ -14,25 +14,37 @@ function fmtAmt(amount, currency) {
 }
 
 // ── 잔금 계산 (계약금액 - 수입실적), 좌측 정렬 ────────────────────
-function fmtRemain(r) {
-    const cur = r.amountCurrency || 'KRW';
-    const amt = Number(r.amount || 0);
+// 수금액을 계약 통화 기준 금액으로 환산해 합산 (미래 예정 제외)
+// 통화가 같으면 그대로, 다르면 수금일 분기 환율로 계약 통화로 변환
+function paidInContractCurrency(r) {
+    const cur   = r.amountCurrency || 'KRW';
     const today = new Date().toISOString().slice(0, 10);
+    let sum = 0, unconvertible = false;
 
-    // 잔금은 환산하지 않음 — 계약 통화 기준으로 직접 차감
-    let paidSame = 0, mixed = false;
     (r.billing || []).forEach((v, i) => {
+        const n = Number(v || 0);
+        if (!n) return;
         const bd = (r.billingDates || [])[i] || '';
         if (bd && bd > today) return;                    // 미래 수입 예정 제외
         const bc = (r.billingCurrencies || [])[i] || 'KRW';
-        if (!Number(v || 0)) return;
-        if (bc === cur) paidSame += Number(v);
-        else mixed = true;                               // 계약 통화와 다른 수금 존재
+        if (bc === cur) { sum += n; return; }
+
+        const krw = toKRW(n, bc, bd);                    // 일단 원화로
+        if (cur === 'KRW') { sum += krw; return; }
+        const rate = (getRatesFor(bd) || {})[cur.toLowerCase()] || 0;
+        if (!rate || !krw) { unconvertible = true; return; }
+        sum += krw / rate;                               // 계약 통화로 환산
     });
-    const remain = amt - paidSame;
+    return { paid: sum, unconvertible };
+}
+
+function fmtRemain(r) {
+    const cur = r.amountCurrency || 'KRW';
+    const { paid, unconvertible } = paidInContractCurrency(r);
+    const remain = Number(r.amount || 0) - paid;
     const color  = remain > 0 ? 'var(--warn)' : 'var(--text3)';
-    const mark   = mixed ? ' <span style="color:var(--danger)" title="계약 통화와 다른 통화의 수입 내역이 있어 잔금이 부정확할 수 있습니다">※</span>' : '';
-    return `<td style="text-align:right;white-space:nowrap;color:${color};font-weight:600">${fmt(remain)} ${cur}${mark}</td>`;
+    const mark   = unconvertible ? ' <span style="color:var(--danger)" title="환율이 없어 일부 수입 내역을 환산하지 못했습니다. 해당 분기 환율을 입력해 주세요.">※</span>' : '';
+    return `<td style="text-align:right;white-space:nowrap;color:${color};font-weight:600">${fmt(Math.round(remain))} ${cur}${mark}</td>`;
 }
 
 // ── 상태 배지 ────────────────────────────────────────────────────
@@ -421,21 +433,19 @@ function calcKRW(r, contractDate) {
     const total = Math.round(toKRW(Number(r.amount || 0), cur, contractDate));
 
     // 수금액 → 각 수금일 분기 환율 (확정치)
-    let paid = 0, paidSame = 0;
+    let paid = 0;
     (r.billing || []).forEach((v, i) => {
         const bd = (r.billingDates || [])[i] || '';
         if (bd && bd > today) return;                    // 미래 수입 예정 제외
-        const bc = (r.billingCurrencies || [])[i] || 'KRW';
         const n  = Number(v || 0);
         if (!n) return;
-        paid += toKRW(n, bc, bd);
-        if (bc === cur) paidSame += n;
+        paid += toKRW(n, (r.billingCurrencies || [])[i] || 'KRW', bd);
     });
     return {
         cur,
         total,
         paid: Math.round(paid),
-        remainOrig: Number(r.amount || 0) - paidSame,    // 원화폐 잔금 (환산 없음)
+        remainOrig: Math.round(Number(r.amount || 0) - paidInContractCurrency(r).paid),
     };
 }
 

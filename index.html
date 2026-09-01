@@ -371,12 +371,30 @@ input[type=date]{color-scheme:dark}
     <div class="card">
       <div class="card-header">
         <span class="card-title" id="revPieTitle">수입 기여도</span>
-        <div style="display:flex;gap:6px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-sm svc-basis-btn active" onclick="switchServiceChartBasis('amount',this)" title="계약 총액 기준">계약총액</button>
+          <button class="btn btn-sm svc-basis-btn" onclick="switchServiceChartBasis('billed',this)" title="실제 수금 실적 기준">수금실적</button>
+          <span style="width:8px"></span>
           <button class="btn btn-sm svc-chart-btn active" onclick="switchServiceChartMode('cert',this)">인증마크별</button>
           <button class="btn btn-sm svc-chart-btn" onclick="switchServiceChartMode('manager',this)">담당자별</button>
         </div>
       </div>
-      <div class="card-body"><div class="chart-wrap"><canvas id="chartTopServices"></canvas></div></div>
+      <div class="card-body">
+        <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+          <div class="chart-wrap" style="flex:1 1 300px;min-width:280px"><canvas id="chartTopServices"></canvas></div>
+          <div style="flex:1 1 320px;min-width:300px">
+            <table id="svcTable" style="width:100%;font-size:12px">
+              <thead><tr>
+                <th id="svcThKey" style="text-align:left">담당자</th>
+                <th style="text-align:right">계약건수</th>
+                <th style="text-align:right">계약금액(백만원)</th>
+                <th id="svcThDue" style="text-align:left">완료예상기간</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <div class="card"><div class="card-header"><span class="card-title" id="revTableTitle">계약별 수입 결산 내역</span></div><div class="card-body" style="padding:0"><div class="table-wrap"><table id="revContractTable">
