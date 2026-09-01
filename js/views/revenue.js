@@ -1,7 +1,7 @@
 // js/views/revenue.js — 수입계획 및 실적 뷰
 
 import { getState, getCurrentYear, getRevTeam, setRevTeam, ensureRevYear } from '../core/store.js';
-import { toKRW, fmtM, fmtMil, getBilledActual } from '../core/utils.js';
+import { toKRW, fmt, fmtM, fmtMil, getBilledActual } from '../core/utils.js';
 
 let chartRevMixed    = null;
 let chartTopServices = null;
@@ -173,18 +173,32 @@ export function renderRevenue() {
         tbody.innerHTML = !tableRows.length
             ? `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text3)">데이터가 없습니다.</td></tr>`
             : tableRows.map((r, i) => {
-                const paid   = (r.billing || []).reduce((s, v, bi) => s + toKRW(Number(v || 0), (r.billingCurrencies || [])[bi] || 'KRW', (r.billingDates || [])[bi] || ''), 0);
-                const total  = toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW', r.startdate || r.contractdate || '');
-                const remain = total - paid;
+                const _today = new Date().toISOString().slice(0, 10);
+                const _cur   = r.amountCurrency || 'KRW';
+                // 수입실적: 미래 예정 수입 제외, 수금일 분기 환율 적용
+                const paid   = (r.billing || []).reduce((s, v, bi) => {
+                    const bd = (r.billingDates || [])[bi] || '';
+                    if (bd && bd > _today) return s;
+                    return s + toKRW(Number(v || 0), (r.billingCurrencies || [])[bi] || 'KRW', bd);
+                }, 0);
+                const total  = toKRW(Number(r.amount || 0), _cur, r.startdate || r.contractdate || '');
+                // 잔액: 환산 없이 계약 통화로 직접 차감
+                const paidSame = (r.billing || []).reduce((s, v, bi) => {
+                    const bd = (r.billingDates || [])[bi] || '';
+                    if (bd && bd > _today) return s;
+                    return ((r.billingCurrencies || [])[bi] || 'KRW') === _cur ? s + Number(v || 0) : s;
+                }, 0);
+                const remainOrig = Number(r.amount || 0) - paidSame;
                 return `<tr>
                     <td>${i + 1}</td>
                     <td><span class="badge ${r._team === '의료기기팀' ? 'badge-med' : 'badge-cert'}">${r._team}</span></td>
                     <td>${r.client || ''}</td>
                     <td>${r._item}</td>
                     <td>${r.startdate || r.contractdate || ''}</td>
-                    <td>${fmtM(r.amount || 0)} ${r.amountCurrency || 'KRW'}</td>
-                    <td style="color:var(--success);font-weight:700">${fmtM(Math.round(paid))}</td>
-                    <td style="color:${remain > 0 ? 'var(--warn)' : 'var(--text3)'}">${fmtM(Math.round(remain))}</td>
+                    <td style="text-align:right;white-space:nowrap">${fmt(r.amount || 0)} ${_cur}${
+                        _cur !== 'KRW' ? `<br><span style="font-size:11px;color:var(--text3)">(${fmt(total)} KRW)</span>` : ''}</td>
+                    <td style="text-align:right;white-space:nowrap;color:var(--success);font-weight:700">${fmt(Math.round(paid))} KRW</td>
+                    <td style="text-align:right;white-space:nowrap;color:${remainOrig > 0 ? 'var(--warn)' : 'var(--text3)'}">${fmt(Math.round(remainOrig))} ${_cur}</td>
                     <td>${r.manager || ''}</td>
                 </tr>`;
             }).join('');
@@ -416,14 +430,27 @@ export function exportRevenueExcel() {
             ...certRows.filter(r => r.year === y).map(r => ({ ...r, _team:'제품환경인증팀', _item: r.certtype || '' })),
           ];
     const sheet2 = tableRows.map((r, i) => {
-        const paid  = (r.billing || []).reduce((s, v, bi) => s + toKRW(Number(v || 0), (r.billingCurrencies || [])[bi] || 'KRW', (r.billingDates || [])[bi] || ''), 0);
-        const total = toKRW(Number(r.amount || 0), r.amountCurrency || 'KRW', r.startdate || r.contractdate || '');
+        const today = new Date().toISOString().slice(0, 10);
+        const cur   = r.amountCurrency || 'KRW';
+        const paid  = (r.billing || []).reduce((s, v, bi) => {
+            const bd = (r.billingDates || [])[bi] || '';
+            if (bd && bd > today) return s;                  // 미래 예정 수입 제외
+            return s + toKRW(Number(v || 0), (r.billingCurrencies || [])[bi] || 'KRW', bd);
+        }, 0);
+        const paidSame = (r.billing || []).reduce((s, v, bi) => {
+            const bd = (r.billingDates || [])[bi] || '';
+            if (bd && bd > today) return s;
+            return ((r.billingCurrencies || [])[bi] || 'KRW') === cur ? s + Number(v || 0) : s;
+        }, 0);
+        const total = toKRW(Number(r.amount || 0), cur, r.startdate || r.contractdate || '');
         return {
             '순번': i + 1, '팀': r._team, '업체명': r.client || '', '항목': r._item,
             '발생월': r.startdate || r.contractdate || '',
-            '계약금액': `${fmtM(r.amount || 0)} ${r.amountCurrency || 'KRW'}`,
-            '수입실적(현재까지)': fmtM(Math.round(paid)),
-            '잔액': fmtM(Math.round(total - paid)),
+            '통화': cur,
+            '계약금액(원화폐)': Number(r.amount || 0),
+            '계약금액(KRW)': Math.round(total),
+            '수입실적(KRW)': Math.round(paid),
+            '잔액(원화폐)': Number(r.amount || 0) - paidSame,
             '담당자': r.manager || ''
         };
     });

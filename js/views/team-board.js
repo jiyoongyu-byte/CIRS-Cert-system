@@ -10,7 +10,7 @@ const getBody = id => {
 
 // ── 금액 표기: 통화 앞, 콤마 포맷, 좌측 정렬 ───────────────────────
 function fmtAmt(amount, currency) {
-    return `<td style="text-align:left;white-space:nowrap">${currency || 'KRW'} ${fmt(amount || 0)}</td>`;
+    return `<td style="text-align:right;white-space:nowrap">${fmt(amount || 0)} ${currency || 'KRW'}</td>`;
 }
 
 // ── 잔금 계산 (계약금액 - 수입실적), 좌측 정렬 ────────────────────
