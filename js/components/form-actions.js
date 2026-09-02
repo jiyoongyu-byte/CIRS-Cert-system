@@ -22,6 +22,12 @@ export async function saveMed() {
         : getCurrentYear();
     const startdate = document.getElementById('m-startdate')?.value || '';
 
+    // 현재 메인 단계('완료')를 상태와 연동. 보류·취소는 보존
+    const progressVal = document.getElementById('m-progress')?.value || '';
+    const prevStatus  = document.getElementById('m-status')?.value || '진행중';
+    const statusVal   = progressVal === '완료' ? '완료'
+                      : (prevStatus === '완료' ? '진행중' : prevStatus);
+
     const record = {
         id, year: y,
         recordType: isContract ? 'contract' : 'consult',
@@ -33,10 +39,10 @@ export async function saveMed() {
         biztype:      document.getElementById('m-biztype')?.value || '',
         stages:       Array.from(document.querySelectorAll('#m-stage-wrap input:checked')).map(x => x.value),
         stage:        Array.from(document.querySelectorAll('#m-stage-wrap input:checked')).map(x => x.value).join(', '),
-        progress:     document.getElementById('m-progress')?.value || '',
+        progress:     progressVal,
         manager:      document.getElementById('m-manager')?.value || '',
         startdate, duedate: document.getElementById('m-duedate')?.value || '',
-        status:       document.getElementById('m-status')?.value || '진행중',
+        status:       statusVal,
         amount:       isContract ? Number(document.getElementById('m-amount')?.value || 0) : 0,
         amountCurrency: document.getElementById('m-amount-currency')?.value || 'KRW',
         billing:        isContract ? getBillingValues('m') : [0,0,0,0,0],
