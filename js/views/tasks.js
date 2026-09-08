@@ -77,7 +77,9 @@ export function renderTasks() {
         const overdue   = !isDone && t.due && t.due < today;
         const canEdit   = ADMIN_USERS.includes(currentUser) || t.to === currentUser;
         const canDelete = ADMIN_USERS.includes(currentUser);
-        const canComplete = currentUser && !isDone && t.to === currentUser;
+        // 완료 보고: 회신 정확성은 지시자가 판단 → 발신자 본인 또는 최고관리자
+        const canComplete = currentUser && !isDone &&
+                            (t.from === currentUser || currentUser === SUPER_ADMIN);
         // 확인 처리: 발행자 본인 또는 최고관리자
         const canConfirm = isDone && !t.confirmedDate &&
                            (t.from === currentUser || currentUser === SUPER_ADMIN);
