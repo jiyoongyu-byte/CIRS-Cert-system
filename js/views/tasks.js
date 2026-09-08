@@ -27,7 +27,7 @@ export function renderTasks() {
     const statF  = document.getElementById('taskStatusFilter')?.value || '';
     const sortBy = document.getElementById('taskSortSel')?.value     || 'date';
 
-    // ── 열람 권한 필터 ───────────────────────────────────────────
+    // ── 열람 권한 필터 ─────────────────────────────────────────────
     // 지윤규: 전체 열람
     // 나머지: 본인이 발신(from) 또는 수신(to)인 것만 → 타인 간 업무지시 열람 불가
     let tasks = (state.tasks || []).filter(t => {
@@ -50,11 +50,8 @@ export function renderTasks() {
         return true;
     });
 
-    // ── 정렬: 미확인 → 완료 → 관리자 확인 순, 내부는 날짜/이름 ──
+    // ── 정렬: 관리자 선택 순 ──
     tasks.sort((a, b) => {
-        const ar = a.confirmedDate ? 2 : a.completedDate ? 1 : 0;
-        const br = b.confirmedDate ? 2 : b.completedDate ? 1 : 0;
-        if (ar !== br) return ar - br;
         if (sortBy === 'name') return (a.to || '').localeCompare(b.to || '', 'ko');
         return (b.date || '').localeCompare(a.date || '');
     });
@@ -64,7 +61,7 @@ export function renderTasks() {
 
     if (!tasks.length) {
         container.innerHTML = `<div class="card"><div class="card-body" style="text-align:center;padding:32px;color:var(--text3)">
-            ${!currentUser ? '로그인 후 이름을 선택하세요.' : '등록된 업무지시/협조요청이 없습니다.'}
+            ${!currentUser ? '로그인 후 이름을 선택하세요.' : '등록된 업무지시서/협조요청이 없습니다.'}
         </div></div>`;
         return;
     }
@@ -73,7 +70,7 @@ export function renderTasks() {
     const PLABEL = { '긴급':'🔴 긴급', '일반':'🟡 일반', '낮음':'🟢 낮음' };
     const today  = new Date().toISOString().slice(0, 10);
 
-    container.innerHTML = tasks.map(t => {
+    const card = t => {
         const isDone    = !!t.completedDate;
         const isOrder   = (t.type || 'order') === 'order';
         const pc        = PCOLOR[t.priority] || 'var(--text3)';
@@ -81,6 +78,9 @@ export function renderTasks() {
         const canEdit   = ADMIN_USERS.includes(currentUser) || t.to === currentUser;
         const canDelete = ADMIN_USERS.includes(currentUser);
         const canComplete = currentUser && !isDone && t.to === currentUser;
+        // 확인 처리: 발행자 본인 또는 최고관리자
+        const canConfirm = isDone && !t.confirmedDate &&
+                           (t.from === currentUser || currentUser === SUPER_ADMIN);
 
         return `<div class="card" style="margin-bottom:10px;border-left:4px solid ${isDone ? 'var(--border)' : pc};opacity:${isDone ? 0.72 : 1}">
             <div style="padding:13px 15px">
@@ -96,7 +96,7 @@ export function renderTasks() {
                         지시일: ${t.date || '-'}${t.due ? ' | 기한: ' + t.due : ''}
                     </span>
                 </div>
-                <div style="${isDone ? 'text-decoration:line-through;color:var(--text3);' : ''}font-size:13px;font-weight:500;line-height:1.6;margin-bottom:7px;white-space:pre-wrap">${t.content || ''}</div>
+                <div style="font-size:13px;font-weight:500;line-height:1.6;margin-bottom:7px;white-space:pre-wrap">${t.content || ''}</div>
                 <div style="display:flex;gap:14px;font-size:11px;color:var(--text3);margin-bottom:7px">
                     <span>📤 <strong style="color:var(--text2)">${t.from || '-'}</strong></span>
                     <span>📥 <strong style="color:${isDone ? 'var(--success)' : 'var(--accent)'}">${t.to || '-'}</strong></span>
@@ -104,17 +104,39 @@ export function renderTasks() {
                 ${isDone ? `<div style="font-size:11px;padding:7px 11px;background:var(--success-light);border-radius:6px;color:var(--success);margin-bottom:7px">
                     ✅ 완료 (${t.completedDate}): ${t.completeNote || ''}
                 </div>` : ''}
-                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
                     ${canComplete ? `<button class="btn btn-cert btn-sm" onclick="openTaskComplete('${t.id}')">완료 보고</button>` : ''}
-                    ${isDone && !t.confirmedDate && ADMIN_USERS.includes(currentUser)
-                        ? `<button class="btn btn-sm" style="border-color:var(--med);color:var(--med)" onclick="confirmTask('${t.id}')">✓ 관리자 확인</button>` : ''}
+                    ${canConfirm ? `<span style="font-size:10px;color:var(--text3)">확인일</span>
+                        <input type="date" id="cfmDate-${t.id}" value="${today}" style="font-size:11px;padding:3px 6px">
+                        <button class="btn btn-sm" style="border-color:var(--med);color:var(--med)" onclick="confirmTask('${t.id}')">✓ 확인 처리</button>` : ''}
                     ${t.confirmedDate ? `<span style="font-size:10px;color:var(--text3)">확인: ${t.confirmedDate}</span>` : ''}
                     ${canEdit && !isDone ? `<button class="btn btn-sm" onclick="openTaskEdit('${t.id}')">수정</button>` : ''}
                     ${canDelete ? `<button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">삭제</button>` : ''}
                 </div>
             </div>
         </div>`;
-    }).join('');
+    };
+
+    // ── 기한 내 진행건 / 기한경과 미완료 / 수행완료 3분할 ──
+    const active  = tasks.filter(t => !t.completedDate && !(t.due && t.due < today));
+    const ongoing = tasks.filter(t => !t.completedDate &&   t.due && t.due < today);
+    const done    = tasks.filter(t =>  t.completedDate);
+
+    const col = (title, list, color) => `<div>
+        <div style="font-size:12px;font-weight:700;color:${color};margin-bottom:8px">${title} (${list.length})</div>
+        ${list.length ? list.map(card).join('')
+            : '<div class="card"><div style="padding:18px;text-align:center;font-size:12px;color:var(--text3)">해당 없음</div></div>'}
+    </div>`;
+
+    container.innerHTML = active.map(card).join('') +
+        ((ongoing.length || done.length) ? `
+        <div style="margin:22px 0 12px;padding-top:16px;border-top:1px solid var(--border);font-size:14px;font-weight:700">
+            작업지시 기한경과 및 수행결과
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            ${col('작업수행이행중', ongoing, 'var(--danger)')}
+            ${col('작업수행완료',   done,    'var(--success)')}
+        </div>` : '');
 }
 
 // ── 수신자 선택 옵션 업데이트 ─────────────────────────────────────
@@ -132,7 +154,7 @@ export function updateTaskToOptions(team) {
         members.filter(m => m !== cur).map(m => `<option value="${m}">${m}</option>`).join('');
 }
 
-// ── 업무지시 수정 모달 열기 ───────────────────────────────────────
+// ── 업무지시 수정 모달 열기 ─────────────────────────────────────
 export function openTaskEdit(id) {
     const t = getState().tasks?.find(x => x.id === id);
     if (!t) return;
@@ -140,7 +162,7 @@ export function openTaskEdit(id) {
     const modal = document.getElementById('modal-task');
     if (!modal) return;
     modal.classList.add('open');
-    document.getElementById('taskModalTitle')?.setAttribute('data-val', t.type === 'order' ? '📋 업무지시 수정' : '🤝 협조요청 수정');
+    document.getElementById('taskModalTitle')?.setAttribute('data-val', t.type === 'order' ? '📋 업무지시서 수정' : '🤝 협조요청 수정');
     document.getElementById('task-type-hidden')?.setAttribute('value', t.type || 'order');
     ['task-from','task-date','task-due','task-content'].forEach(id => {
         const el  = document.getElementById(id);
@@ -170,7 +192,7 @@ export function openTaskEdit(id) {
     }
 }
 
-// ── 완료 보고 모달 열기 ───────────────────────────────────────────
+// ── 완료 보고 모달 열기 ─────────────────────────────────────────
 export function openTaskComplete(id) {
     setCompletingTaskId(id);
     const today = new Date().toISOString().slice(0, 10);
@@ -179,7 +201,7 @@ export function openTaskComplete(id) {
     document.getElementById('modal-task-complete')?.classList.add('open');
 }
 
-// ── 업무 삭제 ────────────────────────────────────────────────────
+// ── 업무 삭제 ─────────────────────────────────────────────────
 export async function deleteTask(id) {
     if (!confirm('삭제하시겠습니까?')) return;
     const state = getState();
@@ -189,20 +211,23 @@ export async function deleteTask(id) {
     renderTasks();
 }
 
-// ── 관리자 확인 처리 ─────────────────────────────────────────────
+// ── 발행자 확인 처리 (확인일자 지정) ─────────────────────────────
 export async function confirmTask(id) {
     const t = getState().tasks?.find(x => x.id === id);
     if (!t) return;
-    t.confirmedDate = new Date().toISOString().slice(0, 10);
+    const picked = document.getElementById(`cfmDate-${id}`)?.value;
+    const date   = picked || new Date().toISOString().slice(0, 10);
+    if (!confirm(`확인일자 ${date} 로 확인 처리하시겠습니까?`)) return;
+    t.confirmedDate = date;
     const { saveState } = await import('../core/store.js');
     await saveState();
     renderTasks();
 }
 
 // ── window 전역 등록 ─────────────────────────────────────────────
-window.renderTasks        = renderTasks;
+window.renderTasks         = renderTasks;
 window.updateTaskToOptions = updateTaskToOptions;
-window.openTaskEdit       = openTaskEdit;
-window.openTaskComplete   = openTaskComplete;
-window.deleteTask         = deleteTask;
-window.confirmTask        = confirmTask;
+window.openTaskEdit        = openTaskEdit;
+window.openTaskComplete    = openTaskComplete;
+window.deleteTask          = deleteTask;
+window.confirmTask         = confirmTask;
