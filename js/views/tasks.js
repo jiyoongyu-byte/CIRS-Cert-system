@@ -80,9 +80,9 @@ export function renderTasks() {
         // 완료 보고: 회신 정확성은 지시자가 판단 → 발신자 본인 또는 최고관리자
         const canComplete = currentUser && !isDone &&
                             (t.from === currentUser || currentUser === SUPER_ADMIN);
-        // 확인 처리: 발행자 본인 또는 최고관리자
-        const canConfirm = isDone && !t.confirmedDate &&
-                           (t.from === currentUser || currentUser === SUPER_ADMIN);
+        // 반려: 수행결과가 불충분할 때 발행자 본인 또는 최고관리자가 이행중으로 되돌림
+        const canReject = isDone &&
+                          (t.from === currentUser || currentUser === SUPER_ADMIN);
 
         return `<div class="card" style="margin-bottom:10px;border-left:4px solid ${isDone ? 'var(--border)' : pc};opacity:${isDone ? 0.72 : 1}">
             <div style="padding:13px 15px">
@@ -106,12 +106,12 @@ export function renderTasks() {
                 ${isDone ? `<div style="font-size:11px;padding:7px 11px;background:var(--success-light);border-radius:6px;color:var(--success);margin-bottom:7px">
                     ✅ 완료 (${t.completedDate}): ${t.completeNote || ''}
                 </div>` : ''}
+                ${!isDone && t.rejectedDate ? `<div style="font-size:11px;padding:7px 11px;background:var(--danger-light);border-radius:6px;color:var(--danger);margin-bottom:7px">
+                    ↩ 반려 (${t.rejectedDate}): ${t.rejectNote || ''}
+                </div>` : ''}
                 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                    ${canComplete ? `<button class="btn btn-cert btn-sm" onclick="openTaskComplete('${t.id}')">완료 보고</button>` : ''}
-                    ${canConfirm ? `<span style="font-size:10px;color:var(--text3)">확인일</span>
-                        <input type="date" id="cfmDate-${t.id}" value="${today}" style="font-size:11px;padding:3px 6px">
-                        <button class="btn btn-sm" style="border-color:var(--med);color:var(--med)" onclick="confirmTask('${t.id}')">✓ 확인 처리</button>` : ''}
-                    ${t.confirmedDate ? `<span style="font-size:10px;color:var(--text3)">확인: ${t.confirmedDate}</span>` : ''}
+                    ${canComplete ? `<button class="btn btn-cert btn-sm" onclick="openTaskComplete('${t.id}')">완료 확인</button>` : ''}
+                    ${canReject ? `<button class="btn btn-sm" style="border-color:var(--warn);color:var(--warn)" onclick="rejectTask('${t.id}')">↩ 반려</button>` : ''}
                     ${canEdit && !isDone ? `<button class="btn btn-sm" onclick="openTaskEdit('${t.id}')">수정</button>` : ''}
                     ${canDelete ? `<button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">삭제</button>` : ''}
                 </div>
@@ -213,14 +213,17 @@ export async function deleteTask(id) {
     renderTasks();
 }
 
-// ── 발행자 확인 처리 (확인일자 지정) ─────────────────────────────
-export async function confirmTask(id) {
+// ── 반려 (수행결과 불충분 → 이행중으로 되돌림) ────────────────────
+export async function rejectTask(id) {
     const t = getState().tasks?.find(x => x.id === id);
     if (!t) return;
-    const picked = document.getElementById(`cfmDate-${id}`)?.value;
-    const date   = picked || new Date().toISOString().slice(0, 10);
-    if (!confirm(`확인일자 ${date} 로 확인 처리하시겠습니까?`)) return;
-    t.confirmedDate = date;
+    const reason = prompt('반려 사유를 입력하세요.');
+    if (!reason || !reason.trim()) return;
+    t.rejectedDate  = new Date().toISOString().slice(0, 10);
+    t.rejectNote    = reason.trim();
+    t.completedDate = '';
+    t.completeNote  = '';
+    t.confirmedDate = '';
     const { saveState } = await import('../core/store.js');
     await saveState();
     renderTasks();
@@ -232,4 +235,4 @@ window.updateTaskToOptions = updateTaskToOptions;
 window.openTaskEdit        = openTaskEdit;
 window.openTaskComplete    = openTaskComplete;
 window.deleteTask          = deleteTask;
-window.confirmTask         = confirmTask;
+window.rejectTask          = rejectTask;
