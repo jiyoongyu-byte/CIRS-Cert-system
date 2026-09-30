@@ -116,7 +116,7 @@ export function renderMedContract() {
     });
 
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
         renderContractTotal('medContractTable', [], 8);
         return;
     }
@@ -131,6 +131,7 @@ export function renderMedContract() {
             <td>${sanitize(r.manager || '')}</td>
             <td>${sanitize(r.startdate || '')}</td>
             <td>${sanitize(r.duedate || '')}</td>
+      <td>${sanitize(r.issuedate || '')}</td>
             ${fmtAmt(r.amount, r.amountCurrency)}
             ${fmtRemain(r, r.startdate || r.contractdate || '')}
             <td>${sanitize(r.stage || '')}</td>
@@ -139,7 +140,7 @@ export function renderMedContract() {
         </tr>`;
     }).join('');
 
-    renderContractTotal('medContractTable', data, 8, 'startdate');
+    renderContractTotal('medContractTable', data, 9, 'startdate');
 }
 
 // ── 의료기기팀 상담 ───────────────────────────────────────────────
@@ -263,7 +264,7 @@ export function renderCertContract() {
     });
 
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
         renderContractTotal('certContractTable', []);
         return;
     }
@@ -276,7 +277,8 @@ export function renderCertContract() {
             <td style="white-space:normal;word-break:break-word;max-width:160px">${sanitize(itemCol)}</td>
             <td>${sanitize(r.manager || '')}</td>
             <td>${sanitize(r.contractdate || '')}</td>
-            <td>${sanitize(r.issuedate || '')}</td>
+            <td>${sanitize(r.duedate || '')}</td>
+      <td>${sanitize(r.issuedate || '')}</td>
             ${fmtAmt(r.amount, r.amountCurrency)}
             ${fmtRemain(r, r.startdate || r.contractdate || '')}
             <td>${sanitize(r.stage || '')}</td>
@@ -285,7 +287,7 @@ export function renderCertContract() {
         </tr>`;
     }).join('');
 
-    renderContractTotal('certContractTable', data, 6, 'contractdate');
+    renderContractTotal('certContractTable', data, 7, 'contractdate');
 }
 
 // ── 제품환경인증팀 상담 ───────────────────────────────────────────
@@ -505,7 +507,8 @@ export function exportContractExcel(team) {
                 : { '인증종류/품목': [certLabel(r), r.etcMemo].filter(Boolean).join(' / ') }),
             '담당자': r.manager || '',
             '계약일': (isMed ? r.startdate : r.contractdate) || '',
-            '완료목표': (isMed ? r.duedate : r.issuedate) || '',
+            '완료목표': r.duedate || '',
+      '인증일': r.issuedate || '',
             '통화': k.cur,
             '계약금액(원화폐)': Number(r.amount || 0),
             '계약금액(KRW)': k.total,

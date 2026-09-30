@@ -137,7 +137,7 @@ export function openMedModal(type) {
     setMedIsContract(type === 'contract');
     const isContract = type === 'contract';
     document.getElementById('modal-med')?.classList.add('open');
-    ['m-client','m-product','m-grade','m-biztype','m-manager','m-startdate','m-duedate',
+    ['m-client','m-product','m-grade','m-biztype','m-manager','m-startdate','m-duedate','m-issuedate',
      'm-status','m-progress','m-amount','m-amount-currency','m-consult-status',
      'm-fail-reason','m-consult-etc','m-quote-date','m-quote-amount','m-quote-file',
      'm-contact-name','m-contact-phone','m-contact-email','m-note','m-renewcycle','m-expiredate',
@@ -190,7 +190,7 @@ export function editMed(id) {
     const fields = {
         'm-client': r.client, 'm-product': r.product, 'm-grade': r.grade,
         'm-biztype': r.biztype, 'm-manager': r.manager, 'm-startdate': r.startdate,
-        'm-duedate': r.duedate, 'm-status': r.status || '진행중',
+        'm-duedate': r.duedate, 'm-issuedate': r.issuedate, 'm-status': r.status || '진행중',
         'm-progress': r.progress, 'm-amount': r.amount || '',
         'm-amount-currency': r.amountCurrency || 'KRW',
         'm-consult-status': r.consultStatus, 'm-fail-reason': r.failReason,
@@ -229,7 +229,7 @@ export function openCertModal(type) {
     const isContract = type === 'contract';
     document.getElementById('modal-cert')?.classList.add('open');
     ['c-client','c-certtype','c-certtype-etc','c-certtype-etcname','c-manager','c-amount','c-amount-currency',
-     'c-contractdate','c-stage','c-issuedate','c-contracted','c-date','c-fail-reason',
+     'c-contractdate','c-duedate','c-stage','c-issuedate','c-contracted','c-date','c-fail-reason',
      'c-quote-date','c-quote-amount','c-quote-file','c-contact-name','c-contact-phone',
      'c-contact-email','c-etc-memo','c-note','c-renewcycle','c-expiredate',
      'c-ref-audit','c-ref-fee','c-ref-memo',
@@ -263,7 +263,7 @@ export function editCert(id) {
         'c-client': r.client, 'c-certtype': r.certtype, 'c-manager': r.manager,
         'c-certtype-etc': r.etcMemo || '', 'c-certtype-etcname': r.certtypeRaw || '',
         'c-amount': r.amount || '', 'c-amount-currency': r.amountCurrency || 'KRW',
-        'c-contractdate': r.contractdate, 'c-stage': r.stage, 'c-issuedate': r.issuedate,
+        'c-contractdate': r.contractdate, 'c-stage': r.stage, 'c-issuedate': r.issuedate, 'c-duedate': r.duedate,
         'c-contracted': r.contracted, 'c-date': r.date, 'c-fail-reason': r.failReason,
         'c-note': r.note, 'c-etc-memo': r.etcMemo, 'c-quote-amount': r.quoteAmount || '',
         'c-renewcycle': r.renewcycle, 'c-expiredate': r.expiredate,
