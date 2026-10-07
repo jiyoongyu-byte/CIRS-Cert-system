@@ -150,8 +150,9 @@ export function renderMedConsult() {
 
     const state   = getState();
     const year    = getCurrentYear();
-    const data    = (state.med || []).filter(x => x.year === year && x.recordType === 'consult' && x.consultStatus !== '계약보류');
-    const archive = (state.med || []).filter(x => x.year === year && x.recordType === 'consult' && x.consultStatus === '계약보류');
+    // 보관(archived) 건은 재상담 대기 목록에서 열람 — 원래 상담상태는 유지
+    const data    = (state.med || []).filter(x => x.year === year && x.recordType === 'consult' && x.consultStatus !== '계약보류' && !x.archived);
+    const archive = (state.med || []).filter(x => x.year === year && x.recordType === 'consult' && (x.consultStatus === '계약보류' || x.archived));
     const isRep   = isRepUser();
 
     // 계약전환율: 해당 연도 계약 건수 / (계약 + 상담) 전체 × 100%
@@ -186,7 +187,8 @@ export function renderMedConsult() {
             <td>${sanitize(r.note || '')}</td>
             <td style="white-space:nowrap">
                 ${!isRep ? `<button class="btn btn-sm" onclick="editMed('${r.id}')">${tt('수정','修改')}</button>
-                <button class="btn btn-sm btn-success" onclick="convertToContract('med','${r.id}')">${tt('계약전환','转为合同')}</button>` : ''}
+                <button class="btn btn-sm btn-success" onclick="convertToContract('med','${r.id}')">${tt('계약전환','转为合同')}</button>
+                <button class="btn btn-sm" onclick="archiveConsult('med','${r.id}')">${tt('보관','归档')}</button>` : ''}
             </td>
         </tr>`).join('');
     }
@@ -205,8 +207,8 @@ export function renderMedConsult() {
                 <td>${sanitize(r.startdate || '')}</td>
                 <td>${statusBadge(r.consultStatus, 'badge-med')}</td>
                 <td>${sanitize(r.quoteDate || '')}</td>
-                <td>${sanitize(r.failReason || '')}</td>
-                <td>${!isRep ? `<button class="btn btn-sm" onclick="editMed('${r.id}')">${tt('수정','修改')}</button>` : ''}</td>
+                <td>${r.archived ? `<span class="badge badge-amber">보관</span> ${sanitize(r.archiveReason || '')}${r.archivedAt ? ' (' + sanitize(r.archivedAt) + ')' : ''}` : sanitize(r.failReason || '')}</td>
+                <td style="white-space:nowrap">${!isRep ? `<button class="btn btn-sm" onclick="editMed('${r.id}')">${tt('수정','修改')}</button>${r.archived ? ` <button class="btn btn-sm btn-success" onclick="restoreConsult('med','${r.id}')">${tt('복원','恢复')}</button>` : ''}` : ''}</td>
             </tr>`).join('');
     }
 }
@@ -297,8 +299,9 @@ export function renderCertConsult() {
 
     const state   = getState();
     const year    = getCurrentYear();
-    const data    = (state.cert || []).filter(x => x.year === year && x.recordType === 'consult' && x.contracted !== '계약보류');
-    const archive = (state.cert || []).filter(x => x.year === year && x.recordType === 'consult' && x.contracted === '계약보류');
+    // 보관(archived) 건은 재상담 대기 목록에서 열람 — 원래 상담상태는 유지
+    const data    = (state.cert || []).filter(x => x.year === year && x.recordType === 'consult' && x.contracted !== '계약보류' && !x.archived);
+    const archive = (state.cert || []).filter(x => x.year === year && x.recordType === 'consult' && (x.contracted === '계약보류' || x.archived));
     const isRep   = isRepUser();
 
     // 계약전환율: 해당 연도 계약 건수 / (계약 + 상담) 전체 × 100%
@@ -331,7 +334,8 @@ export function renderCertConsult() {
             <td>${sanitize(r.note || '')}</td>
             <td style="white-space:nowrap">
                 ${!isRep ? `<button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>
-                <button class="btn btn-sm btn-success" onclick="convertToContract('cert','${r.id}')">${tt('계약전환','转为合同')}</button>` : ''}
+                <button class="btn btn-sm btn-success" onclick="convertToContract('cert','${r.id}')">${tt('계약전환','转为合同')}</button>
+                <button class="btn btn-sm" onclick="archiveConsult('cert','${r.id}')">${tt('보관','归档')}</button>` : ''}
             </td>
         </tr>`).join('');
     }
@@ -348,8 +352,8 @@ export function renderCertConsult() {
                 <td>${sanitize(r.date || '')}</td>
                 <td>${statusBadge(r.contracted, 'badge-cert')}</td>
                 <td>${sanitize(r.quoteDate || '')}</td>
-                <td>${sanitize(r.failReason || '')}</td>
-                <td>${!isRep ? `<button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>` : ''}</td>
+                <td>${r.archived ? `<span class="badge badge-amber">보관</span> ${sanitize(r.archiveReason || '')}${r.archivedAt ? ' (' + sanitize(r.archivedAt) + ')' : ''}` : sanitize(r.failReason || '')}</td>
+                <td style="white-space:nowrap">${!isRep ? `<button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>${r.archived ? ` <button class="btn btn-sm btn-success" onclick="restoreConsult('cert','${r.id}')">${tt('복원','恢复')}</button>` : ''}` : ''}</td>
             </tr>`).join('');
     }
 }

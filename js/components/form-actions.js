@@ -5,7 +5,7 @@ import { getState, getCurrentYear, getCurrentUser, getMedEditId, getCertEditId,
          getEditingTaskId, setEditingTaskId, getCompletingTaskId,
          getEditingEduId, setEditingEduId, saveState, getQualData } from '../core/store.js';
 import { uid, sanitize, toKRW, fmt, fmtM, quarter } from '../core/utils.js';
-import { saveMedRecord, saveCertRecord, deleteMedRecord, deleteCertRecord, logAudit } from '../core/api.js';
+import { saveMedRecord, saveCertRecord, deleteMedRecord, deleteCertRecord, logAudit, setArchived } from '../core/api.js';
 import { getBillingValues, getBillingDates, getBillingCurrencies } from './modal.js';
 
 // ── 의료기기팀 저장 ───────────────────────────────────────────────
@@ -76,6 +76,8 @@ export async function saveMed() {
     // 저장 실패 시 롤백을 위해 기존 레코드 보존
     const prevMed = editId ? state.med.find(x => x.id === editId) : null;
     const prevMedCopy = prevMed ? {...prevMed} : null;
+    // 보관 정보는 수정 화면에 없으므로 기존 값 유지
+    if (prevMed) Object.assign(record, { archived: prevMed.archived, archiveReason: prevMed.archiveReason, archivedAt: prevMed.archivedAt });
 
     if (editId) {
         const i = state.med.findIndex(x => x.id === editId);
@@ -182,6 +184,8 @@ export async function saveCert() {
     // 저장 실패 시 롤백을 위해 기존 레코드 보존
     const prevCert = editId ? state.cert.find(x => x.id === editId) : null;
     const prevCertCopy = prevCert ? {...prevCert} : null;
+    // 보관 정보는 수정 화면에 없으므로 기존 값 유지
+    if (prevCert) Object.assign(record, { archived: prevCert.archived, archiveReason: prevCert.archiveReason, archivedAt: prevCert.archivedAt });
 
     if (editId) {
         const i = state.cert.findIndex(x => x.id === editId);
@@ -224,6 +228,32 @@ export async function deleteCert(id) {
 }
 
 // ── 상담 → 계약 전환 ─────────────────────────────────────────────
+// ── 상담 보관 / 복원 ─────────────────────────────────────────────
+// 보관: 진행 목록에서 빼고 '재상담 대기·보관' 목록에서 열람 (상담상태는 그대로 유지)
+export async function archiveConsult(team, id) {
+    const r = getState()[team]?.find(x => x.id === id);
+    if (!r) return;
+    const reason = prompt(`'${r.client}' 상담을 보관합니다.\n보관 사유를 입력하세요.`, '');
+    if (reason === null) return;
+    try {
+        await setArchived(team === 'med' ? 'med_records' : 'cert_records', id, true, sanitize(reason.trim()));
+    } catch (e) { alert('❌ 보관 실패\n\n' + (e?.message || e)); return; }
+    Object.assign(r, { archived: true, archiveReason: sanitize(reason.trim()), archivedAt: new Date().toISOString().slice(0, 10) });
+    await logAudit('상담 보관', `${team}/${r.client}: ${reason}`, getCurrentUser());
+    team === 'med' ? window.renderMedConsult?.() : window.renderCertConsult?.();
+}
+export async function restoreConsult(team, id) {
+    const r = getState()[team]?.find(x => x.id === id);
+    if (!r) return;
+    if (!confirm(`'${r.client}' 상담을 진행 목록으로 복원하시겠습니까?`)) return;
+    try {
+        await setArchived(team === 'med' ? 'med_records' : 'cert_records', id, false, '');
+    } catch (e) { alert('❌ 복원 실패\n\n' + (e?.message || e)); return; }
+    Object.assign(r, { archived: false, archiveReason: '', archivedAt: '' });
+    await logAudit('상담 복원', `${team}/${r.client}`, getCurrentUser());
+    team === 'med' ? window.renderMedConsult?.() : window.renderCertConsult?.();
+}
+
 export async function convertToContract(team, id) {
     if (!confirm('해당 상담 건을 계약으로 전환하시겠습니까?')) return;
     const state  = getState();
@@ -430,6 +460,8 @@ window.deleteMed        = deleteMed;
 window.saveCert         = saveCert;
 window.deleteCert       = deleteCert;
 window.convertToContract = convertToContract;
+window.archiveConsult    = archiveConsult;
+window.restoreConsult    = restoreConsult;
 window.saveTask         = saveTask;
 window.confirmTaskComplete = confirmTaskComplete;
 window.saveEduRecord    = saveEduRecord;

@@ -34,8 +34,8 @@ export function renderDashboard() {
     const allContracts  = [...medContracts, ...certContracts];
 
     // 상담 (보류 제외한 진행중)
-    const medConsults   = medData.filter(r  => r.recordType === 'consult' && r.consultStatus !== '계약보류');
-    const certConsults  = certData.filter(r => r.recordType === 'consult' && r.contracted    !== '계약보류');
+    const medConsults   = medData.filter(r  => r.recordType === 'consult' && r.consultStatus !== '계약보류' && !r.archived);
+    const certConsults  = certData.filter(r => r.recordType === 'consult' && r.contracted    !== '계약보류' && !r.archived);
     const allConsults   = [...medConsults, ...certConsults];
 
     // 수입 실적 합계

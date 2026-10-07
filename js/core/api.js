@@ -139,6 +139,17 @@ export async function resetPw(targetUser) {
     } catch (e) { console.error('resetPw 오류:', e); }
 }
 
+// ── 상담 보관/복원 (보관 컬럼만 갱신 — 기존 상담상태 등 다른 값은 유지) ──
+export async function setArchived(table, id, archived, reason) {
+    const client = initSb(); if (!client) throw new Error('DB 연결 실패');
+    const { error } = await client.from(table).update({
+        archived: !!archived,
+        archive_reason: archived ? (reason || '') : '',
+        archived_at: archived ? new Date().toISOString().slice(0, 10) : null,
+    }).eq('id', id);
+    if (error) throw error;
+}
+
 // ── 감사 로그 ─────────────────────────────────────────────────────
 export async function logAudit(action, detail, user) {
     const client = initSb(); if (!client) return;
@@ -182,6 +193,7 @@ export async function loadAllData(state) {
             expTrip:  Number(r.exp_trip  || 0), expExtra: r.exp_extra || [],
             refAudit: Number(r.ref_audit || 0), refFee: Number(r.ref_fee || 0),
             refMemo:  r.ref_memo || '', refExtra: r.ref_extra || [],
+            archived: !!r.archived, archiveReason: r.archive_reason || '', archivedAt: r.archived_at || '',
         }));
 
         state.cert = (cR.data || []).map(r => ({
@@ -205,6 +217,7 @@ export async function loadAllData(state) {
             expTrip:  Number(r.exp_trip  || 0), expExtra: r.exp_extra || [],
             refAudit: Number(r.ref_audit || 0), refFee: Number(r.ref_fee || 0),
             refMemo:  r.ref_memo || '', refExtra: r.ref_extra || [],
+            archived: !!r.archived, archiveReason: r.archive_reason || '', archivedAt: r.archived_at || '',
         }));
 
         const rd = rR.data?.data || {};
