@@ -5,6 +5,7 @@ import { setCurrentUser, setCurrentYear, setCurrentView, getCurrentYear, getCurr
 import { savePw, initSb, loadPw, resetPw } from './core/api.js';
 import { tt } from './core/utils.js';
 import * as rates from './core/rates.js';
+import * as staffMod from './core/staff.js';   // 구성원 명단 (staff 테이블)
 window._rates = rates;   // utils.getRates()가 참조
 
 const DEFAULT_PW   = 'cirs2026!';
@@ -13,11 +14,7 @@ const ADMIN_USERS  = ['지윤규','엄태호','유재용'];
 const REP_USER     = '대표이사';
 const EXECS        = ['대표이사', '지윤규']; // 전체 금액 열람 가능 권한자
 
-const TEAM_USERS = {
-    '의료기기팀':    ['유재용','윤미령','차상호','Zhao Lijie','지윤규'],
-    '제품환경인증팀':['엄태호','Lyu Cuicui','박성재','지윤규'],
-    '임원진':        ['지윤규','대표이사'],
-};
+// 팀별 구성원 명단은 js/core/staff.js(Supabase staff 테이블)에서 관리
 
 const QUAL_MASTER = {
     '지윤규': [
@@ -35,8 +32,8 @@ const QUAL_MASTER = {
 
 // ── 팀 판별 헬퍼 ─────────────────────────────────────────────────
 function getUserTeam(user) {
-    if (['유재용','윤미령','차상호','Zhao Lijie'].includes(user)) return '의료기기팀';
-    if (['엄태호','Lyu Cuicui','박성재'].includes(user))          return '제품환경인증팀';
+    const staffTeam = staffMod.teamOf(user);                       // staff 테이블 기준 (비재직자 포함)
+    if (staffTeam)                                                 return staffTeam;
     if (user === REP_USER)                                         return '열람전용'; // 대표이사: 전팀 열람 가능, 수정 불가
     return '관리자'; // 지윤규
 }
@@ -181,6 +178,12 @@ export async function doLogin() {
     }
 
     initSb();
+    // 비재직 구성원(본사 전출·휴직·퇴사 등) 로그인 차단
+    try { await staffMod.ready; } catch (_) {}
+    if (!staffMod.isActive(user)) {
+        if (err) err.textContent = `사용이 중지된 계정입니다 (${staffMod.statusOf(user)}). 관리자에게 문의하세요.`;
+        return;
+    }
     const state = getState();
     try {
         await loadPw(state, user);
@@ -433,6 +436,7 @@ export function renderView(v) {
     if (v === 'strategy'     && window.renderStrategy)     window.renderStrategy();  // 3년 전략기획 뷰
     if (v === 'kpi'          && window.renderKpi)          window.renderKpi();
     if (v === 'tasks'        && window.renderTasks)        window.renderTasks();
+    if (v === 'orgchart')                                   staffMod.renderOrgChart();  // 조직도 (staff 테이블)
 }
 
 // ── 검색 필터: 현재 뷰 테이블 행 필터링 ──────────────────────────

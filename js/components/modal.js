@@ -136,6 +136,7 @@ export function openMedModal(type) {
     setMedEditId(null);
     setMedIsContract(type === 'contract');
     const isContract = type === 'contract';
+    window._staff?.ensureOption('m-manager', '');   // 신규: 재직 구성원만
     document.getElementById('modal-med')?.classList.add('open');
     ['m-client','m-product','m-grade','m-biztype','m-manager','m-startdate','m-duedate','m-issuedate',
      'm-status','m-progress','m-amount','m-amount-currency','m-consult-status',
@@ -186,6 +187,7 @@ export function editMed(id) {
     if (!r) return;
     setMedEditId(id);
     setMedIsContract(r.recordType === 'contract');
+    window._staff?.ensureOption('m-manager', r.manager);   // 비재직 담당자도 보존
     document.getElementById('modal-med')?.classList.add('open');
     const fields = {
         'm-client': r.client, 'm-product': r.product, 'm-grade': r.grade,
@@ -227,6 +229,7 @@ export function openCertModal(type) {
     setCertEditId(null);
     setCertIsContract(type === 'contract');
     const isContract = type === 'contract';
+    window._staff?.ensureOption('c-manager', '');   // 신규: 재직 구성원만
     document.getElementById('modal-cert')?.classList.add('open');
     ['c-client','c-certtype','c-certtype-etc','c-certtype-etcname','c-manager','c-amount','c-amount-currency',
      'c-contractdate','c-duedate','c-stage','c-issuedate','c-contracted','c-date','c-fail-reason',
@@ -258,6 +261,7 @@ export function editCert(id) {
     if (!r) return;
     setCertEditId(id);
     setCertIsContract(r.recordType === 'contract');
+    window._staff?.ensureOption('c-manager', r.manager);   // 비재직 담당자도 보존
     document.getElementById('modal-cert')?.classList.add('open');
     const fields = {
         'c-client': r.client, 'c-certtype': r.certtype, 'c-manager': r.manager,

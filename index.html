@@ -238,7 +238,7 @@ input[type=date]{color-scheme:dark}
 </div>
 
 <div class="view" id="view-orgchart">
-  <div class="section-head"><span class="section-title">전사 조직도</span></div>
+  <div class="section-head"><span class="section-title">전사 조직도</span><button class="btn btn-sm" id="btnStaffManage" style="display:none" onclick="openStaffModal()">👥 구성원 관리</button></div>
   <div class="card">
     <div class="card-body" style="overflow-x:auto; padding:32px 16px;">
       <div style="display:flex; flex-direction:column; align-items:center; gap:0; font-family:var(--sans);">
@@ -272,32 +272,7 @@ input[type=date]{color-scheme:dark}
             <div style="background:var(--cert);color:#fff;font-weight:800;font-size:13px;padding:10px 20px;border-radius:10px;margin-bottom:0;box-shadow:0 4px 12px rgba(25,168,118,0.3);white-space:nowrap;">제품환경인증팀</div>
             <div style="width:2px;height:24px;background:var(--border2);"></div>
             <!-- 팀원 -->
-            <div style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;max-width:200px;">
-              <div style="background:var(--card);border:1px solid var(--cert);border-left:4px solid var(--cert);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
-                <div style="font-size:10px;color:var(--cert);font-weight:800;">팀 장</div>
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
-                  <div style="font-size:14px;font-weight:700;color:var(--text1);">엄태호</div>
-                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('엄태호')"
-                    id="orgBtn_엄태호">성과 뷰</button>
-                </div>
-              </div>
-              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--cert);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
-                <div style="font-size:10px;color:var(--cert-mid);font-weight:800;">책 임</div>
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
-                  <div style="font-size:14px;font-weight:700;color:var(--text1);">Lyu Cuicui</div>
-                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('Lyu Cuicui')"
-                    id="orgBtn_Lyu_Cuicui">성과 뷰</button>
-                </div>
-              </div>
-              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--cert);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
-                <div style="font-size:10px;color:var(--cert-mid);font-weight:800;">선 임</div>
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
-                  <div style="font-size:14px;font-weight:700;color:var(--text1);">박성재</div>
-                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('박성재')"
-                    id="orgBtn_박성재">성과 뷰</button>
-                </div>
-              </div>
-            </div>
+            <div id="org-members-cert" style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;max-width:200px;"></div>
           </div>
 
           <!-- 의료기기팀 -->
@@ -306,40 +281,7 @@ input[type=date]{color-scheme:dark}
             <div style="background:var(--med);color:#fff;font-weight:800;font-size:13px;padding:10px 20px;border-radius:10px;margin-bottom:0;box-shadow:0 4px 12px rgba(91,110,245,0.3);white-space:nowrap;">의료기기팀</div>
             <div style="width:2px;height:24px;background:var(--border2);"></div>
             <!-- 팀원 -->
-            <div style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;max-width:200px;">
-              <div style="background:var(--card);border:1px solid var(--med);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
-                <div style="font-size:10px;color:var(--med);font-weight:800;">수 석</div>
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
-                  <div style="font-size:14px;font-weight:700;color:var(--text1);">유재용</div>
-                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('유재용')"
-                    id="orgBtn_유재용">성과 뷰</button>
-                </div>
-              </div>
-              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
-                <div style="font-size:10px;color:var(--med-mid);font-weight:800;">책 임</div>
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
-                  <div style="font-size:14px;font-weight:700;color:var(--text1);">윤미령</div>
-                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('윤미령')"
-                    id="orgBtn_윤미령">성과 뷰</button>
-                </div>
-              </div>
-              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
-                <div style="font-size:10px;color:var(--med-mid);font-weight:800;">선 임</div>
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
-                  <div style="font-size:14px;font-weight:700;color:var(--text1);">차상호</div>
-                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('차상호')"
-                    id="orgBtn_차상호">성과 뷰</button>
-                </div>
-              </div>
-              <div style="background:var(--card);border:1px solid var(--border2);border-left:4px solid var(--med);border-radius:8px;padding:10px 16px;width:100%;text-align:left;">
-                <div style="font-size:10px;color:var(--med-mid);font-weight:800;">선 임</div>
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px;">
-                  <div style="font-size:14px;font-weight:700;color:var(--text1);">Zhao Lijie</div>
-                  <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;" onclick="openPersonKpi('Zhao Lijie')"
-                    id="orgBtn_Zhao_Lijie">성과 뷰</button>
-                </div>
-              </div>
-            </div>
+            <div id="org-members-med" style="display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;max-width:200px;"></div>
           </div>
         </div>
 
@@ -449,7 +391,7 @@ input[type=date]{color-scheme:dark}
     <span style="margin-left:auto;font-weight:700;" id="kpiYear"></span>
   </div>
   <div id="kpi-sect-qual"><div class="section-head"><span class="section-title" id="kqTitle">구성원 자격 및 법정교육 현황</span><button class="btn btn-primary" onclick="openQualModal()"><span data-ko="🔒 관리자 수정" data-zh="🔒 管理员修改">🔒 관리자 수정</span></button></div><div id="qualCards"></div></div>
-  <div id="kpi-sect-edu" style="display:none"><div style="display:flex;gap:10px;margin-bottom:16px;"><select class="form-select" id="eduMemberSel" onchange="renderKpiEdu()"><option value="" data-ko="전체 구성원" data-zh="全体成员">전체 구성원</option><option>지윤규</option><option>유재용</option><option>윤미령</option><option>차상호</option><option>Zhao Lijie</option><option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option></select><select class="form-select" id="eduTypeSel" onchange="renderKpiEdu()"><option value="" data-ko="전체 유형" data-zh="全部类型">전체 유형</option><option value="역량강화" data-ko="역량강화" data-zh="能力强化">역량강화</option><option value="직무교육" data-ko="직무교육" data-zh="职务教育">직무교육</option><option value="보수교육" data-ko="보수교육" data-zh="进修教育">보수교육</option></select><button class="btn btn-cert" onclick="openEduAddModal()" style="margin-left:auto"><span data-ko="+ 교육 추가" data-zh="+ 添加教育">+ 교육 추가</span></button></div><div id="eduList"></div></div>
+  <div id="kpi-sect-edu" style="display:none"><div style="display:flex;gap:10px;margin-bottom:16px;"><select class="form-select" id="eduMemberSel" onchange="renderKpiEdu()"><option value="" data-ko="전체 구성원" data-zh="全体成员">전체 구성원</option><option>지윤규</option><option>유재용</option><option>차상호</option><option>Zhao Lijie</option><option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option></select><select class="form-select" id="eduTypeSel" onchange="renderKpiEdu()"><option value="" data-ko="전체 유형" data-zh="全部类型">전체 유형</option><option value="역량강화" data-ko="역량강화" data-zh="能力强化">역량강화</option><option value="직무교육" data-ko="직무교육" data-zh="职务教育">직무교육</option><option value="보수교육" data-ko="보수교육" data-zh="进修教育">보수교육</option></select><button class="btn btn-cert" onclick="openEduAddModal()" style="margin-left:auto"><span data-ko="+ 교육 추가" data-zh="+ 添加教育">+ 교육 추가</span></button></div><div id="eduList"></div></div>
   <div id="kpi-sect-profit" style="display:none"><div class="section-head"><span class="section-title" id="kpTitle">개인별 업무 수익 기여도</span></div><div id="kpi-profit-content"></div></div>
 </div>
 
@@ -489,7 +431,7 @@ input[type=date]{color-scheme:dark}
 <div class="form-group"><label class="form-label" data-ko="등급 / 분류" data-zh="等级 / 分类">등급 / 분류</label><select class="form-select" id="m-grade" onchange="document.getElementById('m-grade-etc-wrap').style.display=this.value==='기타'?'':'none'"><option value="" data-ko="선택" data-zh="选择">선택</option><optgroup label="한국"><option value="한국 1등급">한국 1등급</option><option value="한국 2등급">한국 2등급</option><option value="한국 3등급">한국 3등급</option><option value="한국 4등급">한국 4등급</option></optgroup><optgroup label="중국"><option value="중국 1등급">중국 1등급</option><option value="중국 2등급">중국 2등급</option><option value="중국 3등급">중국 3등급</option></optgroup><optgroup label="GMP"><option>KGMP</option><option>CGMP</option></optgroup><optgroup label="기타"><option value="기타">기타 (직접입력)</option></optgroup></select></div>
   <div class="form-group" id="m-grade-etc-wrap" style="display:none"><label class="form-label" data-ko="등급/분류 직접 입력" data-zh="直接输入等级/分类">등급/분류 직접 입력</label><input class="form-input" id="m-grade-etc" placeholder="직접 입력"></div>  <div class="form-group"><label class="form-label" data-ko="업무 유형" data-zh="业务类型">업무 유형</label><select class="form-select" id="m-biztype" onchange="updateMedStageOptions()"><option value="" data-ko="선택" data-zh="选择">선택</option><option value="인허가" data-ko="제품 인허가" data-zh="产品许可">제품 인허가</option><option value="QMS" data-ko="QMS 구축" data-zh="QMS构建">QMS 구축</option></select></div>
   <div class="contract-only-med form-group full"><label class="form-label" data-ko="진행 단계 (복수 선택)" data-zh="进行阶段 (可多选)">진행 단계 (복수 선택)</label><div id="m-stage-wrap" style="padding:10px;border:1px solid var(--border2);border-radius:8px;background:var(--surface);"><span data-ko="업무 유형을 먼저 선택하세요" data-zh="请先选择业务类型">업무 유형을 먼저 선택하세요</span></div></div>
-  <div class="form-group"><label class="form-label" data-ko="담당자" data-zh="负责人">담당자</label><select class="form-select" id="m-manager"><option value="">선택</option><option>유재용</option><option>윤미령</option><option>차상호</option><option>Zhao Lijie</option><option>지윤규</option></select></div>
+  <div class="form-group"><label class="form-label" data-ko="담당자" data-zh="负责人">담당자</label><select class="form-select" id="m-manager"><option value="">선택</option><option>유재용</option><option>차상호</option><option>Zhao Lijie</option><option>지윤규</option></select></div>
   <div class="form-group"><label class="form-label" data-ko="상담일" data-zh="咨询日期">상담일</label><input class="form-input" type="date" id="m-startdate"></div>
   <div class="contract-only-med form-group"><label class="form-label" data-ko="완료 목표일" data-zh="目标完成日">완료 목표일</label><input class="form-input" type="date" id="m-duedate"></div>
   <div class="contract-only-med form-group"><label class="form-label" data-ko="인증서 발급일" data-zh="签发日期">인증서 발급일</label><input class="form-input" type="date" id="m-issuedate"></div>
@@ -564,7 +506,7 @@ input[type=date]{color-scheme:dark}
 </div><div class="modal-footer"><button class="btn" onclick="closeModal('settings')"><span data-ko="취소" data-zh="取消">취소</span></button><button class="btn btn-primary" onclick="changePw()"><span data-ko="변경" data-zh="修改">변경</span></button></div></div></div></div>
 
 <div class="modal-overlay" id="modal-edu-add"><div class="modal-wrapper"><div class="modal" style="max-width:540px"><div class="modal-header"><span class="modal-title" id="eduModalTitle">교육 이력 추가</span><button class="modal-close" onclick="closeModal('edu-add')">×</button></div><div class="modal-body"><div class="form-grid">
-  <div class="form-group"><label class="form-label" data-ko="구성원" data-zh="成员">구성원</label><select class="form-select" id="edu-member"><option value="" data-ko="선택" data-zh="选择">선택</option><option>지윤규</option><option>유재용</option><option>윤미령</option><option>차상호</option><option>Zhao Lijie</option><option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option></select></div>
+  <div class="form-group"><label class="form-label" data-ko="구성원" data-zh="成员">구성원</label><select class="form-select" id="edu-member"><option value="" data-ko="선택" data-zh="选择">선택</option><option>지윤규</option><option>유재용</option><option>차상호</option><option>Zhao Lijie</option><option>엄태호</option><option>Lyu Cuicui</option><option>박성재</option></select></div>
   <div class="form-group"><label class="form-label" data-ko="교육 유형" data-zh="教育类型">교육 유형</label><select class="form-select" id="edu-type"><option value="" data-ko="선택" data-zh="选择">선택</option><option value="역량강화" data-ko="역량강화" data-zh="能力强化">역량강화</option><option value="직무교육" data-ko="직무교육" data-zh="职务教育">직무교육</option><option value="보수교육" data-ko="보수교육 (법정)" data-zh="进修教育 (法定)">보수교육 (법정)</option></select></div>
   <div class="form-group full"><label class="form-label" style="color:var(--med)" data-ko="진행 상태" data-zh="进行状态">진행 상태</label><select class="form-select" id="edu-status" style="border-color:var(--med)"><option value="수료 완료" data-ko="✅ 수료 완료" data-zh="✅ 结业完成">✅ 수료 완료</option><option value="신청 완료(대기중)" data-ko="⏳ 신청 완료 (대기중 / 예정)" data-zh="⏳ 申请完成 (待办 / 预定)">⏳ 신청 완료 (대기중 / 예정)</option></select></div>
   <div class="form-group"><label class="form-label" data-ko="교육일 (시작)" data-zh="教育日 (开始)">교육일 (시작)</label><input class="form-input" type="date" id="edu-date-start"></div><div class="form-group"><label class="form-label" data-ko="교육일 (종료)" data-zh="教育日 (结束)">교육일 (종료)</label><input class="form-input" type="date" id="edu-date-end"></div>
@@ -580,7 +522,7 @@ input[type=date]{color-scheme:dark}
 
 <div class="modal-overlay" id="modal-qual"><div class="modal-wrapper"><div class="modal" style="max-width:500px"><div class="modal-header"><span class="modal-title" data-ko="🔒 자격·법정교육 관리 (관리자)" data-zh="🔒 资格·法定教育管理 (管理员)">🔒 자격·법정교육 관리 (관리자)</span><button class="modal-close" onclick="closeModal('qual')">×</button></div><div class="modal-body">
   <div class="form-group"><label class="form-label" data-ko="관리자 비밀번호" data-zh="管理员密码">관리자 비밀번호</label><div style="display:flex;gap:10px"><input class="form-input" type="password" id="qual-admin-pw"><button class="btn btn-primary" onclick="verifyQualAdmin()"><span data-ko="확인" data-zh="确认">확인</span></button></div><div id="qual-pw-msg" style="font-size:12px;color:var(--danger);margin-top:6px;font-weight:600"></div></div>
-  <div id="qual-edit-area" style="display:none"><hr style="border:none;border-top:1px solid var(--border);margin:16px 0"><div class="form-group"><label class="form-label" data-ko="구성원 선택" data-zh="选择成员">구성원 선택</label><select class="form-select" id="qual-member-sel" onchange="loadQualMember()"><option value="" data-ko="선택" data-zh="选择">선택</option><option>지윤규</option><option>엄태호</option><option>차상호</option><option>윤미령</option><option>유재용</option><option>Zhao Lijie</option><option>Lyu Cuicui</option><option>박성재</option></select></div><div id="qual-member-list" style="margin:12px 0"></div><button class="btn btn-primary" onclick="addQualItem()" style="width:100%;margin-bottom:10px"><span data-ko="+ 자격 항목 추가" data-zh="+ 添加资格项目">+ 자격 항목 추가</span></button><button class="btn btn-cert" onclick="saveQualData()" style="width:100%"><span data-ko="💾 전체 저장" data-zh="💾 全部保存">💾 전체 저장</span></button></div>
+  <div id="qual-edit-area" style="display:none"><hr style="border:none;border-top:1px solid var(--border);margin:16px 0"><div class="form-group"><label class="form-label" data-ko="구성원 선택" data-zh="选择成员">구성원 선택</label><select class="form-select" id="qual-member-sel" onchange="loadQualMember()"><option value="" data-ko="선택" data-zh="选择">선택</option><option>지윤규</option><option>엄태호</option><option>차상호</option><option>유재용</option><option>Zhao Lijie</option><option>Lyu Cuicui</option><option>박성재</option></select></div><div id="qual-member-list" style="margin:12px 0"></div><button class="btn btn-primary" onclick="addQualItem()" style="width:100%;margin-bottom:10px"><span data-ko="+ 자격 항목 추가" data-zh="+ 添加资格项目">+ 자격 항목 추가</span></button><button class="btn btn-cert" onclick="saveQualData()" style="width:100%"><span data-ko="💾 전체 저장" data-zh="💾 全部保存">💾 전체 저장</span></button></div>
 </div><div class="modal-footer"><button class="btn" onclick="closeModal('qual')"><span data-ko="닫기" data-zh="关闭">닫기</span></button></div></div></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -607,9 +549,9 @@ input[type=date]{color-scheme:dark}
 
   <!-- 로그인 전용 인라인 스크립트 (ES Module 로딩 전 즉시 실행) -->
   <script>
-    // 팀별 사용자 목록 (app.js와 동일하게 유지)
+    // 팀별 사용자 목록 — 초기값. js/core/staff.js 로드 후 staff 테이블(재직자) 기준으로 자동 갱신됨
     var LOGIN_TEAM_USERS = {
-      '의료기기팀':     ['유재용','윤미령','차상호','Zhao Lijie','지윤규'],
+      '의료기기팀':     ['유재용','차상호','Zhao Lijie','지윤규'],
       '제품환경인증팀': ['엄태호','Lyu Cuicui','박성재','지윤규'],
       '제품인증부문이사': ['지윤규'],
 '대표이사':        ['대표이사'],

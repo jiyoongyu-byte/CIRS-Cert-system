@@ -142,18 +142,19 @@ export function renderTasks() {
 }
 
 // ── 수신자 선택 옵션 업데이트 ─────────────────────────────────────
-export function updateTaskToOptions(team) {
-    const TEAM_MEMBERS = {
-        '의료기기팀':     ['지윤규','유재용','윤미령','차상호','Zhao Lijie'],
-        '제품환경인증팀': ['지윤규','엄태호','Lyu Cuicui','박성재'],
-        '공통':           ['지윤규','유재용','윤미령','차상호','Zhao Lijie','엄태호','Lyu Cuicui','박성재'],
-    };
-    const members = TEAM_MEMBERS[team] || TEAM_MEMBERS['공통'];
+export function updateTaskToOptions(team, keep) {
+    // 재직 구성원만 표시 (staff 테이블 기준), keep: 수정 시 기존 수신자 보존
+    const S = window._staff;
+    const members = !S ? [] :
+        (team === '의료기기팀' || team === '제품환경인증팀') ? S.activeMembers(team, 'first') : S.allActive();
     const sel     = document.getElementById('task-to');
     if (!sel) return;
-    const cur = getCurrentUser();
+    const cur  = getCurrentUser();
+    const list = members.filter(m => m !== cur);
+    if (keep && !list.includes(keep)) list.push(keep);
+    const lbl  = m => S ? S.label(m) : m;
     sel.innerHTML = '<option value="">담당자 선택</option>' +
-        members.filter(m => m !== cur).map(m => `<option value="${m}">${m}</option>`).join('');
+        list.map(m => `<option value="${m}">${lbl(m)}</option>`).join('');
 }
 
 // ── 업무지시 수정 모달 열기 ─────────────────────────────────────
@@ -173,7 +174,7 @@ export function openTaskEdit(id) {
     });
     if (document.getElementById('task-team')) {
         document.getElementById('task-team').value = t.team || '공통';
-        updateTaskToOptions(t.team || '공통');
+        updateTaskToOptions(t.team || '공통', t.to);
     }
     if (document.getElementById('task-to'))       document.getElementById('task-to').value = t.to || '';
     if (document.getElementById('task-priority')) document.getElementById('task-priority').value = t.priority || '일반';
