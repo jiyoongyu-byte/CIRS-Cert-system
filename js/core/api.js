@@ -39,6 +39,11 @@ export async function saveMedRecord(record) {
             exp_trip: record.expTrip || 0, exp_extra: record.expExtra || [],
             ref_audit: record.refAudit || 0, ref_fee: record.refFee || 0,
             ref_memo: record.refMemo || '', ref_extra: record.refExtra || [],
+            // 비용 지출일 · 상담 보고 항목 (월간 실적보고용)
+            exp_audit_date: record.expAuditDate || null, exp_test_date: record.expTestDate || null,
+            exp_trip_date:  record.expTripDate  || null,
+            location: record.location || '', win_prob: record.winProb || '',
+            expected_month: record.expectedMonth || '', expected_amount: record.expectedAmount || 0,
         });
         if (error) throw error;
     } catch (e) { console.error('saveMedRecord 오류:', e); throw e; } // 호출부 catch 가능하도록 re-throw
@@ -78,6 +83,11 @@ export async function saveCertRecord(record) {
             exp_trip: record.expTrip || 0, exp_extra: record.expExtra || [],
             ref_audit: record.refAudit || 0, ref_fee: record.refFee || 0,
             ref_memo: record.refMemo || '', ref_extra: record.refExtra || [],
+            // 비용 지출일 · 상담 보고 항목 (월간 실적보고용)
+            exp_audit_date: record.expAuditDate || null, exp_test_date: record.expTestDate || null,
+            exp_trip_date:  record.expTripDate  || null,
+            location: record.location || '', win_prob: record.winProb || '',
+            expected_month: record.expectedMonth || '', expected_amount: record.expectedAmount || 0,
         });
         if (error) throw error;
     } catch (e) { console.error('saveCertRecord 오류:', e); throw e; } // 호출부 catch 가능하도록 re-throw
@@ -150,6 +160,19 @@ export async function setArchived(table, id, archived, reason) {
     if (error) throw error;
 }
 
+// ── 월간 실적보고 (monthly_reports) ──────────────────────────────
+export async function loadMonthlyReports(year) {
+    const client = initSb(); if (!client) return [];
+    const { data, error } = await client.from('monthly_reports').select('*').like('ym', `${year}-%`);
+    if (error) { console.error('loadMonthlyReports 오류:', error); return []; }
+    return data || [];
+}
+export async function saveMonthlyReport(row) {
+    const client = initSb(); if (!client) throw new Error('DB 연결 실패');
+    const { error } = await client.from('monthly_reports').upsert(row);
+    if (error) throw error;
+}
+
 // ── 감사 로그 ─────────────────────────────────────────────────────
 export async function logAudit(action, detail, user) {
     const client = initSb(); if (!client) return;
@@ -194,6 +217,9 @@ export async function loadAllData(state) {
             refAudit: Number(r.ref_audit || 0), refFee: Number(r.ref_fee || 0),
             refMemo:  r.ref_memo || '', refExtra: r.ref_extra || [],
             archived: !!r.archived, archiveReason: r.archive_reason || '', archivedAt: r.archived_at || '',
+            expAuditDate: r.exp_audit_date || '', expTestDate: r.exp_test_date || '', expTripDate: r.exp_trip_date || '',
+            location: r.location || '', winProb: r.win_prob || '',
+            expectedMonth: r.expected_month || '', expectedAmount: Number(r.expected_amount || 0),
         }));
 
         state.cert = (cR.data || []).map(r => ({
@@ -218,6 +244,9 @@ export async function loadAllData(state) {
             refAudit: Number(r.ref_audit || 0), refFee: Number(r.ref_fee || 0),
             refMemo:  r.ref_memo || '', refExtra: r.ref_extra || [],
             archived: !!r.archived, archiveReason: r.archive_reason || '', archivedAt: r.archived_at || '',
+            expAuditDate: r.exp_audit_date || '', expTestDate: r.exp_test_date || '', expTripDate: r.exp_trip_date || '',
+            location: r.location || '', winProb: r.win_prob || '',
+            expectedMonth: r.expected_month || '', expectedAmount: Number(r.expected_amount || 0),
         }));
 
         const rd = rR.data?.data || {};

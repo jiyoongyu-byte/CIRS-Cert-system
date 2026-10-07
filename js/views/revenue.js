@@ -123,6 +123,31 @@ function categorizeMed(r) {
 // ══════════════════════════════════════════════════════════════════
 // ── 메인 렌더 ─────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════
+// ── 연간 컨설팅 이익 목표 (월간 실적보고용, 지윤규만 수정) ──────────
+function _profitTargetCard(state, y, team) {
+    const rev = state.revenue?.[y] || {};
+    const val = team === 'med' || team === 'cert'
+        ? Number(rev[team]?.profitTarget || 0)
+        : Number(rev.med?.profitTarget || 0) + Number(rev.cert?.profitTarget || 0);
+    const canEdit = (team === 'med' || team === 'cert') && window._store?.getCurrentUser?.() === '지윤규';
+    return `<div class="stat-card" style="margin:-8px 0 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div class="stat-label" style="margin:0">${y}년 연간 컨설팅 이익 목표</div>
+        <div class="stat-value" style="font-size:18px">${fmtM(val)}</div>
+        ${canEdit ? `<input class="m-input" type="number" value="${val}" style="width:180px"
+            onchange="updateProfitTarget('${team}', this.value)">` : ''}
+        <span style="font-size:11px;color:var(--text3)">이익 = 청구액 − 지출비용(심사·시험·출장·기타·정산)</span>
+    </div>`;
+}
+export async function updateProfitTarget(team, val) {
+    if (window._store?.getCurrentUser?.() !== '지윤규') return;
+    const state = getState(); const y = getCurrentYear();
+    ensureRevYear(y);
+    state.revenue[y][team].profitTarget = Math.round(Number(val) || 0);
+    await window._store?.saveState?.();
+    renderRevenue();
+}
+window.updateProfitTarget = updateProfitTarget;
+
 export function renderRevenue() {
     const state = getState();
     const y     = getCurrentYear();
@@ -151,7 +176,7 @@ export function renderRevenue() {
                         onchange="updateTarget('${team}','${q}',this.value)" style="margin-top:8px">
                 </div>`;
             }).join('')}
-        </div>`;
+        </div>${_profitTargetCard(state, y, team)}`;
     }
 
     // ── 월별 목표/실적 카드 ───────────────────────────────────────

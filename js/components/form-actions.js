@@ -70,6 +70,13 @@ export async function saveMed() {
         expTest:      Number(document.getElementById('m-exp-test')?.value  || 0),
         expTrip:      Number(document.getElementById('m-exp-trip')?.value  || 0),
         expExtra:     getDynamicExpenses('m'),
+        expAuditDate: document.getElementById('m-exp-audit-date')?.value || '',
+        expTestDate:  document.getElementById('m-exp-test-date')?.value  || '',
+        expTripDate:  document.getElementById('m-exp-trip-date')?.value  || '',
+        location:       document.getElementById('m-location')?.value || '',
+        winProb:        document.getElementById('m-win-prob')?.value || '',
+        expectedMonth:  document.getElementById('m-expected-month')?.value || '',
+        expectedAmount: Number(document.getElementById('m-expected-amount')?.value || 0),
         q: quarter(startdate) || 1,
     };
 
@@ -178,6 +185,13 @@ export async function saveCert() {
         expTest:    Number(document.getElementById('c-exp-test')?.value  || 0),
         expTrip:    Number(document.getElementById('c-exp-trip')?.value  || 0),
         expExtra:   getDynamicExpenses('c'),
+        expAuditDate: document.getElementById('c-exp-audit-date')?.value || '',
+        expTestDate:  document.getElementById('c-exp-test-date')?.value  || '',
+        expTripDate:  document.getElementById('c-exp-trip-date')?.value  || '',
+        location:       document.getElementById('c-location')?.value || '',
+        winProb:        document.getElementById('c-win-prob')?.value || '',
+        expectedMonth:  document.getElementById('c-expected-month')?.value || '',
+        expectedAmount: Number(document.getElementById('c-expected-amount')?.value || 0),
         q: quarter(contractdate || consultdate) || 1,
     };
 
@@ -518,13 +532,28 @@ window.addRefExtra    = addRefExtra;
 
 // ── 지출 비용 계산 ────────────────────────────────────────────────
 // ── 동적 기타 비용 항목 직렬화 ────────────────────────────────────
+// 기타 비용 행: 구분(비용/정산) · 항목명 · 금액 · 지출일
+function _dxRowHtml(team, item = {}) {
+    const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    const kind = item.kind === '정산' ? '정산' : '비용';
+    return `
+        <select class="form-select dx-kind" style="width:84px;" title="비용: 인증기관 등 지출 / 정산: 기타 정산분">
+            <option ${kind === '비용' ? 'selected' : ''}>비용</option><option ${kind === '정산' ? 'selected' : ''}>정산</option></select>
+        <input class="form-input dx-label" type="text" placeholder="항목명" style="flex:1;" value="${esc(item.label)}">
+        <input class="form-input dx-amount" type="number" placeholder="금액" style="width:130px;" value="${item.amount || ''}"
+            oninput="calcTotalExpense('${team}')">
+        <input class="form-input dx-date" type="date" title="지출일" style="width:140px;" value="${esc(item.date)}">
+        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();calcTotalExpense('${team}')">✕</button>`;
+}
 export function getDynamicExpenses(p) {
     const wrap = document.getElementById(`${p}-dynamic-expense-wrap`);
     if (!wrap) return [];
-    return Array.from(wrap.children).map(div => {
-        const inputs = div.querySelectorAll('input');
-        return { label: inputs[0]?.value || '', amount: Number(inputs[1]?.value || 0) };
-    }).filter(x => x.label || x.amount);
+    return Array.from(wrap.children).map(div => ({
+        kind:   div.querySelector('.dx-kind')?.value || '비용',
+        label:  div.querySelector('.dx-label')?.value || '',
+        amount: Number(div.querySelector('.dx-amount')?.value || 0),
+        date:   div.querySelector('.dx-date')?.value || '',
+    })).filter(x => x.label || x.amount);
 }
 
 // ── 동적 기타 비용 항목 복원 (편집 시) ───────────────────────────
@@ -536,12 +565,7 @@ export function loadDynamicExpenses(team, extras) {
     (extras || []).forEach(item => {
         const div = document.createElement('div');
         div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;';
-        div.innerHTML = `
-            <input class="form-input" type="text" placeholder="항목명" style="flex:1;" value="${(item.label||'').replace(/"/g,'&quot;')}">
-            <input class="form-input" type="number" placeholder="금액" style="width:140px;" value="${item.amount||0}"
-                oninput="calcTotalExpense('${team}')">
-            <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();calcTotalExpense('${team}')">✕</button>
-        `;
+        div.innerHTML = _dxRowHtml(team, item);
         wrap.appendChild(div);
     });
     calcTotalExpense(team);
@@ -576,15 +600,9 @@ export function addDynamicExpense(team) {
     const p = team === 'med' ? 'm' : 'c';
     const wrap = document.getElementById(`${p}-dynamic-expense-wrap`);
     if (!wrap) return;
-    const idx = wrap.children.length;
     const div = document.createElement('div');
     div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;';
-    div.innerHTML = `
-        <input class="form-input" type="text" placeholder="항목명" style="flex:1;">
-        <input class="form-input" type="number" placeholder="금액" style="width:140px;"
-            oninput="calcTotalExpense('${team}')">
-        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();calcTotalExpense('${team}')">✕</button>
-    `;
+    div.innerHTML = _dxRowHtml(team, { date: new Date().toISOString().slice(0, 10) });
     wrap.appendChild(div);
 }
 window.calcTotalExpense = calcTotalExpense;

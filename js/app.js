@@ -408,6 +408,7 @@ export function nav(viewName, element = null) {
         certContract:'제품환경인증팀 · 계약업체', certConsult:'제품환경인증팀 · 상담',
         certDone:'제품환경인증팀 · 완료대장',
         strategy:'3년 전략기획 (2027~2029)', kpi:'KPI 현황', tasks:'업무지시서',
+        monthlyReport:'월간 실적보고',
     };
     const tb = document.getElementById('topbarTitle');
     if (tb) tb.textContent = titles[viewName] || viewName;
@@ -437,6 +438,7 @@ export function renderView(v) {
     if (v === 'kpi'          && window.renderKpi)          window.renderKpi();
     if (v === 'tasks'        && window.renderTasks)        window.renderTasks();
     if (v === 'orgchart')                                   staffMod.renderOrgChart();  // 조직도 (staff 테이블)
+    if (v === 'monthlyReport' && window.renderMonthlyReport) window.renderMonthlyReport(); // 월간 실적보고
 }
 
 // ── 검색 필터: 현재 뷰 테이블 행 필터링 ──────────────────────────

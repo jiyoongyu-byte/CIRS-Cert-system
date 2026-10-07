@@ -144,6 +144,7 @@ export function openMedModal(type) {
      'm-contact-name','m-contact-phone','m-contact-email','m-note','m-renewcycle','m-expiredate',
      'm-ref-audit','m-ref-fee','m-ref-memo',
      'm-exp-audit','m-exp-test','m-exp-trip','m-expense',
+     'm-exp-audit-date','m-exp-test-date','m-exp-trip-date','m-location','m-win-prob','m-expected-month','m-expected-amount',
      'm-rate-usd','m-rate-rmb']  // 모달 환율 초기화
         .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
     const dew = document.getElementById('m-dynamic-expense-wrap');
@@ -204,6 +205,8 @@ export function editMed(id) {
         'm-contact-phone': r.contactPhone || '',
         'm-contact-email': r.contactEmail || '',
         'm-exp-audit': r.expAudit || '', 'm-exp-test': r.expTest || '', 'm-exp-trip': r.expTrip || '',
+        'm-exp-audit-date': r.expAuditDate || '', 'm-exp-test-date': r.expTestDate || '', 'm-exp-trip-date': r.expTripDate || '',
+        'm-location': r.location || '', 'm-win-prob': r.winProb || '', 'm-expected-month': r.expectedMonth || '', 'm-expected-amount': r.expectedAmount || '',
     };
     Object.entries(fields).forEach(([id, val]) => {
         const el = document.getElementById(id);
@@ -237,6 +240,7 @@ export function openCertModal(type) {
      'c-contact-email','c-etc-memo','c-note','c-renewcycle','c-expiredate',
      'c-ref-audit','c-ref-fee','c-ref-memo',
      'c-exp-audit','c-exp-test','c-exp-trip','c-expense',
+     'c-exp-audit-date','c-exp-test-date','c-exp-trip-date','c-location','c-win-prob','c-expected-month','c-expected-amount',
      'c-rate-usd','c-rate-rmb']  // 모달 환율 초기화
         .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
     const cdew = document.getElementById('c-dynamic-expense-wrap');
@@ -277,6 +281,8 @@ export function editCert(id) {
         'c-contact-phone': r.contactPhone || '',
         'c-contact-email': r.contactEmail || '',
         'c-exp-audit': r.expAudit || '', 'c-exp-test': r.expTest || '', 'c-exp-trip': r.expTrip || '',
+        'c-exp-audit-date': r.expAuditDate || '', 'c-exp-test-date': r.expTestDate || '', 'c-exp-trip-date': r.expTripDate || '',
+        'c-location': r.location || '', 'c-win-prob': r.winProb || '', 'c-expected-month': r.expectedMonth || '', 'c-expected-amount': r.expectedAmount || '',
     };
     Object.entries(fields).forEach(([id, val]) => {
         const el = document.getElementById(id);
