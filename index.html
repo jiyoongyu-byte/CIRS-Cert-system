@@ -156,6 +156,19 @@ input[type=date]{color-scheme:dark}
 .section-sub{grid-column:1/-1;font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.05em;text-transform:uppercase}
 .text-mono{font-family:var(--mono)}
 .logo-img { max-width: 180px; height: auto; display: block; margin: 0 auto; }
+/* ── 사이드바 접기/펼치기 (모바일 열람 개선) ── */
+.sb-toggle{background:transparent;border:1px solid var(--border2);color:var(--text1);border-radius:8px;width:36px;height:36px;font-size:18px;line-height:1;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sb-toggle:hover{border-color:var(--med);color:var(--med)}
+.topbar-left{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.sb-backdrop{display:none}
+.app.sb-collapsed .sidebar{display:none}
+@media (max-width:768px){
+  .sidebar{position:fixed;top:0;left:0;bottom:0;width:240px;z-index:300;transform:translateX(-100%);transition:transform .2s ease;box-shadow:4px 0 24px rgba(0,0,0,.4)}
+  .app.sb-collapsed .sidebar{display:flex}
+  .app.sb-open .sidebar{transform:translateX(0)}
+  .app.sb-open .sb-backdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:250}
+  .topbar{padding:0 12px}
+}
 </style>
 </head>
 
@@ -177,6 +190,7 @@ input[type=date]{color-scheme:dark}
 </div>
 
 <div class="app" id="appShell" style="display:none">
+<div class="sb-backdrop" id="sbBackdrop" onclick="toggleSidebar(false)"></div>
 <div class="sidebar">
   <div class="sidebar-logo"><div style="font-size: 22px; font-weight: 900; color: var(--med); letter-spacing: -0.5px;">CIRS <span style="color: #222;">Korea</span></div><div class="sys" id="sidebarUser"></div></div>
   <div class="sidebar-nav">
@@ -208,7 +222,8 @@ input[type=date]{color-scheme:dark}
 
 <div class="main">
 <div class="topbar">
-  <div class="topbar-title" id="topbarTitle">전체 현황</div>
+  <div class="topbar-left"><button class="sb-toggle" id="sbToggle" onclick="toggleSidebar()" aria-label="메뉴 열기/닫기" title="메뉴 열기/닫기">☰</button>
+<div class="topbar-title" id="topbarTitle">전체 현황</div></div>
   <div class="topbar-center"><input type="text" class="global-search" id="globalSearch" placeholder="🔍 업체명, 인증, 제품명 통합 검색..." data-ko="🔍 업체명, 인증 통합 검색..." data-zh="🔍 搜索企业名称、认证..." onkeyup="doSearch(event)"><div class="search-results" id="searchResults"></div></div>
   <div class="topbar-actions">
     <button class="btn" id="langSwitchBtn" onclick="toggleLang()" style="border-color:var(--med); color:var(--med); font-weight:700;">🌐 中文</button>
@@ -759,6 +774,36 @@ function handleSort(tableKey, field) {
     if (tableKey === 'certC')   { state.cert = sort(state.cert||[]); window.renderCertContract?.(); }
     if (tableKey === 'certCons' || tableKey === 'certConsArch') { state.cert = sort(state.cert||[]); window.renderCertConsult?.(); }
 }
+</script>
+<script>
+/* 사이드바 접기/펼치기: PC는 접힘 상태 기억, 모바일은 기본 숨김 + 메뉴 선택 시 자동 닫힘 */
+(function(){
+  var KEY='cirs_sidebar_collapsed';
+  var mq=window.matchMedia('(max-width:768px)');
+  function app(){return document.getElementById('appShell');}
+  window.toggleSidebar=function(force){
+    var a=app(); if(!a) return;
+    if(mq.matches){
+      var open=(typeof force==='boolean')?force:!a.classList.contains('sb-open');
+      a.classList.toggle('sb-open',open);
+    }else{
+      var col=(typeof force==='boolean')?!force:!a.classList.contains('sb-collapsed');
+      a.classList.toggle('sb-collapsed',col);
+      try{localStorage.setItem(KEY,col?'1':'0');}catch(e){}
+    }
+  };
+  function init(){
+    var a=app(); if(!a) return;
+    try{ if(localStorage.getItem(KEY)==='1') a.classList.add('sb-collapsed'); }catch(e){}
+    var nav=document.querySelector('.sidebar-nav');
+    if(nav) nav.addEventListener('click',function(ev){
+      if(mq.matches && ev.target.closest('.nav-item')) a.classList.remove('sb-open');
+    });
+    var onChange=function(){a.classList.remove('sb-open');};
+    if(mq.addEventListener) mq.addEventListener('change',onChange); else if(mq.addListener) mq.addListener(onChange);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
 </script>
 </body>
 </html>
