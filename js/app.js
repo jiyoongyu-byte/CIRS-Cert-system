@@ -71,9 +71,39 @@ function applyRepRestrictions(viewName) {
     });
 }
 
-// ── 자동 로그아웃 (20분 비활동 시 경고 → 로그아웃) ─────────────────
-const IDLE_TIMEOUT = 20 * 60 * 1000; // 20분 (ms)
-const WARN_BEFORE  =  2 * 60 * 1000; // 로그아웃 2분 전 경고
+// ── 자동 로그아웃 (설정 시간 비활동 시 경고 → 로그아웃) ─────────────
+// 시간은 ⚙ 설정 창에서 사용자별로 선택 (브라우저 localStorage에 저장)
+const IDLE_DEFAULT_MIN = 20;                        // 기본 20분
+const IDLE_ALLOWED_MIN = [10, 20, 30, 60, 120, 0];  // 0 = 사용 안 함
+const WARN_BEFORE      = 2 * 60 * 1000;             // 로그아웃 2분 전 경고
+const _idleKey = () => `cirs_idle_min_${getCurrentUser() || ''}`;
+
+// 현재 사용자의 자동 로그아웃 시간(분) 조회 — 저장값이 없거나 잘못되면 기본 20분
+function getIdleMinutes() {
+    try {
+        const v = localStorage.getItem(_idleKey());
+        if (v !== null && IDLE_ALLOWED_MIN.includes(Number(v))) return Number(v);
+    } catch (e) { /* 저장소 접근 불가 시 기본값 */ }
+    return IDLE_DEFAULT_MIN;
+}
+
+// 설정 창 드롭다운에서 호출 — 저장 후 타이머 즉시 재시작
+export function setIdleTimeout(min) {
+    const m = Number(min);
+    if (!IDLE_ALLOWED_MIN.includes(m)) return;
+    try { localStorage.setItem(_idleKey(), String(m)); } catch (e) { /* 무시 */ }
+    const msg = document.getElementById('idle-timeout-msg');
+    if (msg) msg.textContent = m === 0 ? '⚠ 자동 로그아웃 해제됨 (자리 비울 때 직접 로그아웃하세요)' : `✅ ${m}분으로 적용됨`;
+    resetAutoLogout();
+}
+
+// 설정 창 드롭다운 값을 현재 사용자 설정과 동기화
+function _syncIdleSelect() {
+    const sel = document.getElementById('idle-timeout-sel');
+    if (sel) sel.value = String(getIdleMinutes());
+    const msg = document.getElementById('idle-timeout-msg');
+    if (msg) msg.textContent = '';
+}
 
 let _idleWarnTimer        = null;
 let _idleLogoutTimer      = null;
@@ -132,9 +162,12 @@ function _hideIdleWarning() {
 function _startIdleTimers() {
     clearTimeout(_idleWarnTimer);
     clearTimeout(_idleLogoutTimer);
-    // 18분 후 경고 표시
+    const min = getIdleMinutes();
+    if (min === 0) return; // 사용 안 함 → 타이머 미설정
+    const IDLE_TIMEOUT = min * 60 * 1000;
+    // (설정 시간 - 2분) 후 경고 표시
     _idleWarnTimer = setTimeout(_showIdleWarning, IDLE_TIMEOUT - WARN_BEFORE);
-    // 20분 후 자동 로그아웃
+    // 설정 시간 경과 후 자동 로그아웃
     _idleLogoutTimer = setTimeout(() => {
         _hideIdleWarning();
         doLogout();
@@ -153,6 +186,7 @@ function initAutoLogout() {
     ['mousemove', 'click', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
         document.addEventListener(evt, resetAutoLogout, { passive: true });
     });
+    _syncIdleSelect(); // 로그인 사용자 설정값을 설정 창에 반영
     _startIdleTimers();
 }
 
@@ -493,6 +527,7 @@ window.doLogin          = doLogin;
 window._doLogin         = doLogin;
 window.doLogout         = doLogout;
 window.resetAutoLogout  = resetAutoLogout;
+window.setIdleTimeout   = setIdleTimeout;
 window.nav              = nav;
 window.changeYear       = changeYear;
 window.openRateModal    = openRateModal;
