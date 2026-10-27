@@ -7,7 +7,7 @@ let chartRevMixed    = null;
 let chartTopServices = null;
 let revChartMode     = 'month';  // 'month' | 'quarter' | 'cumul'
 let svcChartMode     = 'cert';   // 'cert'  | 'manager'
-let svcChartBasis    = 'amount'; // 'amount'(계약총액) | 'billed'(수금실적)
+let svcChartBasis    = 'amount'; // 'amount'(계약총액) | 'billed'(수입실적) | 'profit'(실 수익)
 
 // ── 팀 탭 전환 ────────────────────────────────────────────────
 export function switchRevTeam(team, el) {
@@ -26,7 +26,7 @@ export function switchRevChartMode(mode, el) {
     renderRevChart(actual, target, getRevTeam() || 'med', rows, getCurrentYear());
 }
 
-// ── 수입기여도 산정 기준 전환 (계약총액/수금실적) ─────────────────
+// ── 수입기여도 산정 기준 전환 (계약총액/수입실적/실 수익) ──────────
 export function switchServiceChartBasis(basis, el) {
     svcChartBasis = basis;
     document.querySelectorAll('.svc-basis-btn').forEach(b => b.classList.remove('active'));
@@ -157,6 +157,10 @@ export function renderRevenue() {
     const { actual, target, rows, medRows, certRows } = _getActualTarget();
 
     // ── 분기 목표 카드 ────────────────────────────────────────────
+    // 목표 입력: 해당 팀 소속자 + 지윤규(관리자)만. 전체 합산 탭은 열람 전용
+    const ut = window.getUserTeam?.(window._store?.getCurrentUser?.()) || '';
+    const canEditQ = (team === 'med'  && (ut === '의료기기팀'     || ut === '관리자'))
+                  || (team === 'cert' && (ut === '제품환경인증팀' || ut === '관리자'));
     const qWrap = document.getElementById('revQuarterlyWrap');
     if (qWrap) {
         qWrap.innerHTML = `<div class="stat-grid" style="margin-bottom:20px">
@@ -172,8 +176,8 @@ export function renderRevenue() {
                     <div style="font-size:12px;color:var(--success);margin-top:4px">실적 ${fmtM(act)} (${p}%)</div>
                     <div style="font-size:11px;color:${dc};margin-top:2px">${diff >= 0 ? '▲' : '▼'} ${fmtM(Math.abs(diff))}</div>
                     <div class="stat-bar"><div class="stat-fill fill-${team === 'cert' ? 'cert' : 'med'}" style="width:${p}%"></div></div>
-                    <input class="m-input" type="number" value="${tgt}" placeholder="목표 입력"
-                        onchange="updateTarget('${team}','${q}',this.value)" style="margin-top:8px">
+                    ${canEditQ ? `<input class="m-input" type="number" value="${tgt}" placeholder="목표 입력"
+                        onchange="updateTarget('${team}','${q}',this.value)" style="margin-top:8px">` : ''}
                 </div>`;
             }).join('')}
         </div>${_profitTargetCard(state, y, team)}`;
@@ -384,7 +388,8 @@ function renderSvcChart(rows, team, y) {
 
     const COLORS = ['#5B6EF5','#19A876','#F5A623','#E8652A','#4FC3F7','#AB47BC','#26A69A','#EF5350','#78909C','#D4E157'];
     const today  = new Date().toISOString().slice(0, 10);
-    const isBill = svcChartBasis === 'billed';
+    const isProfit = svcChartBasis === 'profit';
+    const isBill = svcChartBasis === 'billed' || isProfit;
 
     // 분류 키
     const keyOf = r => {
@@ -405,7 +410,7 @@ function renderSvcChart(rows, team, y) {
     };
 
     if (isBill) {
-        // 수금실적 기준 — 수금일이 선택 연도에 속한 건만, 미래 예정 제외
+        // 수입실적 기준 — 수입일이 선택 연도에 속한 건만, 미래 예정 제외
         rows.forEach(r => {
             (r.billing || []).forEach((v, i) => {
                 const bd = (r.billingDates || [])[i] || '';
@@ -413,6 +418,15 @@ function renderSvcChart(rows, team, y) {
                 if (!n || !bd || bd > today) return;
                 if (new Date(bd).getFullYear() !== y) return;
                 put(keyOf(r), toKRW(n, (r.billingCurrencies || [])[i] || 'KRW', bd), r);
+            });
+        });
+        // 실 수익 — 지출비용(심사·시험·출장·기타·정산) 차감. 지출일 미입력 시 계약일 기준
+        if (isProfit) rows.forEach(r => {
+            [[r.expAudit, r.expAuditDate], [r.expTest, r.expTestDate], [r.expTrip, r.expTripDate],
+             ...(r.expExtra || []).map(x => [x.amount, x.date])].forEach(([amt, d]) => {
+                const n = Number(amt || 0), ed = d || cDate(r);
+                if (!n || !ed || ed > today || new Date(ed).getFullYear() !== y) return;
+                put(keyOf(r), -n, r);
             });
         });
     } else {
@@ -425,17 +439,18 @@ function renderSvcChart(rows, team, y) {
         });
     }
 
-    const sorted = Object.entries(map).sort((a, b) => b[1].amt - a[1].amt).slice(0, 10);
+    const sorted = Object.entries(map).sort((a, b) => b[1].amt - a[1].amt).slice(0, isProfit ? undefined : 10);
     renderSvcTable(sorted, isBill);
-    if (!sorted.length) return;
+    const pie = sorted.filter(([, v]) => v.amt > 0); // 도넛은 양수만 (음수는 표에 별도 표기)
+    if (!pie.length) return;
 
     chartTopServices = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: sorted.map(([k]) => k),
+            labels: pie.map(([k]) => k),
             datasets: [{
-                data: sorted.map(([, v]) => Math.round(v.amt)),
-                backgroundColor: COLORS.slice(0, sorted.length),
+                data: pie.map(([, v]) => Math.round(v.amt)),
+                backgroundColor: COLORS.slice(0, pie.length),
                 borderWidth: 0,
             }]
         },
@@ -467,6 +482,8 @@ function renderSvcTable(sorted, isBill) {
     const thDue = document.getElementById('svcThDue');
     if (thKey) thKey.textContent = svcChartMode === 'manager' ? '담당자' : '인증마크';
     if (thDue) thDue.textContent = svcChartMode === 'manager' ? '완료예상기간' : '';
+    const thAmt = document.getElementById('svcThAmt');
+    if (thAmt) thAmt.textContent = { amount:'계약금액', billed:'수입실적', profit:'실 수익' }[svcChartBasis] + '(백만원)';
 
     if (!sorted.length) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text3)">데이터가 없습니다.</td></tr>`;
@@ -478,12 +495,12 @@ function renderSvcTable(sorted, isBill) {
     tbody.innerHTML = sorted.map(([k, v]) => `<tr>
         <td style="text-align:left">${k}</td>
         <td style="text-align:right">${v.cnt}</td>
-        <td style="text-align:right">${mil(v.amt)}</td>
+        <td style="text-align:right${v.amt < 0 ? ';color:var(--danger)' : ''}">${mil(v.amt)}</td>
         <td style="text-align:left;color:var(--text3)">${svcChartMode === 'manager' ? (v.due || '-') : ''}</td>
     </tr>`).join('') + `<tr style="background:var(--surface);font-weight:700">
         <td style="text-align:left">합계</td>
         <td style="text-align:right">${sorted.reduce((s, [, v]) => s + v.cnt, 0)}</td>
-        <td style="text-align:right">${mil(totalAmt)}</td>
+        <td style="text-align:right${totalAmt < 0 ? ';color:var(--danger)' : ''}">${mil(totalAmt)}</td>
         <td></td>
     </tr>`;
 }

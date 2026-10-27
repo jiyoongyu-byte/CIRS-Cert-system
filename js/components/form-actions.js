@@ -65,7 +65,7 @@ export async function saveMed() {
         refFee:       Number(document.getElementById('m-ref-fee')?.value || 0),
         refMemo:      sanitize(document.getElementById('m-ref-memo')?.value || ''),
         refExtra:     getRefExtras('m'),
-        // 인증기관 지출 비용 상세 (업체별 고유 데이터)
+        // 지출비용 상세 (업체별 고유 데이터)
         expAudit:     Number(document.getElementById('m-exp-audit')?.value || 0),
         expTest:      Number(document.getElementById('m-exp-test')?.value  || 0),
         expTrip:      Number(document.getElementById('m-exp-trip')?.value  || 0),
@@ -180,7 +180,7 @@ export async function saveCert() {
         refFee:     Number(document.getElementById('c-ref-fee')?.value || 0),
         refMemo:    sanitize(document.getElementById('c-ref-memo')?.value || ''),
         refExtra:   getRefExtras('c'),
-        // 인증기관 지출 비용 상세 (업체별 고유 데이터)
+        // 지출비용 상세 (업체별 고유 데이터)
         expAudit:   Number(document.getElementById('c-exp-audit')?.value || 0),
         expTest:    Number(document.getElementById('c-exp-test')?.value  || 0),
         expTrip:    Number(document.getElementById('c-exp-trip')?.value  || 0),

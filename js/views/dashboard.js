@@ -19,14 +19,9 @@ export function renderDashboard() {
     const userTeam = window.getUserTeam ? window.getUserTeam(user) : '관리자';
     const isRep    = user === (window.REP_USER || '대표이사');
 
-    // ── 팀 필터링: 팀원은 자기 팀 데이터만 ──────────────────────
-    let medData  = (state.med  || []).filter(r => r.year === year);
-    let certData = (state.cert || []).filter(r => r.year === year);
-
-    if (!isExec) {
-        if (userTeam === '의료기기팀')       certData = [];
-        else if (userTeam === '제품환경인증팀') medData = [];
-    }
+    // ── 전체 현황은 전원 열람 (팀 필터 없음) ─────────────────────
+    const medData  = (state.med  || []).filter(r => r.year === year);
+    const certData = (state.cert || []).filter(r => r.year === year);
 
     // 계약 (완료/취소 제외한 진행중)
     const medContracts  = medData.filter(r  => r.recordType === 'contract' && r.status !== '완료' && r.status !== '취소');
