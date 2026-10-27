@@ -85,10 +85,10 @@ function isRepUser() {
 }
 
 // ── 관리 버튼 (대표이사에게는 미표시) ─────────────────────────────
-function manageBtns(editFn, deleteConfirm) {
+function manageBtns(editFn, deleteConfirm, extraBtn = '') {
     if (isRepUser()) return '<td></td>';
     return `<td style="white-space:nowrap">
-        <button class="btn btn-sm" onclick="${editFn}">${tt('수정','修改')}</button>
+        <button class="btn btn-sm" onclick="${editFn}">${tt('수정','修改')}</button>${extraBtn}
         <button class="btn btn-sm btn-danger" onclick="${deleteConfirm}">${tt('삭제','删除')}</button>
     </td>`;
 }
@@ -136,7 +136,8 @@ export function renderMedContract() {
             ${fmtRemain(r, r.startdate || r.contractdate || '')}
             <td>${sanitize(r.stage || '')}</td>
             <td>${statusBadge(r.status, 'badge-med')}</td>
-            ${manageBtns(`editMed('${r.id}')`, `deleteMed('${r.id}')`)}
+            ${manageBtns(`editMed('${r.id}')`, `deleteMed('${r.id}')`,
+                ` <button class="btn btn-sm" onclick="revertToConsult('med','${r.id}')">${tt('상담 복귀','退回咨询')}</button>`)}
         </tr>`;
     }).join('');
 
@@ -285,7 +286,8 @@ export function renderCertContract() {
             ${fmtRemain(r, r.startdate || r.contractdate || '')}
             <td>${sanitize(r.stage || '')}</td>
             <td>${statusBadge(r.contracted, 'badge-cert')}</td>
-            ${manageBtns(`editCert('${r.id}')`, `deleteCert('${r.id}')`)}
+            ${manageBtns(`editCert('${r.id}')`, `deleteCert('${r.id}')`,
+                ` <button class="btn btn-sm" onclick="revertToConsult('cert','${r.id}')">${tt('상담 복귀','退回咨询')}</button>`)}
         </tr>`;
     }).join('');
 

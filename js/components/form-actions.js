@@ -268,6 +268,39 @@ export async function restoreConsult(team, id) {
     team === 'med' ? window.renderMedConsult?.() : window.renderCertConsult?.();
 }
 
+// ── 계약 → 상담 되돌리기 (계약서 미수령 등으로 무산된 경우) ────────
+// 실제 수입실적(수입일 ≤ 오늘)이 있는 건은 차단 → 취소로 처리
+export async function revertToConsult(team, id) {
+    const r = getState()[team]?.find(x => x.id === id);
+    if (!r) return;
+    const today = new Date().toISOString().slice(0, 10);
+    if ((r.billing || []).some((v, i) => Number(v) > 0 && (r.billingDates || [])[i] && r.billingDates[i] <= today)) {
+        alert('수입실적이 입력된 계약은 상담으로 되돌릴 수 없습니다.\n취소로 처리해 주세요.'); return;
+    }
+    const sel = prompt(`'${r.client}' 계약을 상담으로 되돌립니다.\n\n1: 상담 진행으로 복귀\n2: 재상담 대기·보관`, '1');
+    if (sel === null) return;
+    if (sel.trim() !== '1' && sel.trim() !== '2') { alert('1 또는 2를 입력하세요.'); return; }
+    const toArchive = sel.trim() === '2';
+    let reason = '';
+    if (toArchive) {
+        reason = prompt('보관 사유를 입력하세요.', '계약 무산');
+        if (reason === null) return;
+        reason = sanitize(reason.trim());
+    }
+    const prev = { ...r };
+    r.recordType = 'consult';
+    if (team === 'med') r.consultStatus = '견적서 송부완료';
+    else { r.contracted = '협의중'; r.contractdate = ''; }
+    try {
+        team === 'med' ? await saveMedRecord(r) : await saveCertRecord(r);
+        if (toArchive) await setArchived(team === 'med' ? 'med_records' : 'cert_records', id, true, reason);
+    } catch (e) { Object.assign(r, prev); alert('❌ 되돌리기 실패\n\n' + (e?.message || e)); return; }
+    if (toArchive) Object.assign(r, { archived: true, archiveReason: reason, archivedAt: today });
+    await logAudit('계약→상담', `${team}/${r.client}${toArchive ? ' (보관: ' + reason + ')' : ''}`, getCurrentUser());
+    team === 'med' ? (window.renderMedContract?.(), window.renderMedConsult?.())
+                   : (window.renderCertContract?.(), window.renderCertConsult?.());
+}
+
 export async function convertToContract(team, id) {
     if (!confirm('해당 상담 건을 계약으로 전환하시겠습니까?')) return;
     const state  = getState();
@@ -474,6 +507,7 @@ window.deleteMed        = deleteMed;
 window.saveCert         = saveCert;
 window.deleteCert       = deleteCert;
 window.convertToContract = convertToContract;
+window.revertToConsult   = revertToConsult;
 window.archiveConsult    = archiveConsult;
 window.restoreConsult    = restoreConsult;
 window.saveTask         = saveTask;

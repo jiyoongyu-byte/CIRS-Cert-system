@@ -29,14 +29,18 @@ export function renderTasks() {
 
     // ── 열람 권한 필터 ─────────────────────────────────────────────
     // 지윤규: 전체 열람
+    // 팀장(ADMIN_USERS): 본인 관련 + 자기 팀 소속자가 발신·수신한 것 (열람만)
     // 나머지: 본인이 발신(from) 또는 수신(to)인 것만 → 타인 간 업무지시 열람 불가
+    const isLead = currentUser !== SUPER_ADMIN && ADMIN_USERS.includes(currentUser);
+    const myTeam = isLead ? window.getUserTeam?.(currentUser) : '';
+    const inMyTeam = n => !!myTeam && window.getUserTeam?.(n) === myTeam;
     let tasks = (state.tasks || []).filter(t => {
         // 지윤규: 전체 열람
         if (currentUser === SUPER_ADMIN) {
             // 타입/우선순위/상태 필터만 적용
-        } else {
-            // 본인 관련(발신+수신)만, 타인 간 업무지시 차단
-            if (t.from !== currentUser && t.to !== currentUser) return false;
+        } else if (t.from !== currentUser && t.to !== currentUser) {
+            // 본인 관련 외: 팀장만 자기 팀 소속자 관련 건 열람
+            if (!(isLead && (inMyTeam(t.from) || inMyTeam(t.to)))) return false;
         }
 
         // 공통 필터 (유형, 우선순위, 완료 여부)
@@ -75,8 +79,9 @@ export function renderTasks() {
         const isOrder   = (t.type || 'order') === 'order';
         const pc        = PCOLOR[t.priority] || 'var(--text3)';
         const overdue   = !isDone && t.due && t.due < today;
-        const canEdit   = ADMIN_USERS.includes(currentUser) || t.to === currentUser;
-        const canDelete = ADMIN_USERS.includes(currentUser);
+        // 수정: 발신자 본인 + 지윤규 / 삭제: 지윤규만
+        const canEdit   = t.from === currentUser || currentUser === SUPER_ADMIN;
+        const canDelete = currentUser === SUPER_ADMIN;
         // 완료 보고: 회신 정확성은 지시자가 판단 → 발신자 본인 또는 최고관리자
         const canComplete = currentUser && !isDone &&
                             (t.from === currentUser || currentUser === SUPER_ADMIN);
