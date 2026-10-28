@@ -579,10 +579,33 @@ function _dxRowHtml(team, item = {}) {
         <input class="form-input dx-date" type="date" title="지출일" style="width:140px;" value="${esc(item.date)}">
         <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();calcTotalExpense('${team}')">✕</button>`;
 }
+// 본사 정산 행: 항목명 · 금액 · 정산일 (expExtra에 kind '본사정산'으로 저장)
+function _hqRowHtml(item = {}) {
+    const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    return `
+        <input type="hidden" class="dx-kind" value="본사정산">
+        <input class="form-input dx-label" type="text" placeholder="항목명" style="flex:1;" value="${esc(item.label)}">
+        <input class="form-input dx-amount" type="number" placeholder="금액" style="width:130px;" value="${item.amount || ''}"
+            oninput="calcTotalExpense('med')">
+        <input class="form-input dx-date" type="date" title="정산일" style="width:140px;" value="${esc(item.date)}">
+        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();calcTotalExpense('med')">✕</button>`;
+}
+function _appendRow(wrap, html) {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;';
+    div.innerHTML = html;
+    wrap.appendChild(div);
+}
+export function addHqSettle() {
+    const wrap = document.getElementById('m-hq-settle-wrap');
+    if (wrap) _appendRow(wrap, _hqRowHtml({ date: new Date().toISOString().slice(0, 10) }));
+}
+window.addHqSettle = addHqSettle;
+
 export function getDynamicExpenses(p) {
-    const wrap = document.getElementById(`${p}-dynamic-expense-wrap`);
-    if (!wrap) return [];
-    return Array.from(wrap.children).map(div => ({
+    const rows = ['dynamic-expense-wrap', 'hq-settle-wrap']
+        .flatMap(w => Array.from(document.getElementById(`${p}-${w}`)?.children || []));
+    return rows.map(div => ({
         kind:   div.querySelector('.dx-kind')?.value || '비용',
         label:  div.querySelector('.dx-label')?.value || '',
         amount: Number(div.querySelector('.dx-amount')?.value || 0),
@@ -596,11 +619,11 @@ export function loadDynamicExpenses(team, extras) {
     const wrap = document.getElementById(`${p}-dynamic-expense-wrap`);
     if (!wrap) return;
     wrap.innerHTML = '';
+    const hq = document.getElementById(`${p}-hq-settle-wrap`);
+    if (hq) hq.innerHTML = '';
     (extras || []).forEach(item => {
-        const div = document.createElement('div');
-        div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;';
-        div.innerHTML = _dxRowHtml(team, item);
-        wrap.appendChild(div);
+        if (item.kind === '본사정산' && hq) _appendRow(hq, _hqRowHtml(item));
+        else _appendRow(wrap, _dxRowHtml(team, item));
     });
     calcTotalExpense(team);
 }
@@ -617,7 +640,8 @@ export function calcTotalExpense(team) {
     const dynamicWrap = document.getElementById(`${p}-dynamic-expense-wrap`);
     let dynamic = 0;
     if (dynamicWrap) {
-        dynamicWrap.querySelectorAll('input[type=number]').forEach(el => {
+        // 본사 정산 행 포함
+        document.querySelectorAll(`#${p}-dynamic-expense-wrap input[type=number], #${p}-hq-settle-wrap input[type=number]`).forEach(el => {
             dynamic += Number(el.value || 0);
         });
     }

@@ -87,7 +87,7 @@ function expenseLines(team, rows) {
             });
         (r.expExtra || []).forEach(x => {
             if (!Number(x.amount)) return;
-            out.push({ r, label: x.label || '기타', kind: x.kind === '정산' ? '정산' : '비용', krw: Number(x.amount),
+            out.push({ r, label: x.label || (x.kind === '본사정산' ? '본사 정산' : '기타'), kind: (x.kind === '정산' || x.kind === '본사정산') ? '정산' : '비용', krw: Number(x.amount),
                        date: x.date || base, undated: !x.date });
         });
     });

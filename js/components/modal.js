@@ -13,7 +13,10 @@ function _prefillModalRates(p) {
     if (rmbEl && !rmbEl.value && sr.rmb) rmbEl.value = sr.rmb;
 }
 
-const BILL_LABELS = ['1','2','3','4','5'];
+// 수입 칸 수: 그리드에 렌더된 칸 기준
+const _bGrid = p => p === 'm' ? 'medBillingGrid' : 'certBillingGrid';
+const _bTotal = p => p === 'm' ? 'medBillingTotal' : 'certBillingTotal';
+const _bCount = p => document.querySelectorAll(`#${_bGrid(p)} .billing-item`).length;
 
 // ── 공통 닫기 ────────────────────────────────────────────────────
 export function closeModal(id) {
@@ -21,13 +24,17 @@ export function closeModal(id) {
 }
 
 // ── 수입 내역 분할 그리드 생성 ────────────────────────────────────
-export function buildBillingGrid(contId, totalId, prefix, bArr, bDates, bCur) {
+export function buildBillingGrid(contId, totalId, prefix, bArr, bDates, bCur, minN = 1) {
     const el = document.getElementById(contId);
     if (!el) return;
-    el.innerHTML = BILL_LABELS.map((l, i) => {
+    // 값이 있는 마지막 칸까지 표시 (최소 minN칸)
+    let n = minN;
+    (bArr || []).forEach((v, i) => { if (Number(v) || (bDates || [])[i]) n = Math.max(n, i + 1); });
+    el.innerHTML = Array.from({length: n}, (_, i) => {
         const cur = (bCur || [])[i] || 'KRW';
         return `<div class="billing-item">
-            <label>${l}차 수입</label>
+            <label style="display:flex;justify-content:space-between;align-items:center">${i + 1}차 수입
+                <span style="cursor:pointer;color:var(--danger)" title="삭제" onclick="removeBillingItem('${prefix}',${i})">✕</span></label>
             <select id="${prefix}-bc${i}" onchange="calcBilling('${prefix}','${totalId}')">
                 <option value="KRW" ${cur==='KRW'?'selected':''}>KRW</option>
                 <option value="RMB" ${cur==='RMB'?'selected':''}>RMB</option>
@@ -70,7 +77,7 @@ export function calcBilling(p, tId) {
     const tKRW = toKRWLocal(tAmt, tCur);
     let bKRW = 0;
     let bOrig = 0; // 계약 통화 기준 수입합계 (오늘까지 수령분)
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < _bCount(p); i++) {
         const bAmt = Number(document.getElementById(`${p}-b${i}`)?.value || 0);
         const bCur = document.getElementById(`${p}-bc${i}`)?.value || 'KRW';
         const bDate = document.getElementById(`${p}-bd${i}`)?.value || '';
@@ -83,7 +90,7 @@ export function calcBilling(p, tId) {
 
     // 환율 입력 패널: 비KRW 통화 존재 시 표시
     const hasNonKRW = tCur !== 'KRW' ||
-        Array.from({length:5}, (_, i) => document.getElementById(`${p}-bc${i}`)?.value || 'KRW')
+        Array.from({length:_bCount(p)}, (_, i) => document.getElementById(`${p}-bc${i}`)?.value || 'KRW')
              .some(c => c !== 'KRW');
     const rw = document.getElementById(`${p}-rate-wrap`);
     if (rw) rw.style.display = hasNonKRW ? 'flex' : 'none';
@@ -122,13 +129,22 @@ export function calcBilling(p, tId) {
 }
 
 export function getBillingValues(p) {
-    return Array.from({length:5}, (_,i) => Number(document.getElementById(`${p}-b${i}`)?.value || 0));
+    return Array.from({length:_bCount(p)}, (_,i) => Number(document.getElementById(`${p}-b${i}`)?.value || 0));
 }
 export function getBillingDates(p) {
-    return Array.from({length:5}, (_,i) => document.getElementById(`${p}-bd${i}`)?.value || '');
+    return Array.from({length:_bCount(p)}, (_,i) => document.getElementById(`${p}-bd${i}`)?.value || '');
 }
 export function getBillingCurrencies(p) {
-    return Array.from({length:5}, (_,i) => document.getElementById(`${p}-bc${i}`)?.value || 'KRW');
+    return Array.from({length:_bCount(p)}, (_,i) => document.getElementById(`${p}-bc${i}`)?.value || 'KRW');
+}
+// 수입 칸 추가/삭제 — 현재 값으로 그리드 재생성
+export function addBillingItem(p) {
+    buildBillingGrid(_bGrid(p), _bTotal(p), p, getBillingValues(p), getBillingDates(p), getBillingCurrencies(p), _bCount(p) + 1);
+}
+export function removeBillingItem(p, idx) {
+    const v = getBillingValues(p), d = getBillingDates(p), c = getBillingCurrencies(p);
+    [v, d, c].forEach(a => a.splice(idx, 1));
+    buildBillingGrid(_bGrid(p), _bTotal(p), p, v, d, c);
 }
 
 // ── 의료기기팀 모달 ───────────────────────────────────────────────
@@ -149,6 +165,8 @@ export function openMedModal(type) {
         .forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
     const dew = document.getElementById('m-dynamic-expense-wrap');
     if (dew) dew.innerHTML = '';
+    const hqw = document.getElementById('m-hq-settle-wrap');
+    if (hqw) hqw.innerHTML = '';
     const rew = document.getElementById('m-ref-extra-wrap');
     if (rew) rew.innerHTML = '';
     const sw = document.getElementById('m-stage-wrap');
@@ -335,6 +353,8 @@ export function openTaskModal(type) {
 // ── window 전역 등록 ─────────────────────────────────────────────
 window.closeModal = closeModal;
 window.buildBillingGrid = buildBillingGrid;
+window.addBillingItem = addBillingItem;
+window.removeBillingItem = removeBillingItem;
 window.calcBilling = calcBilling;
 window.openMedModal = openMedModal;
 window.openCertModal = openCertModal;
