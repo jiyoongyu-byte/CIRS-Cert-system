@@ -175,7 +175,7 @@ input[type=date]{color-scheme:dark}
 <body>
 <div id="loginScreen">
 <div class="login-box">
-   <div class="login-logo-wrap"><img src="./images/logo.png" alt="CIRS Korea" style="height:40px;"><div style="font-size:14px;color:#666;font-weight:600;margin-top:12px" data-ko="제품 인허가 관리 시스템" data-zh="产品许可管理系统">제품 인허가 관리 시스템</div></div>
+   <div class="login-logo-wrap"><div style="display:flex;align-items:center;justify-content:center;gap:8px"><img src="./images/logo.png" alt="CIRS Korea" style="height:40px;"><span style="font-size:26px;font-weight:900;color:#222;letter-spacing:-0.5px">Korea</span></div><div style="font-size:14px;color:#666;font-weight:600;margin-top:12px" data-ko="제품인증관리시스템" data-zh="产品认证管理系统">제품인증관리시스템</div></div>
   <label class="login-label" data-ko="이메일" data-zh="邮箱">이메일</label>
   <input class="login-input" type="email" id="loginEmail" autocomplete="username" placeholder="name@cirs-group.com">
   <label class="login-label" style="margin-top:6px;" data-ko="비밀번호" data-zh="密码">비밀번호</label>
@@ -188,7 +188,7 @@ input[type=date]{color-scheme:dark}
 <div class="app" id="appShell" style="display:none">
 <div class="sb-backdrop" id="sbBackdrop" onclick="toggleSidebar(false)"></div>
 <div class="sidebar">
-  <div class="sidebar-logo"><div style="font-size: 22px; font-weight: 900; color: var(--med); letter-spacing: -0.5px;">CIRS <span style="color: #222;">Korea</span></div><div class="sys" id="sidebarUser"></div></div>
+  <div class="sidebar-logo"><div style="display:flex;align-items:center;justify-content:center;gap:6px"><img src="./images/logo.png" alt="CIRS Korea" style="height:34px;"><span style="font-size:20px;font-weight:900;color:#222;letter-spacing:-0.5px">Korea</span></div><div class="sys" style="margin-top:8px" data-ko="제품인증관리시스템" data-zh="产品认证管理系统">제품인증관리시스템</div><div class="sys" id="sidebarUser" style="margin-top:4px"></div></div>
   <div class="sidebar-nav">
     <div class="nav-label" data-ko="대시보드" data-zh="仪表板">대시보드</div>
     <div class="nav-item active" onclick="nav('dashboard',this)"><span class="dot dot-all"></span><span data-ko="전체 현황" data-zh="总体概况">전체 현황</span></div>
