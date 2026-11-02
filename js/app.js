@@ -216,8 +216,16 @@ export async function doLogin() {
     try { await authSignIn(email, pw); }
     catch (_) { if (err) err.textContent = '이메일 또는 비밀번호가 일치하지 않습니다.'; return; }
     if (err) err.textContent = '';
+    try { localStorage.setItem('cirs_login_email', email); } catch (_) {}   // 다음 접속 시 이메일 자동 입력 (비밀번호는 저장 안 함)
     await _afterAuth(err);
 }
+
+// 마지막 로그인 이메일 자동 입력
+try {
+    const _em = localStorage.getItem('cirs_login_email');
+    const _el = document.getElementById('loginEmail');
+    if (_em && _el && !_el.value) _el.value = _em;
+} catch (_) {}
 
 // 로그인 직후·새로고침 복원 공통: 계정 확인 → (첫 로그인이면 비번 변경) → 앱 진입
 async function _afterAuth(err) {
