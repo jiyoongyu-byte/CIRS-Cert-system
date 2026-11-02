@@ -15,7 +15,10 @@ const ST = {
     '처리완료':     { cls: 'badge-cert',  label: '📨 처리완료 · 확인 대기' },
     '작업수행완료': { cls: 'badge-green', label: '✅ 작업수행완료' },
     '반려':         { cls: 'badge-red',   label: '↩ 반려 · 재수행' },
+    '수신자미처리': { cls: 'badge-amber', label: '🚫 수신자 미처리' },
 };
+const isClosed = t => t.status === '작업수행완료' || t.status === '수신자미처리';   // 종결 건
+const isOpen   = t => t.status === '지시' || t.status === '확인' || t.status === '반려';   // 수신자가 처리해야 하는 상태
 
 // 내가 할 수 있는 처리 (서버 함수의 규칙과 동일 — 최종 판단은 서버가 함)
 function perms(t, me) {
@@ -28,6 +31,8 @@ function perms(t, me) {
         approve: own  && (t.status === '처리완료' || t.status === '반려'),
         reject:  own  && t.status === '처리완료',
         edit:    own  && t.status !== '작업수행완료',
+        missed:  own  && isOpen(t) && !!t.due && t.due < todayKst(),
+        reopen:  own  && t.status === '수신자미처리',
         del:     me === SUPER,
     };
 }
@@ -85,7 +90,7 @@ export function renderTasks() {
         if (typeF && (t.type || 'order') !== typeF) return false;
         if (prioF && t.priority !== prioF)           return false;
         if (statF) {
-            const done = t.status === '작업수행완료';
+            const done = isClosed(t);
             if (statF === '완료'   && !done) return false;
             if (statF === '진행중' && done)  return false;
         }
@@ -113,7 +118,7 @@ export function renderTasks() {
 
     const card = t => {
         const st      = ST[t.status] || ST['지시'];
-        const isDone  = t.status === '작업수행완료';
+        const isDone  = isClosed(t);
         const isOrder = (t.type || 'order') === 'order';
         const pc      = PCOLOR[t.priority] || 'var(--text3)';
         const overdue = !isDone && t.due && t.due < today;
@@ -123,6 +128,7 @@ export function renderTasks() {
         const showBody = lines.length > 1 || first.length > 45;
         const hist    = t.history || [];
         const lastRej = [...hist].reverse().find(h => h.action === '반려');
+        const lastMiss = t.status === '수신자미처리' ? [...hist].reverse().find(h => h.action === '수신자미처리') : null;
 
         const histBody = hist.map(h => `${fmtDt(h.at)} · ${escAll(h.actor_name)} · <b>${escAll(h.action)}</b>` +
             `${h.from_status && h.to_status && h.from_status !== h.to_status ? ` (${escAll(h.from_status)}→${escAll(h.to_status)})` : ''}` +
@@ -154,6 +160,9 @@ export function renderTasks() {
                 ${(t.status === '처리완료' || isDone) && t.completeNote ? `<div style="font-size:11px;padding:5px 10px;margin-top:5px;background:var(--success-light);border-radius:6px;color:var(--success)">
                     ${isDone ? `✅ 작업수행완료 (${t.completedDate})` : `📨 처리완료 보고 (${t.reportDate})`}: ${escAll(t.completeNote)}
                 </div>` : ''}
+                ${lastMiss ? `<div style="font-size:11px;padding:5px 10px;margin-top:5px;background:var(--danger-light);border-radius:6px;color:var(--danger)">
+                    🚫 수신자 미처리 결정 (${fmtDt(lastMiss.at).slice(0, 10)}): ${escAll(lastMiss.note)}
+                </div>` : ''}
                 ${t.status === '반려' && lastRej ? `<div style="font-size:11px;padding:5px 10px;margin-top:5px;background:var(--danger-light);border-radius:6px;color:var(--danger)">
                     ↩ 반려 (${fmtDt(lastRej.at).slice(0, 10)}): ${escAll(lastRej.note)}
                 </div>` : ''}
@@ -164,6 +173,8 @@ export function renderTasks() {
                         ${p.report  ? `<button class="btn btn-cert btn-sm" ${btn} onclick="openTaskComplete('${t.id}')">처리완료 보고</button>` : ''}
                         ${p.approve ? `<button class="btn btn-cert btn-sm" ${btn} onclick="approveTask('${t.id}')">작업수행완료(승인)</button>` : ''}
                         ${p.reject  ? `<button class="btn btn-sm" style="padding:2px 9px;font-size:11px;border-color:var(--warn);color:var(--warn)" onclick="rejectTask('${t.id}')">↩ 반려</button>` : ''}
+                        ${p.missed  ? `<button class="btn btn-sm" style="padding:2px 9px;font-size:11px;border-color:var(--warn);color:var(--warn)" onclick="markMissedTask('${t.id}')">처리하지 않음 결정</button>` : ''}
+                        ${p.reopen  ? `<button class="btn btn-sm" ${btn} onclick="reopenTask('${t.id}')">다시 지시</button>` : ''}
                         ${p.edit    ? `<button class="btn btn-sm" ${btn} onclick="openTaskEdit('${t.id}')">수정</button>` : ''}
                         ${p.del     ? `<button class="btn btn-sm btn-danger" ${btn} onclick="deleteTask('${t.id}')">삭제</button>` : ''}
                         ${hist.length ? `<button class="btn btn-sm" style="padding:2px 9px;font-size:11px;color:var(--text3)" onclick="toggleWoEl('wo-h-${t.id}')">이력 ${hist.length}건</button>` : ''}
@@ -175,7 +186,7 @@ export function renderTasks() {
     };
 
     // ── 기한 내 진행건 / 기한경과 미완료 / 수행완료 3분할 ──
-    const isDoneT = t => t.status === '작업수행완료';
+    const isDoneT = isClosed;
     const active  = tasks.filter(t => !isDoneT(t) && !(t.due && t.due < today));
     const ongoing = tasks.filter(t => !isDoneT(t) &&   t.due && t.due < today);
     const done    = tasks.filter(isDoneT);
@@ -199,7 +210,7 @@ export function renderTasks() {
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px">
             ${col('작업수행이행중', ongoing, 'var(--danger)')}
-            ${col('작업수행완료',   done,    'var(--success)')}
+            ${col('작업수행완료·종결', done,   'var(--success)')}
         </div>` : '');
     updateTaskBadge();
 }
@@ -292,6 +303,55 @@ export function rejectTask(id) {
     return run(() => woTransition(id, '반려', reason.trim()));
 }
 
+// 기한이 지나도록 수신자가 처리하지 않은 건을 '수신자 미처리'로 종결 (사유 필수, 서버가 기한 경과 여부 재검증)
+export function markMissedTask(id) {
+    const reason = prompt('수신자 미처리로 종결합니다. 사유를 입력하세요.');
+    if (!reason || !reason.trim()) return;
+    return run(() => woTransition(id, '수신자미처리', reason.trim()));
+}
+
+// 종결된 '수신자 미처리' 건을 다시 '지시' 상태로 되돌림 (기한이 지났으면 수정에서 기한 변경 필요)
+export function reopenTask(id) {
+    if (!confirm('다시 지시 상태로 되돌리시겠습니까?\n(기한이 지났다면 수정에서 기한을 변경하세요)')) return;
+    return run(() => woTransition(id, '재지시'));
+}
+
+// 로그인 직후 팝업: 내가 처리할 건 / 승인 대기 / 기한 지난 미처리(결정 필요) — 해당 건이 있을 때만 표시
+export async function showTaskAlert() {
+    const me = getCurrentUser();
+    if (!me) return;
+    try { getState().tasks = await loadWorkOrders(); } catch (e) { console.error('팝업용 지시서 조회 실패:', e); return; }
+    const today   = todayKst();
+    const tasks   = getState().tasks || [];
+    const todo    = tasks.filter(t => t.to === me && isOpen(t));
+    const review  = tasks.filter(t => t.from === me && t.status === '처리완료');
+    const overdue = tasks.filter(t => t.from === me && isOpen(t) && t.due && t.due < today);
+    if (!todo.length && !review.length && !overdue.length) return;
+
+    const row = (t, who) => `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <b>${escAll(who)}</b> · ${escTxt(String(t.content || '').split('\n')[0].trim())}
+        <span style="color:${t.due && t.due < today ? 'var(--danger)' : 'var(--text3)'}">(기한: ${t.due || '-'}${t.due && t.due < today ? ' 초과' : ''})</span></div>`;
+    const sec = (title, list, whoOf) => list.length ? `<div style="margin-bottom:14px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px">${title} (${list.length}건)</div>${list.map(t => row(t, whoOf(t))).join('')}</div>` : '';
+
+    document.getElementById('task-alert-overlay')?.remove();
+    const el = document.createElement('div');
+    el.id = 'task-alert-overlay';
+    el.className = 'modal-overlay open';
+    el.innerHTML = `<div class="modal-wrapper"><div class="modal" style="max-width:520px">
+        <div class="modal-header"><span class="modal-title">📢 확인이 필요한 업무지시서</span><button class="modal-close" onclick="closeTaskAlert()">×</button></div>
+        <div class="modal-body" style="max-height:60vh;overflow-y:auto">
+            ${sec('📥 내가 처리할 업무 (지시자)', todo, t => t.from)}
+            ${sec('✅ 승인·반려 대기 (수신자)', review, t => t.to)}
+            ${sec('⏰ 기한이 지나도록 처리되지 않음 (수신자) — 업무지시서에서 \'처리하지 않음 결정\' 가능', overdue, t => t.to)}
+        </div>
+        <div class="modal-footer"><button class="btn" onclick="closeTaskAlert()">닫기</button>
+            <button class="btn btn-cert" onclick="closeTaskAlert();nav('tasks')">업무지시서로 이동</button></div>
+    </div></div>`;
+    document.body.appendChild(el);
+}
+export const closeTaskAlert = () => document.getElementById('task-alert-overlay')?.remove();
+
 // 삭제: 목록에서만 숨기고 이력은 보존 (지윤규 전용)
 export function deleteTask(id) {
     if (!confirm('삭제하시겠습니까? (목록에서 숨겨지며 이력은 보존됩니다)')) return;
@@ -321,5 +381,9 @@ window.rejectTask          = rejectTask;
 window.ackTask             = ackTask;
 window.approveTask         = approveTask;
 window.updateTaskBadge     = updateTaskBadge;
+window.markMissedTask      = markMissedTask;
+window.reopenTask          = reopenTask;
+window.showTaskAlert       = showTaskAlert;
+window.closeTaskAlert      = closeTaskAlert;
 window.toggleWoBody        = toggleWoBody;
 window.toggleWoEl          = toggleWoEl;

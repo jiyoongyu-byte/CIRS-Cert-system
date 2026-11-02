@@ -217,7 +217,7 @@ export async function doLogin() {
     catch (_) { if (err) err.textContent = '이메일 또는 비밀번호가 일치하지 않습니다.'; return; }
     if (err) err.textContent = '';
     try { localStorage.setItem('cirs_login_email', email); } catch (_) {}   // 다음 접속 시 이메일 자동 입력 (비밀번호는 저장 안 함)
-    await _afterAuth(err);
+    if (await _afterAuth(err)) window.showTaskAlert?.();   // 로그인 직후 1회: 처리 대기 업무지시서 팝업
 }
 
 // 마지막 로그인 이메일 자동 입력
@@ -355,6 +355,7 @@ async function _enterApp(user) {
 
 export async function doLogout() {
     stopAutoLogout(); // 타이머 및 이벤트 리스너 정리
+    window.closeTaskAlert?.();   // 열려 있는 업무지시서 팝업 정리
     _uid = null;
     try { await authSignOut(); } catch (_) {}
     getState().tasks = [];   // 다음 사용자에게 이전 사용자의 지시서가 남지 않도록

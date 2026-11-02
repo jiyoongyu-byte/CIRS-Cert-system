@@ -121,6 +121,7 @@ function renderMyTasks(state, user, isExec) {
     const tasks = (state.tasks || []).filter(t => {
         if (!t.completedDate === false) return false; // 완료된 것 제외
         if (t.completedDate) return false;
+        if (t.status === '수신자미처리') return false;   // 종결 건 제외
         if (user === (window.SUPER_ADMIN || '지윤규')) return true;
         return t.from === user || t.to === user;
     }).slice(0, 8);
