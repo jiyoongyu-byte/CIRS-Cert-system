@@ -176,14 +176,10 @@ input[type=date]{color-scheme:dark}
 <div id="loginScreen">
 <div class="login-box">
    <div class="login-logo-wrap"><img src="./images/logo.png" alt="CIRS Korea" style="height:40px;"><div style="font-size:14px;color:#666;font-weight:600;margin-top:12px" data-ko="제품 인허가 관리 시스템" data-zh="产品许可管理系统">제품 인허가 관리 시스템</div></div>
-  <label class="login-label" data-ko="소속 부서 (1단계)" data-zh="所属部门 (第一步)">소속 부서 (1단계)</label>
-  <select class="login-input" id="loginTeam">
-    <option value="" data-ko="소속 팀 선택" data-zh="选择团队">소속 팀 선택</option><option value="의료기기팀" data-ko="의료기기팀" data-zh="医疗器械组">의료기기팀</option><option value="제품환경인증팀" data-ko="제품환경인증팀" data-zh="环境认证组">제품환경인증팀</option><option value="제품인증부문이사" data-ko="제품인증부문이사" data-zh="产品认证部门理事">제품인증부문이사</option><option value="대표이사" data-ko="대표이사" data-zh="代表理事">대표이사</option>
-  </select>
-  <label class="login-label" id="loginUserLabel" style="display:none; margin-top:6px;" data-ko="사용자 이름 (2단계)" data-zh="用户名 (第二步)">사용자 이름 (2단계)</label>
-  <select class="login-input" id="loginUser" style="display:none;"><option value="">이름 선택</option></select>
+  <label class="login-label" data-ko="이메일" data-zh="邮箱">이메일</label>
+  <input class="login-input" type="email" id="loginEmail" autocomplete="username" placeholder="name@cirs-group.com">
   <label class="login-label" style="margin-top:6px;" data-ko="비밀번호" data-zh="密码">비밀번호</label>
-  <input class="login-input" type="password" id="loginPw" data-ko="비밀번호 입력 (초기: cirs2026!)" data-zh="输入密码 (初始: cirs2026!)" placeholder="비밀번호 입력" >
+  <input class="login-input" type="password" id="loginPw" autocomplete="current-password" data-ko="비밀번호 입력" data-zh="输入密码" placeholder="비밀번호 입력">
   <button class="login-btn" id="loginBtn"><span data-ko="안전하게 로그인" data-zh="安全登录">안전하게 로그인</span></button>
   <div class="login-err" id="loginErr"></div>
 </div>

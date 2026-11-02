@@ -5,7 +5,8 @@ import { getState, getCurrentYear, getCurrentUser, getMedEditId, getCertEditId,
          getEditingTaskId, setEditingTaskId, getCompletingTaskId,
          getEditingEduId, setEditingEduId, saveState, getQualData } from '../core/store.js';
 import { uid, sanitize, toKRW, fmt, fmtM, quarter } from '../core/utils.js';
-import { saveMedRecord, saveCertRecord, deleteMedRecord, deleteCertRecord, logAudit, setArchived } from '../core/api.js';
+import { saveMedRecord, saveCertRecord, deleteMedRecord, deleteCertRecord, logAudit, setArchived,
+         woCreate, woUpdate, woTransition, loadWorkOrders } from '../core/api.js';
 import { getBillingValues, getBillingDates, getBillingCurrencies } from './modal.js';
 
 // ── 의료기기팀 저장 ───────────────────────────────────────────────
@@ -328,54 +329,42 @@ export async function convertToContract(team, id) {
     await logAudit('전환', `'${record.client}' 상담→계약`, getCurrentUser());
 }
 
-// ── 업무지시 저장 ────────────────────────────────────────────────
+// ── 업무지시 저장 (서버 함수: 새 지시는 항상 새 건, 수정은 이력 보존) ─────
 export async function saveTask() {
     const to      = document.getElementById('task-to')?.value;
     const content = document.getElementById('task-content')?.value?.trim();
     if (!to || !content) { alert('담당자와 업무 내용을 입력하세요.'); return; }
 
-    const state  = getState();
+    const v = id => document.getElementById(id)?.value || '';
+    const a = {
+        to, type: v('task-type-hidden') || 'order', team: v('task-team') || '공통',
+        priority: v('task-priority') || '일반', due: v('task-due'), date: v('task-date'),
+        content: sanitize(content), project: v('task-project'),
+    };
     const editId = getEditingTaskId();
-    if (editId) {
-        const t = state.tasks.find(x => x.id === editId);
-        if (t) {
-            t.team     = document.getElementById('task-team')?.value || '공통';
-            t.priority = document.getElementById('task-priority')?.value || '일반';
-            t.to = to; t.due = document.getElementById('task-due')?.value || '';
-            t.content  = sanitize(content);
-            t.project  = document.getElementById('task-project')?.value || '';
-        }
-    } else {
-        if (!state.tasks) state.tasks = [];
-        state.tasks.push({
-            id: uid(),
-            type:     document.getElementById('task-type-hidden')?.value || 'order',
-            team:     document.getElementById('task-team')?.value || '공통',
-            priority: document.getElementById('task-priority')?.value || '일반',
-            from:     getCurrentUser(),
-            to, date: document.getElementById('task-date')?.value || new Date().toISOString().slice(0,10),
-            due:      document.getElementById('task-due')?.value || '',
-            content:  sanitize(content),
-            project:  document.getElementById('task-project')?.value || '',
-            completedDate: '', completeNote: '', confirmedDate: '',
-        });
-    }
+    try {
+        if (editId) await woUpdate(editId, a);
+        else        await woCreate(a);
+    } catch (e) { alert(e?.message || '저장 중 오류가 발생했습니다.'); return; }
+
     setEditingTaskId(null);
     window.closeModal?.('task');
+    getState().tasks = await loadWorkOrders();
     window.renderTasks?.();
-    await saveState().catch(e => console.error('task save:', e));
+    window.updateTaskBadge?.();
 }
 
+// 수신자 처리완료 보고 (지시자의 최종 확인은 별도 '작업수행완료')
 export async function confirmTaskComplete() {
-    const id    = getCompletingTaskId();
-    const state = getState();
-    const t     = state.tasks?.find(x => x.id === id);
-    if (!t) return;
-    t.completedDate = document.getElementById('task-complete-date')?.value || '';
-    t.completeNote  = document.getElementById('task-complete-note')?.value || '';
-    await saveState();
+    const id   = getCompletingTaskId();
+    if (!id) return;
+    const note = document.getElementById('task-complete-note')?.value || '';
+    try { await woTransition(id, '처리완료', note); }
+    catch (e) { alert(e?.message || '처리 중 오류가 발생했습니다.'); return; }
     window.closeModal?.('task-complete');
+    getState().tasks = await loadWorkOrders();
     window.renderTasks?.();
+    window.updateTaskBadge?.();
 }
 
 // ── 교육 이력 저장 ────────────────────────────────────────────────
@@ -422,10 +411,10 @@ export async function deleteEduRecord(id) {
 }
 
 // ── 자격 관리 ─────────────────────────────────────────────────────
-export function verifyQualAdmin() {
+export async function verifyQualAdmin() {
     const pw  = document.getElementById('qual-admin-pw')?.value;
     const msg = document.getElementById('qual-pw-msg');
-    if (pw === getState().pw) {
+    if (await window._verifyPassword?.(pw)) {
         const area = document.getElementById('qual-edit-area');
         if (area) area.style.display = '';
         if (msg) msg.textContent = '';

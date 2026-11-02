@@ -2,13 +2,13 @@
 
 import { setCurrentUser, setCurrentYear, setCurrentView, getCurrentYear, getCurrentUser,
          loadFromSupabase, saveState, getState, ensureRevYear } from './core/store.js';
-import { savePw, initSb, loadPw, resetPw } from './core/api.js';
+import { initSb, resetPw, authSignIn, authSignOut, authGetSession, authVerifyPassword,
+         authChangePassword, loadMyAccount } from './core/api.js';
 import { tt } from './core/utils.js';
 import * as rates from './core/rates.js';
 import * as staffMod from './core/staff.js';   // 구성원 명단 (staff 테이블)
 window._rates = rates;   // utils.getRates()가 참조
 
-const DEFAULT_PW   = 'cirs2026!';
 const SUPER_ADMIN  = '지윤규';
 const ADMIN_USERS  = ['지윤규','엄태호','유재용'];
 const REP_USER     = '대표이사';
@@ -200,34 +200,109 @@ function stopAutoLogout() {
     });
 }
 
-// ── 로그인 ────────────────────────────────────────────────────────
-export async function doLogin() {
-    const user = document.getElementById('loginUser')?.value;
-    const pw   = document.getElementById('loginPw')?.value;
-    const err  = document.getElementById('loginErr');
+// ── 로그인 (Supabase Auth: 이메일 + 비밀번호) ─────────────────────
+let _uid = null;   // 현재 로그인한 Auth 사용자 id (다른 탭에서 계정이 바뀌면 감지해 새로고침)
 
-    if (!user) {
-        if (err) err.textContent = '이름을 선택해주세요.';
+export async function doLogin() {
+    const email = document.getElementById('loginEmail')?.value?.trim();
+    const pw    = document.getElementById('loginPw')?.value;
+    const err   = document.getElementById('loginErr');
+
+    if (!email || !pw) {
+        if (err) err.textContent = '이메일과 비밀번호를 입력해주세요.';
         return;
     }
-
     initSb();
+    try { await authSignIn(email, pw); }
+    catch (_) { if (err) err.textContent = '이메일 또는 비밀번호가 일치하지 않습니다.'; return; }
+    if (err) err.textContent = '';
+    await _afterAuth(err);
+}
+
+// 로그인 직후·새로고침 복원 공통: 계정 확인 → (첫 로그인이면 비번 변경) → 앱 진입
+async function _afterAuth(err) {
+    let acc = null;
+    try { acc = await loadMyAccount(); } catch (_) {}
+    if (!acc) {
+        await authSignOut();
+        if (err) err.textContent = '업무시스템 사용 권한이 없는 계정입니다. 관리자에게 문의하세요.';
+        return false;
+    }
     // 비재직 구성원(본사 전출·휴직·퇴사 등) 로그인 차단
     try { await staffMod.ready; } catch (_) {}
-    if (!staffMod.isActive(user)) {
-        if (err) err.textContent = `사용이 중지된 계정입니다 (${staffMod.statusOf(user)}). 관리자에게 문의하세요.`;
-        return;
+    if (!staffMod.isActive(acc.name)) {
+        await authSignOut();
+        if (err) err.textContent = `사용이 중지된 계정입니다 (${staffMod.statusOf(acc.name)}). 관리자에게 문의하세요.`;
+        return false;
     }
-    const state = getState();
-    try {
-        await loadPw(state, user);
-    } catch (_) {}
+    if (!acc.pw_changed) await _forcePwChange();   // 임시 비밀번호는 첫 로그인 때 반드시 변경
+    const session = await authGetSession();
+    _uid = session?.user?.id || null;
+    await _enterApp(acc.name);
+    return true;
+}
 
-    if (pw !== (state.pw || DEFAULT_PW)) {
-        if (err) err.textContent = '비밀번호가 일치하지 않습니다.';
-        return;
+// 첫 로그인 비밀번호 변경 (변경 전에는 앱에 진입할 수 없음 — 닫기 버튼 없음)
+function _forcePwChange() {
+    return new Promise(resolve => {
+        let el = document.getElementById('pw-force-overlay');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'pw-force-overlay';
+            el.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center';
+            el.innerHTML = `
+                <div style="background:#fff;border-radius:16px;padding:32px;max-width:380px;width:90%">
+                    <h3 style="margin:0 0 6px;font-size:18px;color:#1F3864">비밀번호 변경</h3>
+                    <p style="margin:0 0 16px;font-size:13px;color:#555;line-height:1.5">처음 로그인하셨습니다. 임시 비밀번호를 새 비밀번호로 바꾸어야 사용할 수 있습니다.</p>
+                    <input class="login-input" type="password" id="pwf-cur"  placeholder="현재(임시) 비밀번호" autocomplete="current-password">
+                    <input class="login-input" type="password" id="pwf-new"  placeholder="새 비밀번호 (6자 이상)" autocomplete="new-password">
+                    <input class="login-input" type="password" id="pwf-conf" placeholder="새 비밀번호 확인" autocomplete="new-password">
+                    <button class="login-btn" id="pwf-btn">변경하고 시작하기</button>
+                    <div class="login-err" id="pwf-msg"></div>
+                </div>`;
+            document.body.appendChild(el);
+        }
+        el.style.display = 'flex';
+        const msg = document.getElementById('pwf-msg');
+        document.getElementById('pwf-btn').onclick = async () => {
+            const cur  = document.getElementById('pwf-cur').value;
+            const nw   = document.getElementById('pwf-new').value;
+            const conf = document.getElementById('pwf-conf').value;
+            if (!(await authVerifyPassword(cur))) { msg.textContent = '현재(임시) 비밀번호가 틀립니다.'; return; }
+            if (!nw || nw.length < 6)             { msg.textContent = '새 비밀번호는 6자 이상 입력하세요.'; return; }
+            if (nw === cur)                        { msg.textContent = '임시 비밀번호와 다른 비밀번호를 입력하세요.'; return; }
+            if (nw !== conf)                       { msg.textContent = '새 비밀번호가 일치하지 않습니다.'; return; }
+            try { await authChangePassword(nw); }
+            catch (e) { msg.textContent = '변경 실패: ' + (e?.message || e); return; }
+            ['pwf-cur', 'pwf-new', 'pwf-conf'].forEach(id => { document.getElementById(id).value = ''; });
+            msg.textContent = '';
+            el.style.display = 'none';
+            resolve();
+        };
+    });
+}
+
+// 새로고침 시 로그인 유지: Supabase 세션이 브라우저에 남아 있으면 로그인 화면 없이 복원
+async function restoreSession() {
+    const screen = document.getElementById('loginScreen');
+    const client = initSb();
+    if (client && !client._cirsAuthWatch) {
+        client._cirsAuthWatch = true;
+        client.auth.onAuthStateChange((ev, s) => {
+            if (!_uid) return;
+            if (ev === 'SIGNED_OUT' || (s?.user && s.user.id !== _uid)) location.reload();  // 로그아웃·다른 계정 전환
+        });
     }
-    if (err) err.textContent = '';
+    if (screen) screen.style.visibility = 'hidden';   // 복원 확인 동안 로그인 화면 깜빡임 방지
+    try {
+        const session = await authGetSession();
+        if (session) await _afterAuth(document.getElementById('loginErr'));
+    } catch (e) { console.warn('세션 복원 실패:', e); }
+    finally { if (screen) screen.style.visibility = ''; }
+}
+
+// 앱 진입 (기존 로그인 성공 이후 처리 그대로)
+async function _enterApp(user) {
     setCurrentUser(user);
 
     document.getElementById('loginScreen').style.display  = 'none';
@@ -267,10 +342,14 @@ export async function doLogin() {
     initAutoLogout();
 
     nav('dashboard');
+    window.updateTaskBadge?.();   // 업무지시서 처리 대기 배지
 }
 
-export function doLogout() {
+export async function doLogout() {
     stopAutoLogout(); // 타이머 및 이벤트 리스너 정리
+    _uid = null;
+    try { await authSignOut(); } catch (_) {}
+    getState().tasks = [];   // 다음 사용자에게 이전 사용자의 지시서가 남지 않도록
     setCurrentUser('');
     document.getElementById('appShell').style.display  = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
@@ -372,15 +451,13 @@ export async function changePw() {
     const nw   = document.getElementById('pw-new')?.value;
     const conf = document.getElementById('pw-confirm')?.value;
     const msg  = document.getElementById('pw-msg');
-    const state = getState();
-    const currentUser = getCurrentUser();
 
-    if (cur !== state.pw) { if (msg) msg.textContent = '현재 비밀번호가 틀립니다.'; return; }
+    if (!(await authVerifyPassword(cur))) { if (msg) msg.textContent = '현재 비밀번호가 틀립니다.'; return; }
     if (!nw || nw.length < 6) { if (msg) msg.textContent = '6자 이상 입력하세요.'; return; }
     if (nw !== conf) { if (msg) msg.textContent = '새 비밀번호가 일치하지 않습니다.'; return; }
 
-    state.pw = nw;
-    await savePw(nw, currentUser);
+    try { await authChangePassword(nw); }
+    catch (e) { if (msg) msg.textContent = '변경 실패: ' + (e?.message || e); return; }
     if (msg) { msg.style.color = 'var(--success)'; msg.textContent = '✅ 변경되었습니다.'; }
     setTimeout(() => window.closeModal?.('settings'), 1200);
 }
@@ -535,6 +612,7 @@ window.renderRateRows   = renderRateRows;
 window.saveRateRows     = saveRateRows;
 window.renderRateBox    = renderRateBox;
 window.changePw         = changePw;
+window._verifyPassword  = authVerifyPassword;   // 자격 관리 등 재확인용
 window.exportData       = exportData;
 window.resetUserPw      = resetUserPw;
 window.toggleLang       = toggleLang;
@@ -548,3 +626,6 @@ window.QUAL_MASTER        = QUAL_MASTER;
 window.applyNavVisibility = applyNavVisibility;
 window.applySearchFilter  = applySearchFilter;
 window.clearSearchFilter  = clearSearchFilter;
+
+// 새로고침 시 로그인 유지
+restoreSession();

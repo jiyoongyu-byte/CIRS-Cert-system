@@ -1,7 +1,7 @@
 // js/components/modal.js — 모달 열기/닫기 + 수입내역 그리드 제어
 
 import { getState, setMedEditId, setCertEditId, getMedEditId,
-         setMedIsContract, setCertIsContract } from '../core/store.js';
+         setMedIsContract, setCertIsContract, setEditingTaskId, getCurrentUser } from '../core/store.js';
 import { getRates, fmt, fmtM } from '../core/utils.js';
 
 // ── 모달 내 환율 pre-fill (사이드바 → 모달, 빈 경우에만) ───────────
@@ -329,6 +329,12 @@ export function openEduAddModal(id) {
     document.getElementById('modal-edu-add')?.classList.add('open');
 }
 export function openTaskModal(type) {
+    // 새 지시/요청은 항상 새 건 — 직전 수정 모드·입력값이 남아 기존 건을 덮어쓰지 않도록 초기화
+    setEditingTaskId(null);
+    ['task-due', 'task-content'].forEach(i => { const el = document.getElementById(i); if (el) el.value = ''; });
+    const fromEl = document.getElementById('task-from'); if (fromEl) fromEl.value = getCurrentUser();
+    const prioEl = document.getElementById('task-priority'); if (prioEl) prioEl.value = '일반';
+    window.updateTaskToOptions?.(document.getElementById('task-team')?.value || '공통');
     // task-project 드롭다운: CIRS Group Korea(내부) + 기존 계약/상담 업체 목록
     const sel = document.getElementById('task-project');
     if (sel) {

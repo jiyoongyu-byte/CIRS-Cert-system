@@ -110,7 +110,7 @@ export async function saveRevenueState(state) {
             data: {
                 ...state.revenue,
                 _kpiEdu: state.kpiEdu, _qualData: state.qualData,
-                _eduRecords: state.eduRecords, _tasks: state.tasks,
+                _eduRecords: state.eduRecords,   // 업무지시서는 work_orders 테이블로 이전됨 (_tasks 저장 안 함)
                 _bottleneckReasons: state.bottleneckReasons || {},
                 _strategy: state.strategy || {},       // 3년 전략기획 데이터
             },
@@ -255,11 +255,14 @@ export async function loadAllData(state) {
             if (k === '_kpiEdu')                 state.kpiEdu = rd[k] || {};
             else if (k === '_qualData')          state.qualData = rd[k];
             else if (k === '_eduRecords')        state.eduRecords = rd[k] || [];
-            else if (k === '_tasks')             state.tasks = rd[k] || [];
+            else if (k === '_tasks')             { /* 구 업무지시서 — work_orders 테이블로 이전됨, 무시 */ }
             else if (k === '_bottleneckReasons') state.bottleneckReasons = rd[k] || {};
             else if (k === '_strategy')          state.strategy = rd[k] || {};  // 3년 전략기획 복원
             else                                 state.revenue[k] = rd[k];
         });
+
+        // 업무지시서: 서버가 로그인 사용자 열람 범위만 돌려줌
+        state.tasks = await loadWorkOrders().catch(e => { console.error('loadWorkOrders 오류:', e); return []; });
 
         return true;
     } catch (e) {
@@ -267,3 +270,78 @@ export async function loadAllData(state) {
         return false;
     }
 }
+
+// ── 로그인 (Supabase Auth: 이메일 + 비밀번호) ─────────────────────
+export async function authSignIn(email, password) {
+    const client = initSb(); if (!client) throw new Error('DB 연결 실패');
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+}
+export async function authSignOut() {
+    const client = initSb(); if (client) await client.auth.signOut();
+}
+export async function authGetSession() {
+    const client = initSb(); if (!client) return null;
+    const { data } = await client.auth.getSession();
+    return data?.session || null;
+}
+// 현재 비밀번호 확인 (재로그인 방식)
+export async function authVerifyPassword(pw) {
+    const client = initSb(); if (!client) return false;
+    const session = await authGetSession(); if (!session) return false;
+    const { error } = await client.auth.signInWithPassword({ email: session.user.email, password: pw });
+    return !error;
+}
+// 비밀번호 변경 + 첫 로그인 변경 완료 표시
+export async function authChangePassword(newPw) {
+    const client = initSb(); if (!client) throw new Error('DB 연결 실패');
+    const { error } = await client.auth.updateUser({ password: newPw });
+    if (error) throw error;
+    const r = await client.rpc('wo_set_pw_changed');
+    if (r.error) throw r.error;
+}
+// 내 계정 연결 정보 (서버 규칙상 본인 행만 조회됨)
+export async function loadMyAccount() {
+    const client = initSb(); if (!client) return null;
+    const { data, error } = await client.from('user_accounts').select('name,role,pw_changed').maybeSingle();
+    if (error) throw error;
+    return data;
+}
+
+// ── 업무지시서 (work_orders / work_order_events) ─────────────────
+// 조회: 서버(RLS)가 지시자·수신자 본인 건만 반환 (지윤규·대표이사는 전체)
+export async function loadWorkOrders() {
+    const client = initSb(); if (!client) return [];
+    const [o, e] = await Promise.all([
+        client.from('work_orders').select('*').order('order_date', { ascending: false }),
+        client.from('work_order_events').select('*').order('at', { ascending: true }),
+    ]);
+    if (o.error) throw o.error;
+    if (e.error) throw e.error;
+    const ev = {};
+    (e.data || []).forEach(x => { (ev[x.order_id] = ev[x.order_id] || []).push(x); });
+    return (o.data || []).map(r => ({
+        id: r.id, type: r.type, team: r.team, priority: r.priority,
+        from: r.from_name, to: r.to_name, date: r.order_date, due: r.due || '',
+        content: r.content, project: r.project, status: r.status,
+        // completedDate: 작업수행완료(최종) 일자 — 대시보드·보고서의 '완료' 기준
+        completedDate: r.status === '작업수행완료' ? (r.complete_date || r.order_date) : '',
+        reportDate: r.complete_date || '',      // 수신자 처리완료 보고일
+        completeNote: r.complete_note || '',
+        history: ev[r.id] || [],
+    }));
+}
+async function _rpc(name, args) {
+    const client = initSb(); if (!client) throw new Error('DB 연결 실패');
+    const { data, error } = await client.rpc(name, args);
+    if (error) throw error;
+    return data;
+}
+export const woCreate = (a) => _rpc('wo_create', {
+    p_to: a.to, p_type: a.type, p_team: a.team, p_priority: a.priority,
+    p_due: a.due || null, p_content: a.content, p_project: a.project || '', p_date: a.date || null });
+export const woUpdate = (id, a) => _rpc('wo_update', {
+    p_id: id, p_to: a.to, p_team: a.team, p_priority: a.priority,
+    p_due: a.due || null, p_content: a.content, p_project: a.project || '' });
+export const woTransition = (id, action, note = '') => _rpc('wo_transition', { p_id: id, p_action: action, p_note: note });
+export const woDelete = (id) => _rpc('wo_delete', { p_id: id });

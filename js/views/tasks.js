@@ -1,15 +1,68 @@
-// js/views/tasks.js — 업무지시서 뷰
+// js/views/tasks.js — 업무지시서 뷰 (work_orders 테이블 + 서버 함수 기반)
+// 흐름: 지시 → 확인(수신자) → 처리완료(수신자) → 작업수행완료(지시자) 또는 반려(→ 수신자 재수행)
 
-import { getState, getCurrentUser, setEditingTaskId, setCompletingTaskId,
-         getEditingTaskId } from '../core/store.js';
+import { getState, getCurrentUser, setEditingTaskId, setCompletingTaskId } from '../core/store.js';
+import { woTransition, woDelete, loadWorkOrders } from '../core/api.js';
+
+const escAll = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const escTxt = s => String(s ?? '').replace(/</g, '&lt;').replace(/>/g, '&gt;');   // 저장 시 이미 정화된 본문용
+const fmtDt  = iso => { try { return new Date(iso).toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' }).slice(0, 16); } catch (_) { return ''; } };
+const todayKst = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+
+const ST = {
+    '지시':         { cls: 'badge-gray',  label: '🆕 지시' },
+    '확인':         { cls: 'badge-med',   label: '👀 확인' },
+    '처리완료':     { cls: 'badge-cert',  label: '📨 처리완료 · 확인 대기' },
+    '작업수행완료': { cls: 'badge-green', label: '✅ 작업수행완료' },
+    '반려':         { cls: 'badge-red',   label: '↩ 반려 · 재수행' },
+};
+
+// 내가 할 수 있는 처리 (서버 함수의 규칙과 동일 — 최종 판단은 서버가 함)
+function perms(t, me) {
+    const SUPER = window.SUPER_ADMIN || '지윤규';
+    const isTo = t.to === me;
+    const own  = t.from === me || me === SUPER;
+    return {
+        ack:     isTo && t.status === '지시',
+        report:  isTo && (t.status === '확인' || t.status === '반려'),
+        approve: own  && (t.status === '처리완료' || t.status === '반려'),
+        reject:  own  && t.status === '처리완료',
+        edit:    own  && t.status !== '작업수행완료',
+        del:     me === SUPER,
+    };
+}
+
+// 내가 처리할 건수: 수신자 — 새 지시·반려(재수행) / 지시자 — 처리완료(확인 대기)
+function pendingCounts(tasks, me) {
+    let toDo = 0, toReview = 0;
+    (tasks || []).forEach(t => {
+        if (t.to === me && (t.status === '지시' || t.status === '반려')) toDo++;
+        if (t.from === me && t.status === '처리완료') toReview++;
+    });
+    return { toDo, toReview, total: toDo + toReview };
+}
+
+// 사이드바 '업무지시서' 메뉴 배지
+export function updateTaskBadge() {
+    const nav = document.getElementById('nav-item-tasks');
+    if (!nav) return;
+    const n = pendingCounts(getState().tasks, getCurrentUser()).total;
+    let b = document.getElementById('taskBadge');
+    if (!n) { if (b) b.remove(); return; }
+    if (!b) {
+        b = document.createElement('span');
+        b.id = 'taskBadge';
+        b.className = 'badge badge-red';
+        b.style.cssText = 'margin-left:auto;font-size:10px;font-weight:700';
+        nav.appendChild(b);
+    }
+    b.textContent = n;
+}
 
 // ── 업무지시서 렌더링 ─────────────────────────────────────────────
 export function renderTasks() {
     const state       = getState();
     const currentUser = getCurrentUser();
-    const ADMIN_USERS = window.ADMIN_USERS  || ['지윤규','엄태호','유재용'];
-    const SUPER_ADMIN = window.SUPER_ADMIN  || '지윤규';
-    const REP_USER    = window.REP_USER     || '대표이사';
 
     const badge = document.getElementById('taskUserBadge');
     const warn  = document.getElementById('taskLoginWarn');
@@ -27,34 +80,18 @@ export function renderTasks() {
     const statF  = document.getElementById('taskStatusFilter')?.value || '';
     const sortBy = document.getElementById('taskSortSel')?.value     || 'date';
 
-    // ── 열람 권한 필터 ─────────────────────────────────────────────
-    // 지윤규: 전체 열람
-    // 팀장(ADMIN_USERS): 본인 관련 + 자기 팀 소속자가 발신·수신한 것 (열람만)
-    // 나머지: 본인이 발신(from) 또는 수신(to)인 것만 → 타인 간 업무지시 열람 불가
-    const isLead = currentUser !== SUPER_ADMIN && ADMIN_USERS.includes(currentUser);
-    const myTeam = isLead ? window.getUserTeam?.(currentUser) : '';
-    const inMyTeam = n => !!myTeam && window.getUserTeam?.(n) === myTeam;
+    // 열람 범위는 서버(RLS)가 이미 걸러서 내려줌 — 여기서는 화면 필터만 적용
     let tasks = (state.tasks || []).filter(t => {
-        // 지윤규: 전체 열람
-        if (currentUser === SUPER_ADMIN) {
-            // 타입/우선순위/상태 필터만 적용
-        } else if (t.from !== currentUser && t.to !== currentUser) {
-            // 본인 관련 외: 팀장만 자기 팀 소속자 관련 건 열람
-            if (!(isLead && (inMyTeam(t.from) || inMyTeam(t.to)))) return false;
-        }
-
-        // 공통 필터 (유형, 우선순위, 완료 여부)
         if (typeF && (t.type || 'order') !== typeF) return false;
         if (prioF && t.priority !== prioF)           return false;
         if (statF) {
-            const done = !!t.completedDate;
+            const done = t.status === '작업수행완료';
             if (statF === '완료'   && !done) return false;
             if (statF === '진행중' && done)  return false;
         }
         return true;
     });
 
-    // ── 정렬: 관리자 선택 순 ──
     tasks.sort((a, b) => {
         if (sortBy === 'name') return (a.to || '').localeCompare(b.to || '', 'ko');
         return (b.date || '').localeCompare(a.date || '');
@@ -65,69 +102,78 @@ export function renderTasks() {
 
     if (!tasks.length) {
         container.innerHTML = `<div class="card"><div class="card-body" style="text-align:center;padding:32px;color:var(--text3)">
-            ${!currentUser ? '로그인 후 이름을 선택하세요.' : '등록된 업무지시서/협조요청이 없습니다.'}
+            ${!currentUser ? '로그인 후 이용하세요.' : '등록된 업무지시서/협조요청이 없습니다.'}
         </div></div>`;
         return;
     }
 
     const PCOLOR = { '긴급':'var(--danger)', '일반':'var(--warn)', '낮음':'var(--success)' };
     const PLABEL = { '긴급':'🔴 긴급', '일반':'🟡 일반', '낮음':'🟢 낮음' };
-    const today  = new Date().toISOString().slice(0, 10);
+    const today  = todayKst();
 
     const card = t => {
-        const isDone    = !!t.completedDate;
-        const isOrder   = (t.type || 'order') === 'order';
-        const pc        = PCOLOR[t.priority] || 'var(--text3)';
-        const overdue   = !isDone && t.due && t.due < today;
-        // 수정: 발신자 본인 + 지윤규 / 삭제: 지윤규만
-        const canEdit   = t.from === currentUser || currentUser === SUPER_ADMIN;
-        const canDelete = currentUser === SUPER_ADMIN;
-        // 완료 보고: 회신 정확성은 지시자가 판단 → 발신자 본인 또는 최고관리자
-        const canComplete = currentUser && !isDone &&
-                            (t.from === currentUser || currentUser === SUPER_ADMIN);
-        // 반려: 수행결과가 불충분할 때 발행자 본인 또는 최고관리자가 이행중으로 되돌림
-        const canReject = isDone &&
-                          (t.from === currentUser || currentUser === SUPER_ADMIN);
+        const st      = ST[t.status] || ST['지시'];
+        const isDone  = t.status === '작업수행완료';
+        const isOrder = (t.type || 'order') === 'order';
+        const pc      = PCOLOR[t.priority] || 'var(--text3)';
+        const overdue = !isDone && t.due && t.due < today;
+        const p       = perms(t, currentUser);
+        const lines   = String(t.content || '').split('\n');
+        const first   = lines[0].trim();
+        const showBody = lines.length > 1 || first.length > 45;
+        const hist    = t.history || [];
+        const lastRej = [...hist].reverse().find(h => h.action === '반려');
 
-        return `<div class="card" style="margin-bottom:10px;border-left:4px solid ${isDone ? 'var(--border)' : pc};opacity:${isDone ? 0.72 : 1}">
+        const histHtml = hist.length ? `<details style="margin-top:9px">
+            <summary style="cursor:pointer;font-size:11px;color:var(--text3)">이력 ${hist.length}건</summary>
+            <div style="margin-top:6px;font-size:11px;line-height:1.8;color:var(--text2)">
+                ${hist.map(h => `${fmtDt(h.at)} · ${escAll(h.actor_name)} · <b>${escAll(h.action)}</b>` +
+                    `${h.from_status && h.to_status && h.from_status !== h.to_status ? ` (${escAll(h.from_status)}→${escAll(h.to_status)})` : ''}` +
+                    `${h.note ? ` — ${escAll(h.note)}` : ''}`).join('<br>')}
+            </div></details>` : '';
+
+        return `<div class="card" style="margin-bottom:10px;border-left:4px solid ${isDone ? 'var(--border)' : pc};opacity:${isDone ? 0.78 : 1}">
             <div style="padding:13px 15px">
-                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:9px">
-                    <span style="font-size:11px;font-weight:700;color:${pc}">${PLABEL[t.priority] || t.priority}</span>
-                    <span class="badge ${isOrder ? 'badge-cert' : 'badge-med'}" style="font-size:10px">
-                        ${isOrder ? '📋 업무지시' : '🤝 협조요청'}
-                    </span>
-                    <span class="badge badge-gray" style="font-size:10px">${t.team || '공통'}</span>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+                    <div style="flex:1;min-width:0;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escAll(t.content)}">
+                        📥 ${escAll(t.to)} · ${escTxt(first)}
+                    </div>
+                    <span class="badge ${st.cls}" style="font-size:11px;white-space:nowrap">${st.label}</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+                    <span style="font-size:11px;font-weight:700;color:${pc}">${PLABEL[t.priority] || escAll(t.priority)}</span>
+                    <span class="badge ${isOrder ? 'badge-cert' : 'badge-med'}" style="font-size:10px">${isOrder ? '📋 업무지시' : '🤝 협조요청'}</span>
+                    <span class="badge badge-gray" style="font-size:10px">${escAll(t.team || '공통')}</span>
                     ${overdue ? '<span class="badge badge-red" style="font-size:10px">⚠ 기한초과</span>' : ''}
-                    ${isDone  ? '<span class="badge badge-green" style="font-size:10px">✓ 완료</span>' : ''}
                     <span style="margin-left:auto;font-size:10px;color:var(--text3)">
-                        지시일: ${t.date || '-'}${t.due ? ' | 기한: ' + t.due : ''}
+                        📤 ${escAll(t.from)} | 지시일: ${t.date || '-'}${t.due ? ' | 기한: ' + t.due : ''}
                     </span>
                 </div>
-                <div style="font-size:13px;font-weight:500;line-height:1.6;margin-bottom:7px;white-space:pre-wrap">${t.content || ''}</div>
-                <div style="display:flex;gap:14px;font-size:11px;color:var(--text3);margin-bottom:7px">
-                    <span>📤 <strong style="color:var(--text2)">${t.from || '-'}</strong></span>
-                    <span>📥 <strong style="color:${isDone ? 'var(--success)' : 'var(--accent)'}">${t.to || '-'}</strong></span>
-                </div>
-                ${isDone ? `<div style="font-size:11px;padding:7px 11px;background:var(--success-light);border-radius:6px;color:var(--success);margin-bottom:7px">
-                    ✅ 완료 (${t.completedDate}): ${t.completeNote || ''}
+                ${showBody ? `<div style="font-size:13px;font-weight:500;line-height:1.6;margin-bottom:7px;white-space:pre-wrap">${escTxt(t.content)}</div>` : ''}
+                ${(t.status === '처리완료' || isDone) && t.completeNote ? `<div style="font-size:11px;padding:7px 11px;background:var(--success-light);border-radius:6px;color:var(--success);margin-bottom:7px">
+                    ${isDone ? `✅ 작업수행완료 (${t.completedDate})` : `📨 처리완료 보고 (${t.reportDate})`}: ${escAll(t.completeNote)}
                 </div>` : ''}
-                ${!isDone && t.rejectedDate ? `<div style="font-size:11px;padding:7px 11px;background:var(--danger-light);border-radius:6px;color:var(--danger);margin-bottom:7px">
-                    ↩ 반려 (${t.rejectedDate}): ${t.rejectNote || ''}
+                ${t.status === '반려' && lastRej ? `<div style="font-size:11px;padding:7px 11px;background:var(--danger-light);border-radius:6px;color:var(--danger);margin-bottom:7px">
+                    ↩ 반려 (${fmtDt(lastRej.at).slice(0, 10)}): ${escAll(lastRej.note)}
                 </div>` : ''}
                 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                    ${canComplete ? `<button class="btn btn-cert btn-sm" onclick="openTaskComplete('${t.id}')">완료 확인</button>` : ''}
-                    ${canReject ? `<button class="btn btn-sm" style="border-color:var(--warn);color:var(--warn)" onclick="rejectTask('${t.id}')">↩ 반려</button>` : ''}
-                    ${canEdit && !isDone ? `<button class="btn btn-sm" onclick="openTaskEdit('${t.id}')">수정</button>` : ''}
-                    ${canDelete ? `<button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">삭제</button>` : ''}
+                    ${p.ack     ? `<button class="btn btn-cert btn-sm" onclick="ackTask('${t.id}')">확인</button>` : ''}
+                    ${p.report  ? `<button class="btn btn-cert btn-sm" onclick="openTaskComplete('${t.id}')">처리완료 보고</button>` : ''}
+                    ${p.approve ? `<button class="btn btn-cert btn-sm" onclick="approveTask('${t.id}')">작업수행완료(승인)</button>` : ''}
+                    ${p.reject  ? `<button class="btn btn-sm" style="border-color:var(--warn);color:var(--warn)" onclick="rejectTask('${t.id}')">↩ 반려</button>` : ''}
+                    ${p.edit    ? `<button class="btn btn-sm" onclick="openTaskEdit('${t.id}')">수정</button>` : ''}
+                    ${p.del     ? `<button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">삭제</button>` : ''}
                 </div>
+                ${histHtml}
             </div>
         </div>`;
     };
 
     // ── 기한 내 진행건 / 기한경과 미완료 / 수행완료 3분할 ──
-    const active  = tasks.filter(t => !t.completedDate && !(t.due && t.due < today));
-    const ongoing = tasks.filter(t => !t.completedDate &&   t.due && t.due < today);
-    const done    = tasks.filter(t =>  t.completedDate);
+    const isDoneT = t => t.status === '작업수행완료';
+    const active  = tasks.filter(t => !isDoneT(t) && !(t.due && t.due < today));
+    const ongoing = tasks.filter(t => !isDoneT(t) &&   t.due && t.due < today);
+    const done    = tasks.filter(isDoneT);
 
     const col = (title, list, color) => `<div>
         <div style="font-size:12px;font-weight:700;color:${color};margin-bottom:8px">${title} (${list.length})</div>
@@ -135,7 +181,13 @@ export function renderTasks() {
             : '<div class="card"><div style="padding:18px;text-align:center;font-size:12px;color:var(--text3)">해당 없음</div></div>'}
     </div>`;
 
-    container.innerHTML = active.map(card).join('') +
+    const pc = pendingCounts(state.tasks, currentUser);
+    const banner = pc.total ? `<div class="card" style="margin-bottom:10px;border-left:4px solid var(--accent)">
+        <div style="padding:10px 15px;font-size:13px;font-weight:700">
+            내가 처리할 건: 확인·재수행 ${pc.toDo}건 / 완료 확인(승인·반려) ${pc.toReview}건
+        </div></div>` : '';
+
+    container.innerHTML = banner + active.map(card).join('') +
         ((ongoing.length || done.length) ? `
         <div style="margin:22px 0 12px;padding-top:16px;border-top:1px solid var(--border);font-size:14px;font-weight:700">
             작업지시 기한경과 및 수행결과
@@ -144,6 +196,7 @@ export function renderTasks() {
             ${col('작업수행이행중', ongoing, 'var(--danger)')}
             ${col('작업수행완료',   done,    'var(--success)')}
         </div>` : '');
+    updateTaskBadge();
 }
 
 // ── 수신자 선택 옵션 업데이트 ─────────────────────────────────────
@@ -200,39 +253,44 @@ export function openTaskEdit(id) {
     }
 }
 
-// ── 완료 보고 모달 열기 ─────────────────────────────────────────
+// ── 처리완료 보고 모달 열기 (완료일은 서버가 기록 → 날짜 입력칸 숨김) ──
 export function openTaskComplete(id) {
     setCompletingTaskId(id);
-    const today = new Date().toISOString().slice(0, 10);
-    if (document.getElementById('task-complete-date')) document.getElementById('task-complete-date').value = today;
+    const dateEl = document.getElementById('task-complete-date');
+    if (dateEl) { dateEl.value = ''; const g = dateEl.closest('.form-group'); if (g) g.style.display = 'none'; }
     if (document.getElementById('task-complete-note')) document.getElementById('task-complete-note').value = '';
     document.getElementById('modal-task-complete')?.classList.add('open');
 }
 
-// ── 업무 삭제 ─────────────────────────────────────────────────
-export async function deleteTask(id) {
-    if (!confirm('삭제하시겠습니까?')) return;
-    const state = getState();
-    state.tasks = state.tasks.filter(x => x.id !== id);
-    const { saveState } = await import('../core/store.js');
-    await saveState();
+// ── 서버 처리 후 목록 갱신 ───────────────────────────────────────
+async function reloadAndRender() {
+    getState().tasks = await loadWorkOrders();
     renderTasks();
 }
+async function run(fn) {
+    try { await fn(); }
+    catch (e) { alert(e?.message || '처리 중 오류가 발생했습니다.'); }
+    try { await reloadAndRender(); } catch (e) { console.error('목록 갱신 실패:', e); }
+}
 
-// ── 반려 (수행결과 불충분 → 이행중으로 되돌림) ────────────────────
-export async function rejectTask(id) {
-    const t = getState().tasks?.find(x => x.id === id);
-    if (!t) return;
+export const ackTask = id => run(() => woTransition(id, '확인'));
+
+export function approveTask(id) {
+    if (!confirm('작업수행완료로 승인하시겠습니까?')) return;
+    return run(() => woTransition(id, '작업수행완료'));
+}
+
+// 반려: 수행결과가 불충분하면 사유와 함께 수신자에게 재수행 요청
+export function rejectTask(id) {
     const reason = prompt('반려 사유를 입력하세요.');
     if (!reason || !reason.trim()) return;
-    t.rejectedDate  = new Date().toISOString().slice(0, 10);
-    t.rejectNote    = reason.trim();
-    t.completedDate = '';
-    t.completeNote  = '';
-    t.confirmedDate = '';
-    const { saveState } = await import('../core/store.js');
-    await saveState();
-    renderTasks();
+    return run(() => woTransition(id, '반려', reason.trim()));
+}
+
+// 삭제: 목록에서만 숨기고 이력은 보존 (지윤규 전용)
+export function deleteTask(id) {
+    if (!confirm('삭제하시겠습니까? (목록에서 숨겨지며 이력은 보존됩니다)')) return;
+    return run(() => woDelete(id));
 }
 
 // ── window 전역 등록 ─────────────────────────────────────────────
@@ -242,3 +300,6 @@ window.openTaskEdit        = openTaskEdit;
 window.openTaskComplete    = openTaskComplete;
 window.deleteTask          = deleteTask;
 window.rejectTask          = rejectTask;
+window.ackTask             = ackTask;
+window.approveTask         = approveTask;
+window.updateTaskBadge     = updateTaskBadge;
