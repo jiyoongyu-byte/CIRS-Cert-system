@@ -84,6 +84,12 @@ function isRepUser() {
     return getCurrentUser() === (window.REP_USER || '대표이사');
 }
 
+// ── 상담 목록 삭제 버튼 (지윤규 전용) ─────────────────────────────
+function consultDelBtn(fn) {
+    return getCurrentUser() === (window.SUPER_ADMIN || '지윤규')
+        ? ` <button class="btn btn-sm btn-danger" onclick="${fn}">${tt('삭제','删除')}</button>` : '';
+}
+
 // ── 진행단계 칸: 클릭하면 단계 수정 팝업 (대표이사는 읽기 전용) ──
 function stageCell(team, r) {
     const txt = sanitize(r.stage || '');
@@ -196,7 +202,7 @@ export function renderMedConsult() {
             <td style="white-space:nowrap">
                 ${!isRep ? `<button class="btn btn-sm" onclick="editMed('${r.id}')">${tt('수정','修改')}</button>
                 <button class="btn btn-sm btn-success" onclick="convertToContract('med','${r.id}')">${tt('계약전환','转为合同')}</button>
-                <button class="btn btn-sm" onclick="archiveConsult('med','${r.id}')">${tt('보관','归档')}</button>` : ''}
+                <button class="btn btn-sm" onclick="archiveConsult('med','${r.id}')">${tt('보관','归档')}</button>` : ''}${consultDelBtn(`deleteMed('${r.id}')`)}
             </td>
         </tr>`).join('');
     }
@@ -216,7 +222,7 @@ export function renderMedConsult() {
                 <td>${statusBadge(r.consultStatus, 'badge-med')}</td>
                 <td>${sanitize(r.quoteDate || '')}</td>
                 <td>${r.archived ? `<span class="badge badge-amber">보관</span> ${sanitize(r.archiveReason || '')}${r.archivedAt ? ' (' + sanitize(r.archivedAt) + ')' : ''}` : sanitize(r.failReason || '')}</td>
-                <td style="white-space:nowrap">${!isRep ? `<button class="btn btn-sm" onclick="editMed('${r.id}')">${tt('수정','修改')}</button>${r.archived ? ` <button class="btn btn-sm btn-success" onclick="restoreConsult('med','${r.id}')">${tt('복원','恢复')}</button>` : ''}` : ''}</td>
+                <td style="white-space:nowrap">${!isRep ? `<button class="btn btn-sm" onclick="editMed('${r.id}')">${tt('수정','修改')}</button>${r.archived ? ` <button class="btn btn-sm btn-success" onclick="restoreConsult('med','${r.id}')">${tt('복원','恢复')}</button>` : ''}` : ''}${consultDelBtn(`deleteMed('${r.id}')`)}</td>
             </tr>`).join('');
     }
 }
@@ -344,7 +350,7 @@ export function renderCertConsult() {
             <td style="white-space:nowrap">
                 ${!isRep ? `<button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>
                 <button class="btn btn-sm btn-success" onclick="convertToContract('cert','${r.id}')">${tt('계약전환','转为合同')}</button>
-                <button class="btn btn-sm" onclick="archiveConsult('cert','${r.id}')">${tt('보관','归档')}</button>` : ''}
+                <button class="btn btn-sm" onclick="archiveConsult('cert','${r.id}')">${tt('보관','归档')}</button>` : ''}${consultDelBtn(`deleteCert('${r.id}')`)}
             </td>
         </tr>`).join('');
     }
@@ -362,7 +368,7 @@ export function renderCertConsult() {
                 <td>${statusBadge(r.contracted, 'badge-cert')}</td>
                 <td>${sanitize(r.quoteDate || '')}</td>
                 <td>${r.archived ? `<span class="badge badge-amber">보관</span> ${sanitize(r.archiveReason || '')}${r.archivedAt ? ' (' + sanitize(r.archivedAt) + ')' : ''}` : sanitize(r.failReason || '')}</td>
-                <td style="white-space:nowrap">${!isRep ? `<button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>${r.archived ? ` <button class="btn btn-sm btn-success" onclick="restoreConsult('cert','${r.id}')">${tt('복원','恢复')}</button>` : ''}` : ''}</td>
+                <td style="white-space:nowrap">${!isRep ? `<button class="btn btn-sm" onclick="editCert('${r.id}')">${tt('수정','修改')}</button>${r.archived ? ` <button class="btn btn-sm btn-success" onclick="restoreConsult('cert','${r.id}')">${tt('복원','恢复')}</button>` : ''}` : ''}${consultDelBtn(`deleteCert('${r.id}')`)}</td>
             </tr>`).join('');
     }
 }
