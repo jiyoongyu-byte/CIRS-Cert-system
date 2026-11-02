@@ -124,47 +124,52 @@ export function renderTasks() {
         const hist    = t.history || [];
         const lastRej = [...hist].reverse().find(h => h.action === '반려');
 
-        const histHtml = hist.length ? `<details style="margin-top:9px">
-            <summary style="cursor:pointer;font-size:11px;color:var(--text3)">이력 ${hist.length}건</summary>
-            <div style="margin-top:6px;font-size:11px;line-height:1.8;color:var(--text2)">
-                ${hist.map(h => `${fmtDt(h.at)} · ${escAll(h.actor_name)} · <b>${escAll(h.action)}</b>` +
-                    `${h.from_status && h.to_status && h.from_status !== h.to_status ? ` (${escAll(h.from_status)}→${escAll(h.to_status)})` : ''}` +
-                    `${h.note ? ` — ${escAll(h.note)}` : ''}`).join('<br>')}
-            </div></details>` : '';
+        const histBody = hist.map(h => `${fmtDt(h.at)} · ${escAll(h.actor_name)} · <b>${escAll(h.action)}</b>` +
+            `${h.from_status && h.to_status && h.from_status !== h.to_status ? ` (${escAll(h.from_status)}→${escAll(h.to_status)})` : ''}` +
+            `${h.note ? ` — ${escAll(h.note)}` : ''}`).join('<br>');
 
-        return `<div class="card" style="margin-bottom:10px;border-left:4px solid ${isDone ? 'var(--border)' : pc};opacity:${isDone ? 0.78 : 1}">
-            <div style="padding:13px 15px">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
-                    <div style="flex:1;min-width:0;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escAll(t.content)}">
+        // 기한 표시: 초과=빨강, 임박(오늘~D-2)=주황
+        const dday  = t.due ? Math.round((Date.parse(t.due) - Date.parse(today)) / 86400000) : null;
+        const soon  = !isDone && dday !== null && dday >= 0 && dday <= 2;
+        const dueClr = overdue ? 'var(--danger)' : soon ? 'var(--warn)' : 'inherit';
+        const dueTxt = t.due
+            ? ` | 기한: <b style="color:${dueClr};font-weight:${overdue || soon ? 700 : 400}">${t.due}${overdue ? ' 기한초과' : soon ? (dday === 0 ? ' 오늘' : ' D-' + dday) : ''}</b>`
+            : '';
+        const btn = 'style="padding:2px 9px;font-size:11px"';
+
+        return `<div class="card" style="margin-bottom:8px;border-left:4px solid ${isDone ? 'var(--border)' : pc};opacity:${isDone ? 0.78 : 1}">
+            <div style="padding:8px 14px">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <div style="flex:1;min-width:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escAll(t.content)}">
                         📥 ${escAll(t.to)} · ${escTxt(first)}
                     </div>
-                    <span class="badge ${st.cls}" style="font-size:11px;white-space:nowrap">${st.label}</span>
+                    <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+                        <span style="font-size:11px;font-weight:700;color:${pc}">${PLABEL[t.priority] || escAll(t.priority)}</span>
+                        <span class="badge ${isOrder ? 'badge-cert' : 'badge-med'}" style="font-size:10px">${isOrder ? '📋 업무지시' : '🤝 협조요청'}</span>
+                        <span class="badge badge-gray" style="font-size:10px">${escAll(t.team || '공통')}</span>
+                        <span class="badge ${st.cls}" style="font-size:10px">${st.label}</span>
+                    </div>
                 </div>
-                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-                    <span style="font-size:11px;font-weight:700;color:${pc}">${PLABEL[t.priority] || escAll(t.priority)}</span>
-                    <span class="badge ${isOrder ? 'badge-cert' : 'badge-med'}" style="font-size:10px">${isOrder ? '📋 업무지시' : '🤝 협조요청'}</span>
-                    <span class="badge badge-gray" style="font-size:10px">${escAll(t.team || '공통')}</span>
-                    ${overdue ? '<span class="badge badge-red" style="font-size:10px">⚠ 기한초과</span>' : ''}
-                    <span style="margin-left:auto;font-size:10px;color:var(--text3)">
-                        📤 ${escAll(t.from)} | 지시일: ${t.date || '-'}${t.due ? ' | 기한: ' + t.due : ''}
-                    </span>
-                </div>
-                ${showBody ? `<div style="font-size:13px;font-weight:500;line-height:1.6;margin-bottom:7px;white-space:pre-wrap">${escTxt(t.content)}</div>` : ''}
-                ${(t.status === '처리완료' || isDone) && t.completeNote ? `<div style="font-size:11px;padding:7px 11px;background:var(--success-light);border-radius:6px;color:var(--success);margin-bottom:7px">
+                ${showBody ? `<div onclick="toggleWoBody(this)" title="클릭하면 펼치기/접기" style="cursor:pointer;margin-top:3px;font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escTxt(t.content)}</div>` : ''}
+                ${(t.status === '처리완료' || isDone) && t.completeNote ? `<div style="font-size:11px;padding:5px 10px;margin-top:5px;background:var(--success-light);border-radius:6px;color:var(--success)">
                     ${isDone ? `✅ 작업수행완료 (${t.completedDate})` : `📨 처리완료 보고 (${t.reportDate})`}: ${escAll(t.completeNote)}
                 </div>` : ''}
-                ${t.status === '반려' && lastRej ? `<div style="font-size:11px;padding:7px 11px;background:var(--danger-light);border-radius:6px;color:var(--danger);margin-bottom:7px">
+                ${t.status === '반려' && lastRej ? `<div style="font-size:11px;padding:5px 10px;margin-top:5px;background:var(--danger-light);border-radius:6px;color:var(--danger)">
                     ↩ 반려 (${fmtDt(lastRej.at).slice(0, 10)}): ${escAll(lastRej.note)}
                 </div>` : ''}
-                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                    ${p.ack     ? `<button class="btn btn-cert btn-sm" onclick="ackTask('${t.id}')">확인</button>` : ''}
-                    ${p.report  ? `<button class="btn btn-cert btn-sm" onclick="openTaskComplete('${t.id}')">처리완료 보고</button>` : ''}
-                    ${p.approve ? `<button class="btn btn-cert btn-sm" onclick="approveTask('${t.id}')">작업수행완료(승인)</button>` : ''}
-                    ${p.reject  ? `<button class="btn btn-sm" style="border-color:var(--warn);color:var(--warn)" onclick="rejectTask('${t.id}')">↩ 반려</button>` : ''}
-                    ${p.edit    ? `<button class="btn btn-sm" onclick="openTaskEdit('${t.id}')">수정</button>` : ''}
-                    ${p.del     ? `<button class="btn btn-sm btn-danger" onclick="deleteTask('${t.id}')">삭제</button>` : ''}
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:5px">
+                    <span style="font-size:11px;color:var(--text3)">${escAll(t.from)} | 지시일: ${t.date || '-'}${dueTxt}</span>
+                    <span style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                        ${p.ack     ? `<button class="btn btn-cert btn-sm" ${btn} onclick="ackTask('${t.id}')">확인</button>` : ''}
+                        ${p.report  ? `<button class="btn btn-cert btn-sm" ${btn} onclick="openTaskComplete('${t.id}')">처리완료 보고</button>` : ''}
+                        ${p.approve ? `<button class="btn btn-cert btn-sm" ${btn} onclick="approveTask('${t.id}')">작업수행완료(승인)</button>` : ''}
+                        ${p.reject  ? `<button class="btn btn-sm" style="padding:2px 9px;font-size:11px;border-color:var(--warn);color:var(--warn)" onclick="rejectTask('${t.id}')">↩ 반려</button>` : ''}
+                        ${p.edit    ? `<button class="btn btn-sm" ${btn} onclick="openTaskEdit('${t.id}')">수정</button>` : ''}
+                        ${p.del     ? `<button class="btn btn-sm btn-danger" ${btn} onclick="deleteTask('${t.id}')">삭제</button>` : ''}
+                        ${hist.length ? `<button class="btn btn-sm" style="padding:2px 9px;font-size:11px;color:var(--text3)" onclick="toggleWoEl('wo-h-${t.id}')">이력 ${hist.length}건</button>` : ''}
+                    </span>
                 </div>
-                ${histHtml}
+                ${hist.length ? `<div id="wo-h-${t.id}" style="display:none;margin-top:6px;font-size:11px;line-height:1.8;color:var(--text2)">${histBody}</div>` : ''}
             </div>
         </div>`;
     };
@@ -175,7 +180,7 @@ export function renderTasks() {
     const ongoing = tasks.filter(t => !isDoneT(t) &&   t.due && t.due < today);
     const done    = tasks.filter(isDoneT);
 
-    const col = (title, list, color) => `<div>
+    const col = (title, list, color) => `<div style="min-width:0">
         <div style="font-size:12px;font-weight:700;color:${color};margin-bottom:8px">${title} (${list.length})</div>
         ${list.length ? list.map(card).join('')
             : '<div class="card"><div style="padding:18px;text-align:center;font-size:12px;color:var(--text3)">해당 없음</div></div>'}
@@ -192,7 +197,7 @@ export function renderTasks() {
         <div style="margin:22px 0 12px;padding-top:16px;border-top:1px solid var(--border);font-size:14px;font-weight:700">
             작업지시 기한경과 및 수행결과
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px">
             ${col('작업수행이행중', ongoing, 'var(--danger)')}
             ${col('작업수행완료',   done,    'var(--success)')}
         </div>` : '');
@@ -293,6 +298,19 @@ export function deleteTask(id) {
     return run(() => woDelete(id));
 }
 
+// 카드 내용 한 줄 말줄임 ↔ 펼침 / 이력 펼침
+export function toggleWoBody(el) {
+    const open = el.dataset.open === '1';
+    el.dataset.open = open ? '0' : '1';
+    el.style.whiteSpace   = open ? 'nowrap' : 'pre-wrap';
+    el.style.overflow     = open ? 'hidden' : 'visible';
+    el.style.textOverflow = open ? 'ellipsis' : 'clip';
+}
+export function toggleWoEl(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+
 // ── window 전역 등록 ─────────────────────────────────────────────
 window.renderTasks         = renderTasks;
 window.updateTaskToOptions = updateTaskToOptions;
@@ -303,3 +321,5 @@ window.rejectTask          = rejectTask;
 window.ackTask             = ackTask;
 window.approveTask         = approveTask;
 window.updateTaskBadge     = updateTaskBadge;
+window.toggleWoBody        = toggleWoBody;
+window.toggleWoEl          = toggleWoEl;

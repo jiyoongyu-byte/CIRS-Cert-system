@@ -508,6 +508,26 @@ export function updateQualRemark(member, idx, value) {
     saveState();
 }
 
+// 자격 취소선 토글 — 취소 시 사유 필수, 해제 시 사유 삭제
+export function toggleQualStrike(member, idx) {
+    const qualData = getQualData();
+    const q = qualData[member]?.[idx];
+    if (!q) return;
+    if (q.struck) {
+        if (!confirm('취소선을 해제하시겠습니까?')) return;
+        q.struck = false; q.struckReason = '';
+    } else {
+        const r = prompt('취소 사유를 입력하세요.');
+        if (!r || !r.trim()) return;
+        q.struck = true; q.struckReason = r.trim();
+    }
+    const state = getState();
+    if (!state.qualData) state.qualData = {};
+    state.qualData[member] = qualData[member];
+    saveState();
+    window.renderKpiQual?.();
+}
+
 // ── 수입 목표 업데이트 ────────────────────────────────────────────
 export async function updateTarget(team, q, val) {
     const { ensureRevYear, getCurrentYear, getState, saveState } = window._store || {};
@@ -547,6 +567,7 @@ window.addQualItem      = addQualItem;
 window.removeQualItem   = removeQualItem;
 window.saveQualData     = saveQualData;
 window.updateQualRemark = updateQualRemark;
+window.toggleQualStrike = toggleQualStrike;
 window.updateTarget     = updateTarget;
 // ── 외부기관 참고 비용 — 동적 기타 항목 ────────────────────────────
 export function getRefExtras(p) {

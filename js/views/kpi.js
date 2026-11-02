@@ -42,7 +42,7 @@ export function renderKpiQual() {
 
     cont.innerHTML = Object.keys(base).map(m => {
         const quals  = base[m] || [];
-        const legal  = quals.filter(q => q.edu);
+        const legal  = quals.filter(q => q.edu && !q.struck);
         const allDone = legal.every(q => getEduDone(m, q.name));
         const ls     = !legal.length ? null : allDone ? 'done' : 'pending';
         return `<div class="card" style="margin-bottom:20px;border-top:4px solid var(--border2)">
@@ -57,7 +57,7 @@ export function renderKpiQual() {
             <div class="card-body" style="padding:0"><div class="table-wrap"><table>
                 <thead><tr>
                     <th>자격·허가명</th><th>취득일</th><th>발급기관</th>
-                    <th>교육주기</th><th>비고 (해당 업무)</th><th>${y}년 이수일</th>
+                    <th>교육주기</th><th>비고 (해당 업무)</th><th>${y}년 이수일</th><th>취소</th>
                 </tr></thead>
                 <tbody>${quals.map((q, qi) => {
                     const done = q.edu ? getEduDone(m, q.name) : '';
@@ -66,18 +66,22 @@ export function renderKpiQual() {
                         ? `<input type="text" value="${q.remark||''}" onchange="updateQualRemark('${m}',${qi},this.value)"
                               style="border:none;background:transparent;color:var(--text1);width:100%;">`
                         : (q.remark || '-');
-                    const eduCell = q.edu
+                    const eduCell = q.struck ? '-' : q.edu
                         ? `<input type="date" value="${done}"
                               onchange="setEduDateRecord('${m}','${q.name}','${y}',this.value)"
                               style="border:1px solid ${done?'var(--success)':'var(--border2)'};border-radius:5px;padding:4px;font-size:11px;background:${done?'var(--success-light)':'var(--bg)'};color:#fff;color-scheme:dark;">`
                         : '-';
+                    const ln = q.struck ? 'text-decoration:line-through;color:var(--text3)' : '';
+                    const strikeCell = canEdit
+                        ? `<button class="btn btn-sm" style="padding:2px 8px;font-size:11px" onclick="toggleQualStrike('${m}',${qi})">${q.struck ? '해제' : '취소선'}</button>` : '';
                     return `<tr>
-                        <td><strong>${q.name}</strong></td>
-                        <td>${q.date||'-'}</td>
-                        <td>${q.org||'-'}</td>
-                        <td>${q.edu?q.edu.cycle:'-'}</td>
+                        <td><strong style="${ln}">${q.name}</strong>${q.struck ? `<div style="font-size:11px;color:var(--danger)">취소 사유: ${q.struckReason || '-'}</div>` : ''}</td>
+                        <td style="${ln}">${q.date||'-'}</td>
+                        <td style="${ln}">${q.org||'-'}</td>
+                        <td style="${ln}">${q.edu?q.edu.cycle:'-'}</td>
                         <td>${remarkCell}</td>
                         <td>${eduCell}</td>
+                        <td>${strikeCell}</td>
                     </tr>`;
                 }).join('')}</tbody>
             </table></div></div>
