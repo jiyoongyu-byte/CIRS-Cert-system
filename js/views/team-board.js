@@ -84,6 +84,13 @@ function isRepUser() {
     return getCurrentUser() === (window.REP_USER || '대표이사');
 }
 
+// ── 진행단계 칸: 클릭하면 단계 수정 팝업 (대표이사는 읽기 전용) ──
+function stageCell(team, r) {
+    const txt = sanitize(r.stage || '');
+    if (isRepUser()) return `<td>${txt}</td>`;
+    return `<td class="stage-edit" title="${tt('클릭하여 수정','点击修改')}" onclick="openStageEdit('${team}','${r.id}')">${txt || '<span style="color:var(--text3)">＋</span>'}</td>`;
+}
+
 // ── 관리 버튼 (대표이사에게는 미표시) ─────────────────────────────
 function manageBtns(editFn, deleteConfirm, extraBtn = '') {
     if (isRepUser()) return '<td></td>';
@@ -134,7 +141,7 @@ export function renderMedContract() {
       <td>${sanitize(r.issuedate || '')}</td>
             ${fmtAmt(r.amount, r.amountCurrency)}
             ${fmtRemain(r, r.startdate || r.contractdate || '')}
-            <td>${sanitize(r.stage || '')}</td>
+            ${stageCell('med', r)}
             <td>${statusBadge(r.status, 'badge-med')}</td>
             ${manageBtns(`editMed('${r.id}')`, `deleteMed('${r.id}')`,
                 ` <button class="btn btn-sm" onclick="revertToConsult('med','${r.id}')">${tt('상담 복귀','退回咨询')}</button>`)}
@@ -284,7 +291,7 @@ export function renderCertContract() {
       <td>${sanitize(r.issuedate || '')}</td>
             ${fmtAmt(r.amount, r.amountCurrency)}
             ${fmtRemain(r, r.startdate || r.contractdate || '')}
-            <td>${sanitize(r.stage || '')}</td>
+            ${stageCell('cert', r)}
             <td>${statusBadge(r.contracted, 'badge-cert')}</td>
             ${manageBtns(`editCert('${r.id}')`, `deleteCert('${r.id}')`,
                 ` <button class="btn btn-sm" onclick="revertToConsult('cert','${r.id}')">${tt('상담 복귀','退回咨询')}</button>`)}

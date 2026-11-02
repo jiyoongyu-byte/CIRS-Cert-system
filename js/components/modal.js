@@ -13,6 +13,22 @@ function _prefillModalRates(p) {
     if (rmbEl && !rmbEl.value && sr.rmb) rmbEl.value = sr.rmb;
 }
 
+// 콤마 포함 문자열 → 숫자
+const _num = v => Number(String(v ?? '').replace(/,/g, '')) || 0;
+const _escAttr = v => String(v ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+// 숫자 입력칸에 세 자리마다 ',' 표시 (커서 위치 유지)
+export function fmtCommaInput(el) {
+    let n = el.value.slice(0, el.selectionStart ?? 0).replace(/[^\d.]/g, '').length;
+    const raw = el.value.replace(/[^\d.]/g, '');
+    const [ip, ...rest] = raw.split('.');
+    const out = ip.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (raw.includes('.') ? '.' + rest.join('') : '');
+    el.value = out;
+    let pos = 0;
+    while (n > 0 && pos < out.length) { if (/[\d.]/.test(out[pos])) n--; pos++; }
+    el.setSelectionRange?.(pos, pos);
+}
+
 // 수입 칸 수: 그리드에 렌더된 칸 기준
 const _bGrid = p => p === 'm' ? 'medBillingGrid' : 'certBillingGrid';
 const _bTotal = p => p === 'm' ? 'medBillingTotal' : 'certBillingTotal';
@@ -24,25 +40,27 @@ export function closeModal(id) {
 }
 
 // ── 수입 내역 분할 그리드 생성 ────────────────────────────────────
-export function buildBillingGrid(contId, totalId, prefix, bArr, bDates, bCur, minN = 1) {
+export function buildBillingGrid(contId, totalId, prefix, bArr, bDates, bCur, bNotes, minN = 1) {
     const el = document.getElementById(contId);
     if (!el) return;
     // 값이 있는 마지막 칸까지 표시 (최소 minN칸)
     let n = minN;
-    (bArr || []).forEach((v, i) => { if (Number(v) || (bDates || [])[i]) n = Math.max(n, i + 1); });
+    (bArr || []).forEach((v, i) => { if (Number(v) || (bDates || [])[i] || (bNotes || [])[i]) n = Math.max(n, i + 1); });
     el.innerHTML = Array.from({length: n}, (_, i) => {
         const cur = (bCur || [])[i] || 'KRW';
+        const amt = Number((bArr || [])[i]) ? Number(bArr[i]).toLocaleString('en-US') : '';
         return `<div class="billing-item">
-            <label style="display:flex;justify-content:space-between;align-items:center">${i + 1}차 수입
-                <span style="cursor:pointer;color:var(--danger)" title="삭제" onclick="removeBillingItem('${prefix}',${i})">✕</span></label>
+            <span class="bi-no">${i + 1}차 수입</span>
             <select id="${prefix}-bc${i}" onchange="calcBilling('${prefix}','${totalId}')">
                 <option value="KRW" ${cur==='KRW'?'selected':''}>KRW</option>
                 <option value="RMB" ${cur==='RMB'?'selected':''}>RMB</option>
                 <option value="USD" ${cur==='USD'?'selected':''}>USD</option>
             </select>
-            <input type="number" value="${(bArr||[])[i]||''}" id="${prefix}-b${i}"
-                oninput="calcBilling('${prefix}','${totalId}')">
+            <input type="text" inputmode="decimal" value="${amt}" id="${prefix}-b${i}"
+                oninput="fmtCommaInput(this);calcBilling('${prefix}','${totalId}')">
             <input type="date" id="${prefix}-bd${i}" value="${(bDates||[])[i]||''}" onchange="calcBilling('${prefix}','${totalId}')">
+            <input type="text" id="${prefix}-bn${i}" value="${_escAttr((bNotes||[])[i])}" placeholder="내역 (예: 1. ○○ 품목 계약금, 2. ××품목 시험비)">
+            <span style="cursor:pointer;color:var(--danger)" title="삭제" onclick="removeBillingItem('${prefix}',${i})">✕</span>
         </div>`;
     }).join('');
     _prefillModalRates(prefix); // 사이드바 환율 자동 pre-fill
@@ -78,7 +96,7 @@ export function calcBilling(p, tId) {
     let bKRW = 0;
     let bOrig = 0; // 계약 통화 기준 수입합계 (오늘까지 수령분)
     for (let i = 0; i < _bCount(p); i++) {
-        const bAmt = Number(document.getElementById(`${p}-b${i}`)?.value || 0);
+        const bAmt = _num(document.getElementById(`${p}-b${i}`)?.value);
         const bCur = document.getElementById(`${p}-bc${i}`)?.value || 'KRW';
         const bDate = document.getElementById(`${p}-bd${i}`)?.value || '';
         if (bDate && bDate > today) continue; // 미래 수입 예정 제외
@@ -124,12 +142,12 @@ export function calcBilling(p, tId) {
     if (el) el.innerHTML =
         `<span>계약총액 <strong>${contractLabel}</strong></span>` +
         `<span>수입합계 <strong>${paidLabel}</strong></span>` +
-        `<span class="billing-remain ${tKRW-bKRW<=0&&tKRW>0?'ok':'none'}">잔액 ${remainLabel}</span>` +
-        warnHtml;
+        warnHtml +
+        `<span class="billing-remain">잔액 <strong>${remainLabel}</strong></span>`;
 }
 
 export function getBillingValues(p) {
-    return Array.from({length:_bCount(p)}, (_,i) => Number(document.getElementById(`${p}-b${i}`)?.value || 0));
+    return Array.from({length:_bCount(p)}, (_,i) => _num(document.getElementById(`${p}-b${i}`)?.value));
 }
 export function getBillingDates(p) {
     return Array.from({length:_bCount(p)}, (_,i) => document.getElementById(`${p}-bd${i}`)?.value || '');
@@ -137,14 +155,17 @@ export function getBillingDates(p) {
 export function getBillingCurrencies(p) {
     return Array.from({length:_bCount(p)}, (_,i) => document.getElementById(`${p}-bc${i}`)?.value || 'KRW');
 }
+export function getBillingNotes(p) {
+    return Array.from({length:_bCount(p)}, (_,i) => (document.getElementById(`${p}-bn${i}`)?.value || '').trim());
+}
 // 수입 칸 추가/삭제 — 현재 값으로 그리드 재생성
 export function addBillingItem(p) {
-    buildBillingGrid(_bGrid(p), _bTotal(p), p, getBillingValues(p), getBillingDates(p), getBillingCurrencies(p), _bCount(p) + 1);
+    buildBillingGrid(_bGrid(p), _bTotal(p), p, getBillingValues(p), getBillingDates(p), getBillingCurrencies(p), getBillingNotes(p), _bCount(p) + 1);
 }
 export function removeBillingItem(p, idx) {
-    const v = getBillingValues(p), d = getBillingDates(p), c = getBillingCurrencies(p);
-    [v, d, c].forEach(a => a.splice(idx, 1));
-    buildBillingGrid(_bGrid(p), _bTotal(p), p, v, d, c);
+    const v = getBillingValues(p), d = getBillingDates(p), c = getBillingCurrencies(p), n = getBillingNotes(p);
+    [v, d, c, n].forEach(a => a.splice(idx, 1));
+    buildBillingGrid(_bGrid(p), _bTotal(p), p, v, d, c, n);
 }
 
 // ── 의료기기팀 모달 ───────────────────────────────────────────────
@@ -171,21 +192,25 @@ export function openMedModal(type) {
     if (rew) rew.innerHTML = '';
     const sw = document.getElementById('m-stage-wrap');
     if (sw) sw.innerHTML = '';
-    buildBillingGrid('medBillingGrid','medBillingTotal','m',[],[],[]);
+    buildBillingGrid('medBillingGrid','medBillingTotal','m',[],[],[],[]);
     // 의료기기 '상담'은 계약이 아니므로 계약금액/지출비용/수입분할 섹션 숨김
     document.querySelectorAll('.contract-only-med').forEach(el => {
         el.style.display = isContract ? '' : 'none';
     });
+    const q = document.getElementById('medQuoteSection');   // 계약 건에는 '상담 진행' 불필요
+    if (q) q.style.display = isContract ? 'none' : '';
 }
+
+export const MED_STAGES = {
+    '인허가': ['자료수집 및 규제검토','기술문서 작성','신청서 제출','시험 검사','심사 및 보완','인허가 완료'],
+    'QMS':    ['현황분석','절차서 작성','직원교육','내부감사','인증심사','CGMP 완료'],
+};
 
 export function updateMedStageOptions() {
     const b = document.getElementById('m-biztype')?.value;
     const w = document.getElementById('m-stage-wrap');
     if (!w) return;
-    const stages = {
-        '인허가': ['자료수집 및 규제검토','기술문서 작성','신청서 제출','시험 검사','심사 및 보완','인허가 완료'],
-        'QMS':    ['현황분석','절차서 작성','직원교육','내부감사','인증심사','CGMP 완료'],
-    }[b] || [];
+    const stages = MED_STAGES[b] || [];
     if (!stages.length) {
         w.innerHTML = '<span style="font-size:12px;color:var(--text3)">업무 유형을 먼저 선택하세요</span>';
         return;
@@ -235,7 +260,7 @@ export function editMed(id) {
         const cb = document.querySelector(`#m-stage-wrap input[value="${st}"]`);
         if (cb) { cb.checked = true; cb.parentElement.style.background = 'var(--med-light)'; cb.parentElement.style.color = 'var(--med)'; }
     });
-    buildBillingGrid('medBillingGrid','medBillingTotal','m', r.billing, r.billingDates, r.billingCurrencies);
+    buildBillingGrid('medBillingGrid','medBillingTotal','m', r.billing, r.billingDates, r.billingCurrencies, r.billingNotes);
     // 동적 기타 비용 항목 복원
     window.loadDynamicExpenses?.('med', r.expExtra || []);
     // 외부기관 참고 기타 비용 항목 복원
@@ -243,6 +268,8 @@ export function editMed(id) {
     document.querySelectorAll('.contract-only-med').forEach(el => {
         el.style.display = r.recordType === 'contract' ? '' : 'none';
     });
+    const q = document.getElementById('medQuoteSection');   // 계약 건에는 '상담 진행' 불필요
+    if (q) q.style.display = r.recordType === 'contract' ? 'none' : '';
 }
 
 // ── 인증팀 모달 ──────────────────────────────────────────────────
@@ -265,7 +292,7 @@ export function openCertModal(type) {
     if (cdew) cdew.innerHTML = '';
     const crew = document.getElementById('c-ref-extra-wrap');
     if (crew) crew.innerHTML = '';
-    buildBillingGrid('certBillingGrid','certBillingTotal','c',[],[],[]);
+    buildBillingGrid('certBillingGrid','certBillingTotal','c',[],[],[],[]);
     const cf = document.getElementById('certContractFields');
     const cs = document.getElementById('certConsultSection');
     if (cf) cf.style.display = isContract ? 'contents' : 'none';
@@ -307,7 +334,7 @@ export function editCert(id) {
         if (el) el.value = val || '';
     });
     toggleCertTypeEtc();
-    buildBillingGrid('certBillingGrid','certBillingTotal','c', r.billing, r.billingDates, r.billingCurrencies);
+    buildBillingGrid('certBillingGrid','certBillingTotal','c', r.billing, r.billingDates, r.billingCurrencies, r.billingNotes);
     // 동적 기타 비용 항목 복원
     window.loadDynamicExpenses?.('cert', r.expExtra || []);
     // 외부기관 참고 기타 비용 항목 복원
@@ -362,6 +389,7 @@ window.buildBillingGrid = buildBillingGrid;
 window.addBillingItem = addBillingItem;
 window.removeBillingItem = removeBillingItem;
 window.calcBilling = calcBilling;
+window.fmtCommaInput = fmtCommaInput;
 window.openMedModal = openMedModal;
 window.openCertModal = openCertModal;
 window.editMed = editMed;

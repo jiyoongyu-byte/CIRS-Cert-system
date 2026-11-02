@@ -7,7 +7,7 @@ import { getState, getCurrentYear, getCurrentUser, getMedEditId, getCertEditId,
 import { uid, sanitize, toKRW, fmt, fmtM, quarter } from '../core/utils.js';
 import { saveMedRecord, saveCertRecord, deleteMedRecord, deleteCertRecord, logAudit, setArchived,
          woCreate, woUpdate, woTransition, loadWorkOrders } from '../core/api.js';
-import { getBillingValues, getBillingDates, getBillingCurrencies } from './modal.js';
+import { getBillingValues, getBillingDates, getBillingCurrencies, getBillingNotes, MED_STAGES, closeModal } from './modal.js';
 
 // ── 의료기기팀 저장 ───────────────────────────────────────────────
 export async function saveMed() {
@@ -50,6 +50,7 @@ export async function saveMed() {
         billing:        isContract ? getBillingValues('m') : [0,0,0,0,0],
         billingDates:   isContract ? getBillingDates('m')  : ['','','','',''],
         billingCurrencies: isContract ? getBillingCurrencies('m') : ['KRW','KRW','KRW','KRW','KRW'],
+        billingNotes:   isContract ? getBillingNotes('m') : ['','','','',''],
         renewcycle:   document.getElementById('m-renewcycle')?.value || '',
         expiredate:   document.getElementById('m-expiredate')?.value || '',
         consultStatus: document.getElementById('m-consult-status')?.value || '',
@@ -164,6 +165,7 @@ export async function saveCert() {
         billing:        isContract ? getBillingValues('c') : [0,0,0,0,0],
         billingDates:   isContract ? getBillingDates('c')  : ['','','','',''],
         billingCurrencies: isContract ? getBillingCurrencies('c') : ['KRW','KRW','KRW','KRW','KRW'],
+        billingNotes:   isContract ? getBillingNotes('c') : ['','','','',''],
         renewcycle: document.getElementById('c-renewcycle')?.value || '',
         expiredate: document.getElementById('c-expiredate')?.value || '',
         failReason: document.getElementById('c-fail-reason')?.value || '',
@@ -300,6 +302,40 @@ export async function revertToConsult(team, id) {
     await logAudit('계약→상담', `${team}/${r.client}${toArchive ? ' (보관: ' + reason + ')' : ''}`, getCurrentUser());
     team === 'med' ? (window.renderMedContract?.(), window.renderMedConsult?.())
                    : (window.renderCertContract?.(), window.renderCertConsult?.());
+}
+
+// ── 계약업체 목록에서 진행단계만 수정 (의료기기: 업무유형별 복수선택 / 인증팀: 단일선택) ──
+let _stageEdit = null;
+export function openStageEdit(team, id) {
+    const r = getState()[team]?.find(x => x.id === id);
+    if (!r) return;
+    const isMed = team === 'med';
+    const opts = isMed ? (MED_STAGES[r.biztype] || [])
+                       : Array.from(document.querySelectorAll('#c-stage option')).map(o => o.value).filter(Boolean);
+    if (!opts.length) { alert('업무 유형이 지정되지 않아 단계를 선택할 수 없습니다.\n[수정]에서 업무 유형을 먼저 지정하세요.'); return; }
+    const cur = isMed ? (r.stages?.length ? r.stages : (r.stage ? r.stage.split(', ') : [])) : [r.stage];
+    _stageEdit = { team, id };
+    document.getElementById('stageModalTitle').textContent = `${r.client} · 진행 단계`;
+    document.getElementById('stageEditBody').innerHTML = opts.map(st =>
+        `<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:8px">
+            <input type="${isMed ? 'checkbox' : 'radio'}" name="stage-pick" value="${st}" ${cur.includes(st) ? 'checked' : ''}>${st}</label>`).join('');
+    document.getElementById('modal-stage')?.classList.add('open');
+}
+
+export async function saveStageEdit() {
+    const { team, id } = _stageEdit || {};
+    const r = getState()[team]?.find(x => x.id === id);
+    if (!r) return;
+    const picked = Array.from(document.querySelectorAll('#stageEditBody input:checked')).map(x => x.value);
+    const prev = { ...r };
+    if (team === 'med') { r.stages = picked; r.stage = picked.join(', '); }
+    else r.stage = picked[0] || '';
+    try {
+        team === 'med' ? await saveMedRecord(r) : await saveCertRecord(r);
+    } catch (e) { Object.assign(r, prev); alert('❌ 저장 실패\n\n' + (e?.message || e)); return; }
+    await logAudit('진행단계 수정', `${team}/${r.client}: ${r.stage}`, getCurrentUser());
+    closeModal('stage');
+    team === 'med' ? window.renderMedContract?.() : window.renderCertContract?.();
 }
 
 export async function convertToContract(team, id) {
@@ -497,6 +533,8 @@ window.saveCert         = saveCert;
 window.deleteCert       = deleteCert;
 window.convertToContract = convertToContract;
 window.revertToConsult   = revertToConsult;
+window.openStageEdit     = openStageEdit;
+window.saveStageEdit     = saveStageEdit;
 window.archiveConsult    = archiveConsult;
 window.restoreConsult    = restoreConsult;
 window.saveTask         = saveTask;
