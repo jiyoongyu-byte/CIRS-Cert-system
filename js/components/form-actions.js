@@ -18,10 +18,11 @@ export async function saveMed() {
     const editId = getMedEditId();
     const isContract = getMedIsContract();
     const id     = editId || uid();
-    const y      = editId
-        ? (state.med.find(x => x.id === editId)?.year || getCurrentYear())
-        : getCurrentYear();
     const startdate = document.getElementById('m-startdate')?.value || '';
+    // 계약 건의 기준연도 = 계약일 연도 (계약일 없으면 기존 방식)
+    const y      = (isContract && startdate) ? parseInt(startdate.slice(0, 4))
+                 : editId ? (state.med.find(x => x.id === editId)?.year || getCurrentYear())
+                 : getCurrentYear();
 
     // 현재 메인 단계('완료')를 상태와 연동. 보류·취소는 보존
     const progressVal = document.getElementById('m-progress')?.value || '';
@@ -86,7 +87,7 @@ export async function saveMed() {
     const prevMed = editId ? state.med.find(x => x.id === editId) : null;
     const prevMedCopy = prevMed ? {...prevMed} : null;
     // 보관 정보는 수정 화면에 없으므로 기존 값 유지
-    if (prevMed) Object.assign(record, { archived: prevMed.archived, archiveReason: prevMed.archiveReason, archivedAt: prevMed.archivedAt });
+    if (prevMed) Object.assign(record, { archived: prevMed.archived, archiveReason: prevMed.archiveReason, archivedAt: prevMed.archivedAt, renewConsulted: prevMed.renewConsulted });
 
     if (editId) {
         const i = state.med.findIndex(x => x.id === editId);
@@ -114,6 +115,7 @@ export async function saveMed() {
     }
     await logAudit(editId ? '수정' : '신규', `'${record.client}' 의료기기팀`, getCurrentUser());
     setMedEditId(null);
+    if (!isContract) await window.markRenewConsulted?.('med', record.client);
     window.closeModal?.('med');
     // 저장 성공 후 모든 뷰 갱신 (완료대장 포함 — 완료대장에서 수정해도 반영됨)
     window.renderMedContract?.(); window.renderMedConsult?.(); window.renderMedDone?.();
@@ -137,9 +139,6 @@ export async function saveCert() {
     const editId = getCertEditId();
     const isContract = getCertIsContract();
     const id     = editId || uid();
-    const y      = editId
-        ? (state.cert.find(x => x.id === editId)?.year || getCurrentYear())
-        : getCurrentYear();
     const certtype = document.getElementById('c-certtype')?.value || '';
     // 기타 인증명칭 (인증 종류가 '기타'일 때만 사용)
     const certtypeRaw = certtype === '기타'
@@ -148,6 +147,10 @@ export async function saveCert() {
     const itemName = sanitize(document.getElementById('c-certtype-etc')?.value || '');
     const contractdate = document.getElementById('c-contractdate')?.value || '';
     const consultdate  = document.getElementById('c-date')?.value || '';
+    // 계약 건의 기준연도 = 계약일 연도 (계약일 없으면 기존 방식)
+    const y      = (isContract && contractdate) ? parseInt(contractdate.slice(0, 4))
+                 : editId ? (state.cert.find(x => x.id === editId)?.year || getCurrentYear())
+                 : getCurrentYear();
 
     const record = {
         id, year: y,
@@ -202,7 +205,7 @@ export async function saveCert() {
     const prevCert = editId ? state.cert.find(x => x.id === editId) : null;
     const prevCertCopy = prevCert ? {...prevCert} : null;
     // 보관 정보는 수정 화면에 없으므로 기존 값 유지
-    if (prevCert) Object.assign(record, { archived: prevCert.archived, archiveReason: prevCert.archiveReason, archivedAt: prevCert.archivedAt });
+    if (prevCert) Object.assign(record, { archived: prevCert.archived, archiveReason: prevCert.archiveReason, archivedAt: prevCert.archivedAt, renewConsulted: prevCert.renewConsulted });
 
     if (editId) {
         const i = state.cert.findIndex(x => x.id === editId);
@@ -230,6 +233,7 @@ export async function saveCert() {
     }
     await logAudit(editId ? '수정' : '신규', `'${record.client}' 인증팀`, getCurrentUser());
     setCertEditId(null);
+    if (!isContract) await window.markRenewConsulted?.('cert', record.client);
     window.closeModal?.('cert');
     // 저장 성공 후 모든 뷰 갱신 (완료대장 포함 — 완료대장에서 수정해도 반영됨)
     window.renderCertContract?.(); window.renderCertConsult?.(); window.renderCertDone?.();
@@ -345,6 +349,7 @@ export async function convertToContract(team, id) {
     if (!record) return;
     record.recordType = 'contract';
     const today = new Date().toISOString().slice(0, 10);
+    record.year = parseInt(today.slice(0, 4));   // 계약일 연도 기준
     try {
         if (team === 'med') {
             record.status = '진행중'; record.startdate = today; record.consultStatus = '계약완료';

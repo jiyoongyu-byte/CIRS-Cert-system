@@ -217,7 +217,7 @@ export async function doLogin() {
     catch (_) { if (err) err.textContent = '이메일 또는 비밀번호가 일치하지 않습니다.'; return; }
     if (err) err.textContent = '';
     try { localStorage.setItem('cirs_login_email', email); } catch (_) {}   // 다음 접속 시 이메일 자동 입력 (비밀번호는 저장 안 함)
-    if (await _afterAuth(err)) window.showTaskAlert?.();   // 로그인 직후 1회: 처리 대기 업무지시서 팝업
+    if (await _afterAuth(err)) { window.showTaskAlert?.(); window.showDataAlert?.(); }   // 로그인 직후 1회: 업무지시서 팝업, 계약일 누락·갱신 대상 팝업
 }
 
 // 마지막 로그인 이메일 자동 입력

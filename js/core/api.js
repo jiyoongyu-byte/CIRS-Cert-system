@@ -45,6 +45,7 @@ export async function saveMedRecord(record) {
             exp_trip_date:  record.expTripDate  || null,
             location: record.location || '', win_prob: record.winProb || '',
             expected_month: record.expectedMonth || '', expected_amount: record.expectedAmount || 0,
+            renew_consulted: !!record.renewConsulted,
         });
         if (error) throw error;
     } catch (e) { console.error('saveMedRecord 오류:', e); throw e; } // 호출부 catch 가능하도록 re-throw
@@ -90,6 +91,7 @@ export async function saveCertRecord(record) {
             exp_trip_date:  record.expTripDate  || null,
             location: record.location || '', win_prob: record.winProb || '',
             expected_month: record.expectedMonth || '', expected_amount: record.expectedAmount || 0,
+            renew_consulted: !!record.renewConsulted,
         });
         if (error) throw error;
     } catch (e) { console.error('saveCertRecord 오류:', e); throw e; } // 호출부 catch 가능하도록 re-throw
@@ -187,6 +189,9 @@ export async function logAudit(action, detail, user) {
 }
 
 // ── 전체 데이터 로드 ──────────────────────────────────────────────
+// 계약 건의 기준연도 = 계약일 연도 (계약일이 없거나 상담 건이면 저장된 year 유지)
+const contractYear = (type, date, saved) => ((type || 'contract') === 'contract' && date) ? parseInt(String(date).slice(0, 4)) : saved;
+
 export async function loadAllData(state) {
     const client = initSb(); if (!client) return false;
     try {
@@ -197,7 +202,7 @@ export async function loadAllData(state) {
         ]);
 
         state.med = (mR.data || []).map(r => ({
-            id: r.id, year: r.year, recordType: r.record_type || 'contract',
+            id: r.id, year: contractYear(r.record_type, r.start_date, r.year), recordType: r.record_type || 'contract',
             client: r.client || '', product: r.product || '',
             grade: r.grade || '', biztype: r.biztype || '',
             stage: r.stage || '', stages: r.stages || [],
@@ -223,10 +228,11 @@ export async function loadAllData(state) {
             expAuditDate: r.exp_audit_date || '', expTestDate: r.exp_test_date || '', expTripDate: r.exp_trip_date || '',
             location: r.location || '', winProb: r.win_prob || '',
             expectedMonth: r.expected_month || '', expectedAmount: Number(r.expected_amount || 0),
+            renewConsulted: !!r.renew_consulted,
         }));
 
         state.cert = (cR.data || []).map(r => ({
-            id: r.id, year: r.year, recordType: r.record_type || 'contract',
+            id: r.id, year: contractYear(r.record_type, r.contract_date, r.year), recordType: r.record_type || 'contract',
             client: r.client || '', certtype: r.cert_type || '',
             manager: r.manager || '', contractdate: r.contract_date || '',
             date: r.date || '', stage: r.stage || '',
@@ -251,6 +257,7 @@ export async function loadAllData(state) {
             expAuditDate: r.exp_audit_date || '', expTestDate: r.exp_test_date || '', expTripDate: r.exp_trip_date || '',
             location: r.location || '', winProb: r.win_prob || '',
             expectedMonth: r.expected_month || '', expectedAmount: Number(r.expected_amount || 0),
+            renewConsulted: !!r.renew_consulted,
         }));
 
         const rd = rR.data?.data || {};
