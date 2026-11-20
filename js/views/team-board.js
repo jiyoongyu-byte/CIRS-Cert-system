@@ -129,7 +129,7 @@ export function renderMedContract() {
     });
 
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
         renderContractTotal('medContractTable', [], 8);
         return;
     }
@@ -145,6 +145,7 @@ export function renderMedContract() {
             <td>${sanitize(r.startdate || '')}</td>
             <td>${sanitize(r.duedate || '')}</td>
       <td>${sanitize(r.issuedate || '')}</td>
+            ${firstBar(r)}
             ${fmtAmt(r.amount, r.amountCurrency)}
             ${fmtRemain(r, r.startdate || r.contractdate || '')}
             ${stageCell('med', r)}
@@ -154,7 +155,7 @@ export function renderMedContract() {
         </tr>`;
     }).join('');
 
-    renderContractTotal('medContractTable', data, 9, 'startdate');
+    renderContractTotal('medContractTable', data, 10, 'startdate');
 }
 
 // ── 의료기기팀 상담 ───────────────────────────────────────────────
@@ -280,7 +281,7 @@ export function renderCertContract() {
     });
 
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:20px;color:var(--text3)">${tt('데이터가 없습니다.','暂无数据。')}</td></tr>`;
         renderContractTotal('certContractTable', []);
         return;
     }
@@ -295,6 +296,7 @@ export function renderCertContract() {
             <td>${sanitize(r.contractdate || '')}</td>
             <td>${sanitize(r.duedate || '')}</td>
       <td>${sanitize(r.issuedate || '')}</td>
+            ${firstBar(r)}
             ${fmtAmt(r.amount, r.amountCurrency)}
             ${fmtRemain(r, r.startdate || r.contractdate || '')}
             ${stageCell('cert', r)}
@@ -304,7 +306,7 @@ export function renderCertContract() {
         </tr>`;
     }).join('');
 
-    renderContractTotal('certContractTable', data, 7, 'contractdate');
+    renderContractTotal('certContractTable', data, 8, 'contractdate');
 }
 
 // ── 제품환경인증팀 상담 ───────────────────────────────────────────
@@ -410,6 +412,18 @@ function certLabel(r) {
     return (t === '기타' && r.certtypeRaw) ? `기타(${r.certtypeRaw})` : t;
 }
 
+// ── 최초상담일 → 최초계약일 소요 막대 (값 없으면 '-', 90일을 100%로 환산) ──
+function firstBar(r) {
+    const a = r.firstConsultDate || '', b = r.firstContractDate || '';
+    if (!a && !b) return '<td style="color:var(--text3)">-</td>';
+    let days = (a && b) ? Math.round((new Date(b) - new Date(a)) / 86400000) : null;
+    if (days !== null && isNaN(days)) days = null;
+    const w = days === null ? 0 : Math.max(4, Math.min(100, Math.round(Math.max(days, 0) / 90 * 100)));
+    return `<td style="min-width:150px;font-size:11px;white-space:nowrap">
+        ${sanitize(a || '-')} → ${sanitize(b || '-')}
+        <div style="height:6px;background:var(--border2);border-radius:3px;margin-top:3px"><div style="width:${w}%;height:100%;background:var(--med-mid);border-radius:3px"></div></div>
+        ${days === null ? '' : `<span style="color:var(--text3)">${days}${tt('일','天')}</span>`}</td>`;
+}
 // ── 표 하단 합계 행 (진행 건수 / 계약금액 / 잔금 — 모두 KRW 환산) ──────
 function renderContractTotal(tableId, rows, labelSpan = 6, dateKey = 'startdate') {
     const table = document.getElementById(tableId);
